@@ -4,7 +4,8 @@ loadEnvConfig(process.cwd());
 import type { Outage } from '../lib/types';
 import { createServiceClient } from './supabase';
 import { errorMessage, politeFetch, type ConditionalCache } from './http';
-import { extractArticle, extractArticleLinks } from './adapters/feed';
+import { extractArticle } from './adapters/feed';
+import { collectSitemapEntries } from './adapters/sitemap';
 import { looksLikeOutage } from './parse/kind';
 import { parseAnnouncement } from './parse';
 import { dedupe } from './dedupe';
@@ -23,94 +24,117 @@ type ArchiveSource = {
   id: string;
   name: string;
   kind: 'official' | 'press';
-  // Page N of the outlet's outage tag archive.
-  pageUrl: (page: number) => string;
-  articlePattern: RegExp;
+  // Root sitemap. An index is followed one level down.
+  sitemap: string;
+  // How many sitemaps to follow from an index, newest first.
+  maxSitemaps?: number;
 };
 
+// Sitemaps rather than tag pages: none of these outlets surface outage
+// articles through their RSS feed, and every one of them publishes a sitemap
+// carrying <lastmod> (§10.8).
 const SOURCES: ArchiveSource[] = [
   {
-    id: 'kibtek',
-    name: 'KIB-TEK',
-    kind: 'official',
-    pageUrl: (page) => `https://www.kibtek.com/category/acil-duyuru/page/${page}/`,
-    articlePattern: /^\/[a-z0-9-]{10,}\/$/i,
+    id: 'detaykibris',
+    name: 'Detay Kıbrıs',
+    kind: 'press',
+    sitemap: 'https://www.detaykibris.com/sitemap-news-01.xml',
   },
   {
     id: 'gundemkibris',
     name: 'Gündem Kıbrıs',
     kind: 'press',
-    pageUrl: (page) => `https://www.gundemkibris.com/arama?q=elektrik+kesintisi&page=${page}`,
-    articlePattern: /^\/[a-z0-9-]{10,}$/i,
+    sitemap: 'https://www.gundemkibris.com/sitemap.xml',
+    maxSitemaps: 8,
+  },
+  {
+    id: 'kibrisgazetesi',
+    name: 'Kıbrıs Gazetesi',
+    kind: 'press',
+    sitemap: 'https://kibrisgazetesi.com/sitemap_index.xml',
+    maxSitemaps: 8,
   },
   {
     id: 'yeniduzen',
     name: 'Yenidüzen',
     kind: 'press',
-    pageUrl: (page) => `https://www.yeniduzen.com/arama?kelime=elektrik%20kesintisi&sayfa=${page}`,
-    articlePattern: /-\d+h?\.htm|\/[a-z0-9-]{10,}$/i,
+    sitemap: 'https://www.yeniduzen.com/sitemap-news-01.xml',
   },
 ];
 
-export async function backfill(options: { pages?: number; dryRun?: boolean } = {}) {
-  const pages = options.pages ?? 10;
+export async function backfill(options: { perSource?: number; dryRun?: boolean; since?: number } = {}) {
+  const perSource = options.perSource ?? 60;
   const cache: ConditionalCache = new Map();
   const parsed: Outage[] = [];
   const review: ReviewItem[] = [];
   const seen = new Set<string>();
 
   for (const source of SOURCES) {
-    for (let page = 1; page <= pages; page++) {
-      const listing = await politeFetch(source.pageUrl(page), cache);
-      if (listing.status !== 'ok') {
-        console.log(`[${source.id}] page ${page}: ${listing.status === 'skipped' ? listing.reason : 'unchanged'}`);
-        break;
+    const entries = await collectSitemapEntries(source.sitemap, cache, {
+      maxSitemaps: source.maxSitemaps,
+      since: options.since,
+    });
+    const capped = entries.slice(0, perSource);
+    console.log(`[${source.id}] ${entries.length} candidate(s) in sitemap, taking ${capped.length}`);
+
+    let kept = 0;
+    let skipped = 0;
+    for (const entry of capped) {
+      if (seen.has(entry.url)) continue;
+      seen.add(entry.url);
+
+      const article = await politeFetch(entry.url, cache);
+      if (article.status !== 'ok') continue;
+      const { title, body } = extractArticle(article.body);
+      if (!looksLikeOutage(`${title} ${body}`)) {
+        skipped++;
+        continue;
       }
 
-      const links = extractArticleLinks(listing.body, source.pageUrl(page), source.articlePattern).filter(
-        (link) => !seen.has(link),
-      );
-      if (links.length === 0) {
-        console.log(`[${source.id}] page ${page}: no further articles`);
-        break;
-      }
+      const fetchedAt = new Date().toISOString();
+      const outcome = parseAnnouncement({
+        source: { name: source.name, url: entry.url, kind: source.kind },
+        title,
+        body,
+        // The sitemap's own <lastmod> beats scraping the page for a date.
+        publishedAt: entry.lastmod ?? publishedDate(article.body) ?? fetchedAt,
+        fetchedAt,
+      });
 
-      let kept = 0;
-      for (const link of links) {
-        seen.add(link);
-        const article = await politeFetch(link, cache);
-        if (article.status !== 'ok') continue;
-        const { title, body } = extractArticle(article.body);
-        if (!looksLikeOutage(`${title} ${body}`)) continue;
-
-        const fetchedAt = new Date().toISOString();
-        const outcome = parseAnnouncement({
-          source: { name: source.name, url: link, kind: source.kind },
-          title,
-          body,
-          publishedAt: publishedDate(article.body) ?? fetchedAt,
-          fetchedAt,
+      if (outcome.status === 'parsed') {
+        parsed.push(...outcome.records);
+        kept++;
+      } else if (outcome.status === 'failed') {
+        review.push({
+          source: { name: source.name, url: entry.url },
+          rawText: `${title}
+${body}`,
+          reason: outcome.reason,
         });
-
-        if (outcome.status === 'parsed') {
-          parsed.push(...outcome.records);
-          kept++;
-        } else if (outcome.status === 'failed') {
-          review.push({
-            source: { name: source.name, url: link },
-            rawText: `${title}\n${body}`,
-            reason: outcome.reason,
-          });
-        }
       }
-      console.log(`[${source.id}] page ${page}: ${links.length} article(s), ${kept} parsed`);
     }
+    console.log(`[${source.id}] ${kept} parsed, ${skipped} not an outage, ${capped.length - kept - skipped} unparsed`);
   }
 
   const collapsed = dedupe(parsed);
   console.log(`backfill: ${parsed.length} record(s) -> ${collapsed.length} after dedupe, ${review.length} to review`);
 
-  if (options.dryRun) return collapsed;
+  if (options.dryRun) {
+    // A dry run exists to be read: print what was parsed so the rows can be
+    // compared against the real announcements before any of it is stored.
+    for (const record of collapsed) {
+      const end = record.endsAt ? record.endsAt.slice(11, 16) : '??:??';
+      console.log(
+        `  ${record.kind.padEnd(8)} ${record.startsAt.slice(0, 16).replace('T', ' ')}-${end} ` +
+          `${record.district.padEnd(11)} ${record.areas.join(', ')}`,
+      );
+      console.log(`           ${record.sources[0].url}`);
+    }
+    for (const item of review) {
+      console.log(`  REVIEW  ${item.reason}  ${item.source.url}`);
+    }
+    return collapsed;
+  }
 
   const client = createServiceClient();
   const stored = await storeOutages(client, collapsed);
@@ -137,9 +161,12 @@ function publishedDate(html: string): string | null {
 const invokedDirectly = process.argv[1]?.replace(/\\/g, '/').endsWith('ingest/backfill.ts');
 
 if (invokedDirectly) {
-  const pagesArg = process.argv.indexOf('--pages');
+  const perSourceArg = process.argv.indexOf('--per-source');
+  const monthsArg = process.argv.indexOf('--months');
+  const months = monthsArg === -1 ? 6 : Number(process.argv[monthsArg + 1]);
   backfill({
-    pages: pagesArg === -1 ? undefined : Number(process.argv[pagesArg + 1]),
+    perSource: perSourceArg === -1 ? undefined : Number(process.argv[perSourceArg + 1]),
+    since: Date.now() - months * 30 * 86400000,
     dryRun: process.argv.includes('--dry-run'),
   })
     .then(() => process.exit(0))

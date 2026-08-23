@@ -84,5 +84,34 @@ export function extractArticle(html: string): { title: string; body: string } {
   const paragraphs = [...withoutChrome.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)]
     .map((match) => htmlToText(match[1]))
     .filter((text) => text.length > 25);
-  return { title, body: paragraphs.join('\n') };
+
+  // The lead sentence is where these outlets put the time range, and it is
+  // routinely not a <p>: detaykibris keeps it in <div itemprop="description">,
+  // others only in a meta description. Missing it meant losing the one fact
+  // the parser most needs, so the summary is collected and put first.
+  const summary = extractSummary(withoutChrome, html);
+  const body =
+    summary && !paragraphs.some((text) => text.includes(summary.slice(0, 40)))
+      ? [summary, ...paragraphs].join('\n')
+      : paragraphs.join('\n');
+
+  return { title, body };
+}
+
+function extractSummary(withoutChrome: string, html: string): string {
+  const blocks: RegExp[] = [
+    /<[a-z]+\b[^>]*itemprop=["']description["'][^>]*>([\s\S]*?)<\/[a-z]+>/i,
+    /<[a-z]+\b[^>]*class=["'][^"']*(?:short_content|spot|ozet|summary|excerpt)[^"']*["'][^>]*>([\s\S]*?)<\/[a-z]+>/i,
+  ];
+  for (const pattern of blocks) {
+    const match = pattern.exec(withoutChrome);
+    if (!match) continue;
+    const text = htmlToText(match[1]);
+    if (text.length > 25) return text;
+  }
+  const meta =
+    /<meta\b[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i.exec(html) ??
+    /<meta\b[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i.exec(html);
+  const text = meta ? htmlToText(meta[1]) : '';
+  return text.length > 25 ? text : '';
 }

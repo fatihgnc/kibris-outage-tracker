@@ -51,6 +51,28 @@ const PLANNED = [
   'programli',
 ];
 
+// Wording that only appears when the work was scheduled in advance. Kept
+// apart from PLANNED because a bare 'çalışma' ("work") is too weak to
+// outrank a fault.
+const PLANNED_STRONG = [
+  'planlı',
+  'planli',
+  'programlı',
+  'programli',
+  'proje çalışma',
+  'proje calisma',
+  'bakım onarım',
+  'bakim onarim',
+  'bakım çalışma',
+  'bakim calisma',
+  'yenileme çalışma',
+  'yenileme calisma',
+  'şebeke iyileştirme',
+  'sebeke iyilestirme',
+  'arıza tamiri',
+  'ariza tamiri',
+];
+
 const CANCELLATION = [
   'iptal edilmiştir',
   'iptal edilmistir',
@@ -73,8 +95,14 @@ function containsAny(haystack: string, needles: string[]): boolean {
 export function classifyKind(text: string): OutageKind {
   const lower = toLowerTr(text);
   if (containsAny(lower, ROTATING)) return 'rotating';
-  if (containsAny(lower, FAULT)) return 'fault';
-  if (containsAny(lower, PLANNED)) return 'planned';
+  // Announcements routinely give the reason as scheduled work *and* a fault
+  // repair: "proje çalışması ve arıza tamiri nedeniyle ... yapılacak". Work
+  // announced ahead with a time window is planned by definition (§10.4) — the
+  // word 'arıza' there names the reason, not an unplanned interruption. So a
+  // strong planned marker outranks an incidental fault mention.
+  const scheduled = containsAny(lower, PLANNED_STRONG);
+  if (containsAny(lower, FAULT) && !scheduled) return 'fault';
+  if (scheduled || containsAny(lower, PLANNED)) return 'planned';
   return 'planned';
 }
 

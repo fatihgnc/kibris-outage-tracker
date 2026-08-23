@@ -50,3 +50,26 @@ test('looksLikeOutage is not fooled by words that merely start with "kesin"', ()
 test('looksLikeOutage rejects "kesintisiz", which means the opposite', () => {
   assert.equal(looksLikeOutage('Kesintisiz enerji kaynağı devreye alındı'), false);
 });
+
+// Real announcements give both reasons at once. Work announced ahead with a
+// time window is planned; 'arıza' there names the reason, not an unplanned cut.
+test('scheduled project work outranks an incidental fault mention', () => {
+  assert.equal(
+    classifyKind(
+      'Orta gerilim elektrik şebekesinde yapılacak proje çalışması ve arıza tamiri nedeniyle bugün 09.00 – 11.00 arası iki saatlik elektrik kesintisi yapılacak.',
+    ),
+    'planned',
+  );
+});
+
+test('a genuine fault with no scheduling language is still a fault', () => {
+  assert.equal(classifyKind('Meydana gelen arıza nedeniyle elektrikler kesildi.'), 'fault');
+  assert.equal(classifyKind('Direğe çarpan araç nedeniyle kopan hat onarılıyor.'), 'fault');
+});
+
+test('rotating still wins over both', () => {
+  assert.equal(
+    classifyKind('Üretim yetersizliği nedeniyle planlı dönüşümlü kesinti uygulanacaktır.'),
+    'rotating',
+  );
+});
