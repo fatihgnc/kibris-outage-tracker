@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import '../globals.css';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
-import { getLastCheckedAt, getNow, getOutages } from '@/lib/data';
+import { getFreshness, getNow, getOutages } from '@/lib/data';
 import { formatClock } from '@/lib/time';
 import StatusBar from '@/components/StatusBar';
 import NavLinks from '@/components/NavLinks';
@@ -76,12 +76,12 @@ export default async function LocaleLayout({
   const locale: Locale = raw;
   const dict = await getDictionary(locale);
   const now = await getNow();
-  const [outages, lastCheckedAt] = await Promise.all([getOutages(now), getLastCheckedAt(now)]);
+  const [outages, freshness] = await Promise.all([getOutages(now), getFreshness(now)]);
 
   return (
     <html lang={locale} className={`${fraunces.variable} ${publicSans.variable} ${plexMono.variable}`}>
       <body className="flex min-h-screen flex-col">
-        <StatusBar locale={locale} dict={dict} outages={outages} now={now} lastCheckedAt={lastCheckedAt} />
+        <StatusBar locale={locale} dict={dict} outages={outages} now={now} freshness={freshness} />
 
         <header className="mx-auto flex w-full max-w-[1060px] items-baseline justify-between gap-4 px-5 pt-4">
           <Link
@@ -100,7 +100,10 @@ export default async function LocaleLayout({
             {/* The persistent disclaimer (§1.4): every duration is an estimate. */}
             <p className="m-0 max-w-[68ch] text-meta text-muted">{dict.footer.disclaimer}</p>
             <p className="m-0 font-mono text-meta text-muted">
-              {dict.brand} · {fill(dict.footer.lastChecked, { time: formatClock(lastCheckedAt, locale) })}
+              {dict.brand} ·{' '}
+              {freshness.lastCheckedAt
+                ? fill(dict.footer.lastChecked, { time: formatClock(freshness.lastCheckedAt, locale) })
+                : dict.statusBar.neverChecked}
             </p>
           </div>
         </footer>

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
-import { getLastCheckedAt, getNow, getOutages } from '@/lib/data';
+import { getFreshness, getNow, getOutages } from '@/lib/data';
 import { deriveStatus, formatClock } from '@/lib/time';
 import { DISTRICTS, getMapGeometry, isDistrictId } from '@/lib/geography';
 import type { DistrictId, Outage } from '@/lib/types';
@@ -37,7 +37,7 @@ export default async function HomePage({ params, searchParams }: Props) {
     typeof districtRaw === 'string' && isDistrictId(districtRaw) ? districtRaw : null;
 
   const now = await getNow();
-  const [outages, lastCheckedAt] = await Promise.all([getOutages(now), getLastCheckedAt(now)]);
+  const [outages, freshness] = await Promise.all([getOutages(now), getFreshness(now)]);
 
   const byStart = (a: Outage, b: Outage) => Date.parse(a.startsAt) - Date.parse(b.startsAt);
   const active = outages.filter((o) => deriveStatus(o, now) === 'active').sort(byStart);
@@ -139,7 +139,9 @@ export default async function HomePage({ params, searchParams }: Props) {
           <div className="flex flex-col gap-2 rounded-[4px] border border-dark px-5 py-6">
             <p className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{dict.list.empty}</p>
             <p className="m-0 font-mono text-meta text-muted">
-              {fill(dict.list.checkedAsOf, { time: formatClock(lastCheckedAt, locale) })}
+              {freshness.lastCheckedAt
+                ? fill(dict.list.checkedAsOf, { time: formatClock(freshness.lastCheckedAt, locale) })
+                : dict.statusBar.neverChecked}
             </p>
           </div>
         )}

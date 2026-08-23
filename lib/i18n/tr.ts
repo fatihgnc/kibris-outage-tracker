@@ -46,6 +46,12 @@ export const tr = {
     oneActive: (district: string) => `${locative(district)} kesinti sürüyor`,
     manyActive: '{count} bölgede kesinti sürüyor',
     checked: 'kontrol {time}',
+    // Errors say what happened and what to do: name the failure, then show
+    // the last known state with its timestamp (§7.5, §10.7).
+    staleTitle: 'Güncellemeler gecikiyor.',
+    staleBody: 'Duyuru kaynaklarına {time} tarihinden beri ulaşılamadı. Aşağıdaki bilgiler o ana ait; şu an kesinti olabilir ya da bitmiş olabilir. Kesin bilgi için KIB-TEK duyurularına bakın.',
+    staleNeverBody: 'Duyuru kaynaklarına henüz ulaşılamadı. Aşağıda gösterilecek bir bilgi yok. Kesin bilgi için KIB-TEK duyurularına bakın.',
+    neverChecked: 'kontrol edilemedi',
   },
   hero: {
     allClear: 'Ada şu anda tamamen ışıkta.',

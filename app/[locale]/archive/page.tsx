@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
-import { getNow, getOutages } from '@/lib/data';
+import { getArchivedOutages, getNow } from '@/lib/data';
 import { deriveStatus, formatMonthYear, monthKey } from '@/lib/time';
 import { isDistrictId } from '@/lib/geography';
 import type { DistrictId, Outage } from '@/lib/types';
@@ -41,7 +41,7 @@ export default async function ArchivePage({ params, searchParams }: Props) {
   const monthRaw = typeof sp.month === 'string' ? sp.month : null;
 
   const now = await getNow();
-  const outages = await getOutages(now);
+  const outages = await getArchivedOutages(now);
   const past = outages
     .filter((o) => deriveStatus(o, now) === 'past')
     .sort((a: Outage, b: Outage) => Date.parse(b.startsAt) - Date.parse(a.startsAt));

@@ -27,6 +27,10 @@ export const en: Dictionary = {
     oneActive: (district: string) => `Outage in progress in ${district}`,
     manyActive: 'Outages in progress in {count} districts',
     checked: 'checked {time}',
+    staleTitle: 'Updates are delayed.',
+    staleBody: 'We have not been able to reach the announcement sources since {time}. What you see below is from then — an outage may have started or ended since. For definitive information, check the KIB-TEK announcements.',
+    staleNeverBody: 'We have not been able to reach the announcement sources yet, so there is nothing to show below. For definitive information, check the KIB-TEK announcements.',
+    neverChecked: 'not yet checked',
   },
   hero: {
     allClear: 'The whole island has power right now.',

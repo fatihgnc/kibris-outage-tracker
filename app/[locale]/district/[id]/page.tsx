@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
-import { getLastCheckedAt, getMonthlyTotals, getNow, getOutages } from '@/lib/data';
+import { getFreshness, getMonthlyTotals, getNow, getOutages } from '@/lib/data';
 import { deriveStatus, formatClock } from '@/lib/time';
 import { DISTRICTS, getMapGeometry, isDistrictId } from '@/lib/geography';
 import type { Outage } from '@/lib/types';
@@ -38,10 +38,10 @@ export default async function DistrictPage({ params }: Props) {
   const dict = await getDictionary(locale);
 
   const now = await getNow();
-  const [outages, totals, lastCheckedAt] = await Promise.all([
+  const [outages, totals, freshness] = await Promise.all([
     getOutages(now),
     getMonthlyTotals(id, now),
-    getLastCheckedAt(now),
+    getFreshness(now),
   ]);
 
   const byStart = (a: Outage, b: Outage) => Date.parse(a.startsAt) - Date.parse(b.startsAt);
@@ -102,7 +102,9 @@ export default async function DistrictPage({ params }: Props) {
                 {dict.district.noActive(district.name)}
               </p>
               <p className="m-0 font-mono text-meta text-muted">
-                {fill(dict.list.checkedAsOf, { time: formatClock(lastCheckedAt, locale) })}
+                {freshness.lastCheckedAt
+                  ? fill(dict.list.checkedAsOf, { time: formatClock(freshness.lastCheckedAt, locale) })
+                  : dict.statusBar.neverChecked}
               </p>
             </div>
           )}
