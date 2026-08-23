@@ -1,10 +1,20 @@
+// Maintenance tool for data/places.json, which caps parsing quality (§10.4).
+//
+// Scans real outage announcements for capitalised tokens the place matcher
+// does not recognise and ranks them by how often they appear, so the list is
+// grown from what announcements actually say rather than from a guess at what
+// might be missing. Names still need a district checked by hand before they
+// are added — the categories are not reliable on that.
+//
+//   node --import tsx scripts/harvest-places.ts
+
 import { loadEnvConfig } from '@next/env';
 loadEnvConfig(process.cwd());
-import { politeFetch, type ConditionalCache } from './ingest/http';
-import { extractArticle } from './ingest/adapters/feed';
-import { collectSitemapEntries } from './ingest/adapters/sitemap';
-import { looksLikeOutage } from './ingest/parse/kind';
-import { matchPlaces } from './ingest/parse/places';
+import { politeFetch, type ConditionalCache } from '../ingest/http';
+import { extractArticle } from '../ingest/adapters/feed';
+import { collectSitemapEntries } from '../ingest/adapters/sitemap';
+import { looksLikeOutage } from '../ingest/parse/kind';
+import { matchPlaces } from '../ingest/parse/places';
 
 const SITEMAPS = [
   { url: 'https://www.detaykibris.com/sitemap-news-01.xml', o: {} },
