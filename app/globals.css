@@ -166,6 +166,15 @@ body {
   display: none;
 }
 
+/* On a narrow screen the lamps shrink with the frame, so the island never
+ * turns into one undifferentiated smear. The glow circle sits at its group's
+ * origin, so scaling it is scaling it about its own centre. */
+@media (max-width: 639px) {
+  .map-glow {
+    transform: scale(0.74);
+  }
+}
+
 /* The one animation on the site: map points igniting west to east, then the
  * points under an outage fading back to dark (§3.5). */
 @keyframes ignite {
@@ -189,5 +198,21 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .map-anim {
     animation: none !important;
+    transition: none !important;
   }
+}
+
+/* The click target is the district, not the point. The focus ring is a stroke
+ * on the district shape rather than an outline: an outline traces the
+ * element's box, and the element is the shape of a district. */
+.map-hit {
+  cursor: pointer;
+  stroke: transparent;
+  stroke-width: 2;
+}
+svg a:focus {
+  outline: none;
+}
+svg a:focus-visible .map-hit {
+  stroke: var(--color-lamp);
 }

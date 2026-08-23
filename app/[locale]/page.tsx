@@ -5,7 +5,7 @@ import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getFreshness, getNow, getOutages } from '@/lib/data';
 import { deriveStatus, formatClock } from '@/lib/time';
-import { DISTRICTS, getMapGeometry, isDistrictId } from '@/lib/geography';
+import { DISTRICTS, getMapGeometry, isDistrictId, resolveDarkness } from '@/lib/geography';
 import type { DistrictId, Outage } from '@/lib/types';
 import IslandMap from '@/components/IslandMap';
 import DistrictFilter from '@/components/DistrictFilter';
@@ -65,11 +65,7 @@ export default async function HomePage({ params, searchParams }: Props) {
   const next = upcoming[0];
 
   const geometry = getMapGeometry();
-  const points = geometry.points.map((p) => ({
-    ...p,
-    districtName: DISTRICTS[p.district].name,
-    out: activeDistricts.has(p.district),
-  }));
+  const dark = resolveDarkness(active, geometry.settlements);
 
   const listTitle = selectedDistrict
     ? fill(dict.list.titleDistrict, { district: DISTRICTS[selectedDistrict].name })
@@ -104,16 +100,20 @@ export default async function HomePage({ params, searchParams }: Props) {
       <section className="pt-1">
         <IslandMap
           viewBox={geometry.viewBox}
+          width={geometry.width}
+          height={geometry.height}
           islandPath={geometry.islandPath}
-          northPath={geometry.northPath}
-          points={points}
+          districts={geometry.districts}
+          settlements={geometry.settlements}
+          darkDistricts={[...dark.districts]}
+          darkSettlements={[...dark.settlements]}
           locale={locale}
           strings={{
             ariaLabel: dict.map.ariaLabel,
             hint: dict.map.hint,
             powerOn: dict.map.powerOn,
             powerOut: dict.map.powerOut,
-            pointAria: dict.map.pointAria,
+            districtAria: dict.map.districtAria,
           }}
         />
       </section>

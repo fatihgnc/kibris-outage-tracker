@@ -64,10 +64,11 @@ export const en: Dictionary = {
   },
   map: {
     ariaLabel: 'Map of Cyprus showing the power status of northern settlements',
-    hint: 'tap a light to open that district',
+    hint: 'tap a district to open it',
     powerOn: 'power on',
     powerOut: 'power out',
     pointAria: '{name} — {status}, open {district}',
+    districtAria: '{district} — {status}',
   },
   filter: {
     ariaLabel: 'Filter by district',

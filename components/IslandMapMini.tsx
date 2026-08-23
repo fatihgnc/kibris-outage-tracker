@@ -1,58 +1,62 @@
 import type { DistrictId } from '@/lib/types';
-import type { MapPoint } from '@/lib/geography';
+import type { MapDistrict, MapSettlement } from '@/lib/geography';
 
 type Props = {
   viewBox: string;
   islandPath: string;
-  northPath: string;
-  points: MapPoint[];
+  districts: MapDistrict[];
+  settlements: MapSettlement[];
   district: DistrictId;
   ariaLabel: string;
   caption: string;
 };
 
-// Small static map variant for the district page (§3.8): whole island muted,
-// the one district's points highlighted. No animation, no interaction.
-export default function IslandMapMini({ viewBox, islandPath, northPath, points, district, ariaLabel, caption }: Props) {
+// Static variant for the district page (§3.8). The island drops right back and
+// one district keeps its brightness — the reader already knows where they are,
+// so this only has to say where that is on the island. No animation, no
+// interaction, and the light is a flat fill rather than the radial source: at
+// this size a gradient reads as a smudge.
+export default function IslandMapMini({
+  viewBox,
+  islandPath,
+  districts,
+  settlements,
+  district,
+  ariaLabel,
+  caption,
+}: Props) {
   return (
     <figure className="m-0">
-      <svg viewBox={viewBox} role="img" aria-label={ariaLabel} className="block h-auto w-full">
+      <svg viewBox={viewBox} role="img" aria-label={ariaLabel} className="block h-auto w-full bg-night">
+        <rect x="-100%" y="-100%" width="300%" height="300%" fill="var(--color-night)" />
+        <path d={islandPath} fill="var(--color-text)" fillOpacity={0.04} />
+        {districts.map((d) => (
+          <path
+            key={d.id}
+            d={d.path}
+            fill="var(--color-text)"
+            fillOpacity={d.id === district ? 0.13 : 0.06}
+          />
+        ))}
+        {districts.map((d) => (
+          <path key={d.id} d={d.path} fill="none" stroke="var(--color-dark)" strokeWidth={0.6} />
+        ))}
         <path
           d={islandPath}
-          fill="var(--color-text)"
-          fillOpacity={0.03}
+          fill="none"
           stroke="var(--color-muted)"
-          strokeWidth={1.6}
-          strokeOpacity={0.6}
+          strokeWidth={1.2}
+          strokeOpacity={0.7}
           strokeLinejoin="round"
         />
-        <path
-          d={northPath}
-          fill="var(--color-text)"
-          fillOpacity={0.06}
-          stroke="var(--color-muted)"
-          strokeWidth={1.8}
-          strokeLinejoin="round"
-        />
-        {points.map((point) => {
-          const highlighted = point.district === district;
-          return (
-            <g key={point.name}>
-              {highlighted && (
-                <>
-                  <circle cx={point.x} cy={point.y} r={17} fill="var(--color-lamp)" opacity={0.1} />
-                  <circle cx={point.x} cy={point.y} r={9} fill="var(--color-lamp)" opacity={0.22} />
-                </>
-              )}
-              <circle
-                cx={point.x}
-                cy={point.y}
-                r={highlighted ? 3.6 : 2}
-                fill={highlighted ? 'var(--color-lamp)' : 'var(--color-dark)'}
-              />
+        {settlements
+          .filter((s) => s.district === district)
+          .map((s) => (
+            <g key={s.name}>
+              <circle cx={s.x} cy={s.y} r={s.weight * 8} fill="var(--color-lamp)" fillOpacity={0.14} />
+              <circle cx={s.x} cy={s.y} r={s.weight * 1.6} fill="var(--color-lamp)" />
             </g>
-          );
-        })}
+          ))}
       </svg>
       <figcaption className="mt-1 font-mono text-meta text-muted">{caption}</figcaption>
     </figure>

@@ -81,8 +81,8 @@ export default async function DistrictPage({ params }: Props) {
           <IslandMapMini
             viewBox={geometry.viewBox}
             islandPath={geometry.islandPath}
-            northPath={geometry.northPath}
-            points={geometry.points}
+            districts={geometry.districts}
+            settlements={geometry.settlements}
             district={id}
             ariaLabel={fill(dict.district.miniAria, { district: district.name })}
             caption={fill(dict.district.miniCaption, { district: district.name })}

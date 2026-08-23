@@ -88,10 +88,11 @@ export const tr = {
   },
   map: {
     ariaLabel: 'Kıbrıs haritası, kuzeydeki yerleşim yerlerinin elektrik durumu',
-    hint: 'bir ışığa dokun, bölge sayfasına gider',
+    hint: 'bir ilçeye dokun, bölge sayfasına gider',
     powerOn: 'elektrik var',
     powerOut: 'elektrik kesik',
     pointAria: '{name} — {status}, {district} sayfasına git',
+    districtAria: '{district} — {status}',
   },
   filter: {
     ariaLabel: 'Bölge süzgeci',

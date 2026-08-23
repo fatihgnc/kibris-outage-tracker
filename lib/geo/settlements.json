@@ -1,0 +1,184 @@
+[
+  {
+    "name": "Lefkoşa",
+    "lat": 35.1856,
+    "lng": 33.3642,
+    "district": "lefkosa",
+    "weight": 3
+  },
+  {
+    "name": "Gönyeli",
+    "lat": 35.2131,
+    "lng": 33.2939,
+    "district": "lefkosa",
+    "weight": 2
+  },
+  {
+    "name": "Hamitköy",
+    "lat": 35.2,
+    "lng": 33.335,
+    "district": "lefkosa",
+    "weight": 1
+  },
+  {
+    "name": "Alayköy",
+    "lat": 35.1783,
+    "lng": 33.25,
+    "district": "lefkosa",
+    "weight": 1
+  },
+  {
+    "name": "Değirmenlik",
+    "lat": 35.2333,
+    "lng": 33.4167,
+    "district": "lefkosa",
+    "weight": 1
+  },
+  {
+    "name": "Girne",
+    "lat": 35.3417,
+    "lng": 33.3192,
+    "district": "girne",
+    "weight": 3
+  },
+  {
+    "name": "Lapta",
+    "lat": 35.3333,
+    "lng": 33.1667,
+    "district": "girne",
+    "weight": 2
+  },
+  {
+    "name": "Alsancak",
+    "lat": 35.3333,
+    "lng": 33.2167,
+    "district": "girne",
+    "weight": 1
+  },
+  {
+    "name": "Karaoğlanoğlu",
+    "lat": 35.3417,
+    "lng": 33.2667,
+    "district": "girne",
+    "weight": 1
+  },
+  {
+    "name": "Çatalköy",
+    "lat": 35.3167,
+    "lng": 33.4,
+    "district": "girne",
+    "weight": 1
+  },
+  {
+    "name": "Esentepe",
+    "lat": 35.3167,
+    "lng": 33.5833,
+    "district": "girne",
+    "weight": 1
+  },
+  {
+    "name": "Gazimağusa",
+    "lat": 35.125,
+    "lng": 33.9333,
+    "district": "gazimagusa",
+    "weight": 3
+  },
+  {
+    "name": "Yeniboğaziçi",
+    "lat": 35.1833,
+    "lng": 33.8833,
+    "district": "gazimagusa",
+    "weight": 1
+  },
+  {
+    "name": "Mutluyaka",
+    "lat": 35.1,
+    "lng": 33.8667,
+    "district": "gazimagusa",
+    "weight": 1
+  },
+  {
+    "name": "Tuzla",
+    "lat": 35.0833,
+    "lng": 33.8833,
+    "district": "gazimagusa",
+    "weight": 1
+  },
+  {
+    "name": "Güzelyurt",
+    "lat": 35.1975,
+    "lng": 32.9931,
+    "district": "guzelyurt",
+    "weight": 2
+  },
+  {
+    "name": "Zümrütköy",
+    "lat": 35.1833,
+    "lng": 33.0333,
+    "district": "guzelyurt",
+    "weight": 1
+  },
+  {
+    "name": "Kalkanlı",
+    "lat": 35.15,
+    "lng": 32.9333,
+    "district": "guzelyurt",
+    "weight": 1
+  },
+  {
+    "name": "Lefke",
+    "lat": 35.11,
+    "lng": 32.85,
+    "district": "lefke",
+    "weight": 2
+  },
+  {
+    "name": "Yeşilyurt",
+    "lat": 35.1333,
+    "lng": 32.8,
+    "district": "lefke",
+    "weight": 1
+  },
+  {
+    "name": "Gemikonağı",
+    "lat": 35.1333,
+    "lng": 32.8833,
+    "district": "lefke",
+    "weight": 1
+  },
+  {
+    "name": "İskele",
+    "lat": 35.2833,
+    "lng": 33.8917,
+    "district": "iskele",
+    "weight": 2
+  },
+  {
+    "name": "Boğaztepe",
+    "lat": 35.3333,
+    "lng": 33.95,
+    "district": "iskele",
+    "weight": 1
+  },
+  {
+    "name": "Kumyalı",
+    "lat": 35.4167,
+    "lng": 34.0833,
+    "district": "iskele",
+    "weight": 1
+  },
+  {
+    "name": "Yeni Erenköy",
+    "lat": 35.4667,
+    "lng": 34.1833,
+    "district": "iskele",
+    "weight": 1
+  },
+  {
+    "name": "Dipkarpaz",
+    "lat": 35.6,
+    "lng": 34.3833,
+    "district": "iskele",
+    "weight": 1
+  }
+]
