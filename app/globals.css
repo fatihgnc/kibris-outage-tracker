@@ -63,6 +63,101 @@ body {
   font-variation-settings: "opsz" 24;
 }
 
+/* Rendered markdown for guides and the legal pages. Stays inside the same
+ * tokens and type scale as the rest of the site; no new colors, no shadows. */
+.prose {
+  max-width: 68ch;
+}
+.prose > * + * {
+  margin-top: 16px;
+}
+.prose h2 {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 40;
+  font-weight: 600;
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+  color: var(--color-text);
+  margin-top: 36px;
+}
+.prose h3 {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 24;
+  font-weight: 600;
+  font-size: var(--text-body);
+  color: var(--color-text);
+  margin-top: 26px;
+}
+.prose p,
+.prose li {
+  color: var(--color-muted);
+  text-wrap: pretty;
+}
+.prose strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+.prose a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-muted);
+  text-underline-offset: 3px;
+}
+.prose a:hover {
+  color: var(--color-lamp);
+  text-decoration-color: var(--color-lamp);
+}
+.prose ul,
+.prose ol {
+  padding-left: 22px;
+}
+.prose li + li {
+  margin-top: 6px;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+/* Phone numbers, times, and figures are machine-read: mono, like everywhere
+ * else on the site. */
+.prose code {
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  color: var(--color-lamp);
+}
+.prose blockquote {
+  border-left: 1px solid var(--color-dark);
+  padding-left: 16px;
+  color: var(--color-muted);
+}
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--color-dark);
+  margin-top: 32px;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-small);
+}
+.prose th,
+.prose td {
+  border-bottom: 1px solid var(--color-dark);
+  padding: 8px 12px 8px 0;
+  text-align: left;
+  color: var(--color-muted);
+}
+.prose th {
+  color: var(--color-text);
+  font-weight: 600;
+}
+/* Wide tables scroll inside their own container rather than the page. */
+.prose .table-scroll {
+  overflow-x: auto;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;

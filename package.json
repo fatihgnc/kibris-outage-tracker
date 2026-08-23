@@ -7,13 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --import tsx --test \"ingest/**/*.test.ts\"",
+    "test": "node --import tsx --test \"ingest/**/*.test.ts\" \"lib/**/*.test.ts\"",
     "ingest": "node --import tsx ingest/run.ts",
     "backfill": "node --import tsx ingest/backfill.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
     "d3-geo": "^3.1.1",
+    "marked": "^18.0.10",
     "next": "16.3.2",
     "react": "19.2.8",
     "react-dom": "19.2.8"
