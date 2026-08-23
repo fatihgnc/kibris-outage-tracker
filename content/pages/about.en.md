@@ -24,9 +24,10 @@ For official announcements, always check
 
 ## Where the data comes from
 
-The information is compiled automatically from KIB-TEK's own announcements and
-five local news outlets. Every record names the source it came from and links to
-the original announcement.
+The information is compiled automatically from five local news outlets.
+KIB-TEK's own site is not among them: its "planned outages" section is empty,
+and the announcements actually appear in the press. Every record names the
+source it came from and links to the original announcement.
 
 The whole process — which sources we read, how we parse the text, how we merge
 duplicate announcements, and what we deliberately do not do — is described in

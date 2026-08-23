@@ -17,17 +17,20 @@ hakkı vardır.
 Resmî bir veri servisi (API) yok. Duyurular düz metin olarak yayımlanır ve
 dakikalar içinde haber siteleri tarafından aktarılır.
 
-Altı kaynağı takip ediyoruz:
+Beş haber sitesini takip ediyoruz: **Yenidüzen**, **Kıbrıs Postası**,
+**Detay Kıbrıs**, **Gündem Kıbrıs** ve **Kıbrıs Gazetesi**.
 
-- **KIB-TEK** — kurumun kendi duyuruları. Yetkili kaynak, ama bazen yavaş.
-- **Yenidüzen**, **Kıbrıs Postası**, **Detay Kıbrıs**, **Gündem Kıbrıs**,
-  **Kıbrıs Gazetesi** — haber siteleri.
+Listede KIB-TEK'in kendi sitesinin olmaması dikkatinizi çekebilir. Sitede
+"Planlı Kesintiler" diye bir bölüm var, ama içi boş — bir tek duyuru bile
+yayımlanmamış. Kurumun akışında ihale ve şartname duyuruları çıkıyor,
+kesintiler değil. Bir süre orayı da yokladık, hiçbir şey dönmediği için
+listeden çıkardık. Kurum bir gün oraya yayımlamaya başlarsa geri ekleriz.
 
-Haber sitelerini "yedek" olarak görmüyoruz. Pratikte çoğu zaman kurumun kendi
-sitesinden daha hızlı yayımlıyorlar, dolayısıyla gerçek birer kaynaklar.
+Bu yüzden haber sitelerini "yedek" olarak görmüyoruz; bu duyuruların
+fiilen yayımlandığı yer onlar.
 
 Her kaydın altında hangi kaynaktan geldiği yazar ve özgün duyuruya bağlantı
-verilir. Kurumun kendi duyurusu varsa önce o gösterilir.
+verilir.
 
 ## Ne sıklıkla ve nasıl bakıyoruz
 
@@ -86,8 +89,8 @@ bir inceleme listesine düşer.
 
 ## Mükerrer kayıtlar
 
-Altı kaynak takip edildiğinde tek bir kesinti tipik olarak beş altı kez gelir.
-Bunları tek bir kayda indirmezsek okuyucu aynı olay için beş kart görür.
+Beş kaynak takip edildiğinde tek bir kesinti tipik olarak dört beş kez gelir.
+Bunları tek bir kayda indirmezsek okuyucu aynı olay için dört kart görür.
 
 Kayıtları başlangıç saati, bitiş saati ve yerleşim listesine göre eşleştiriyoruz.
 Kaynağın adını ve cümlelerin kuruluşunu kasten hesaba katmıyoruz — mükerrer

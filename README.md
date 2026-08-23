@@ -5,7 +5,7 @@ out in my area, and when does it come back?"**
 
 Built to [SPEC.md](./SPEC.md). Current state: **Phases A, B and C built** — the
 full frontend in Turkish and English, the ingest pipeline that collects outage
-announcements from six public sources into Supabase, and the content and ad
+announcements from five news outlets into Supabase, and the content and ad
 layer: six guides plus about/privacy/terms in both locales, a consent banner,
 and ad slots that reserve their height.
 
@@ -56,11 +56,12 @@ the model returns is validated against a schema, place names are re-matched
 against `data/places.json`, and the resulting records are marked
 `confidence: low` and show as "unverified" on the card.
 
-Sources: `kibtek` (the utility) plus `yeniduzen`, `kibrispostasi`,
-`detaykibris`, `gundemkibris`, and `kibrisgazetesi`. A single outage typically
-arrives five or six times, so `ingest/dedupe.ts` collapses duplicates — taking
-the **union** of place names, because outlets abbreviate the village list
-differently. Each adapter is wrapped so one failure cannot abort the run.
+Sources: `yeniduzen`, `kibrispostasi`, `detaykibris`, `gundemkibris`, and
+`kibrisgazetesi`. There is no adapter for KIB-TEK itself: its planned-outages
+category is empty and its feed carries tenders, so polling it returned nothing.
+A single outage typically arrives four or five times, so `ingest/dedupe.ts`
+collapses duplicates — taking the **union** of place names, because outlets
+abbreviate the village list differently. Each adapter is wrapped so one failure cannot abort the run.
 
 Only structured facts are extracted — times, dates, places, outage kind. Article
 text is never stored or republished; the card links back to the source.

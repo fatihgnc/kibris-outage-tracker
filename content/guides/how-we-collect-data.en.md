@@ -16,18 +16,21 @@ they are entitled to know where it came from and how far to trust it.
 There is no official data service. Announcements are published as plain prose
 and republished by news outlets within minutes.
 
-We follow six sources:
+We follow five news outlets: **Yenidüzen**, **Kıbrıs Postası**,
+**Detay Kıbrıs**, **Gündem Kıbrıs** and **Kıbrıs Gazetesi**.
 
-- **KIB-TEK** — the utility's own announcements. Authoritative, but sometimes
-  slow.
-- **Yenidüzen**, **Kıbrıs Postası**, **Detay Kıbrıs**, **Gündem Kıbrıs**,
-  **Kıbrıs Gazetesi** — news outlets.
+You may notice KIB-TEK's own site is not on that list. It has a "Planlı
+Kesintiler" (planned outages) section, but the section is empty — not one
+announcement has ever been posted there. The utility's feed carries tenders and
+technical specifications, not outages. We polled it for a while, got nothing
+back, and dropped it. If the utility ever starts publishing there, we will add
+it again.
 
-We do not treat the outlets as a fallback. In practice they are often faster
-than the utility's own site, which makes them real sources.
+So we do not treat the outlets as a fallback: they are where these
+announcements actually appear.
 
 Every record names the source it came from and links to the original
-announcement. Where the utility's own announcement exists, it is shown first.
+announcement.
 
 ## How often we look, and how
 
@@ -87,8 +90,8 @@ review list with its original text.
 
 ## Duplicates
 
-With six sources, a single outage typically arrives five or six times. Without
-collapsing them, you would see five cards for one event.
+With five sources, a single outage typically arrives four or five times.
+Without collapsing them, you would see four cards for one event.
 
 We match records on start time, end time, and the set of settlements. We
 deliberately ignore the name of the source and the wording — those are exactly

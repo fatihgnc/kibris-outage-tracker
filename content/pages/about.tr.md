@@ -24,9 +24,10 @@ bakın.
 
 ## Veriler nereden geliyor
 
-Bilgiler; KIB-TEK'in kendi duyurularından ve beş yerel haber sitesinden
-otomatik olarak derlenir. Her kaydın altında hangi kaynaktan geldiği yazar ve
-özgün duyuruya bağlantı verilir.
+Bilgiler beş yerel haber sitesinden otomatik olarak derlenir. KIB-TEK'in kendi
+sitesi listede değil, çünkü oradaki "Planlı Kesintiler" bölümü boş — duyurular
+fiilen haber sitelerinde yayımlanıyor. Her kaydın altında hangi kaynaktan
+geldiği yazar ve özgün duyuruya bağlantı verilir.
 
 Sürecin tamamını —hangi kaynaklara baktığımızı, metni nasıl ayrıştırdığımızı,
 mükerrer duyuruları nasıl birleştirdiğimizi ve neyi bilerek yapmadığımızı—

@@ -94,7 +94,7 @@ test('merging keeps the existing id so re-running stays idempotent', () => {
 
 // This is the check SPEC 13 step 15 asks for after adding each adapter: the
 // record count must not grow when another source reports the same event.
-test('six sources reporting one event collapse to a single record', () => {
+test('five sources reporting one event collapse to a single record', () => {
   const arrivals = [
     outage({ sources: [OFFICIAL], areas: ['Gönyeli', 'Hamitköy'] }),
     outage({ sources: [PRESS], areas: ['Gönyeli'] }),
