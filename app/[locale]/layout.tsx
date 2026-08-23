@@ -7,6 +7,7 @@ import '../globals.css';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getFreshness, getNow, getOutages } from '@/lib/data';
+import { resolveSiteUrl } from '@/lib/site';
 import { formatClock } from '@/lib/time';
 import StatusBar from '@/components/StatusBar';
 import NavLinks from '@/components/NavLinks';
@@ -47,7 +48,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!isLocale(locale)) return {};
   const dict = await getDictionary(locale);
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+    metadataBase: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
     title: { default: dict.meta.title, template: dict.meta.titleTemplate },
     description: dict.meta.description,
     alternates: {
