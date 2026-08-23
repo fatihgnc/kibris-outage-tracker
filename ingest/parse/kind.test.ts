@@ -31,6 +31,22 @@ test('cancellations are detected', () => {
 test('looksLikeOutage filters tenders and press releases out of the feed', () => {
   assert.equal(looksLikeOutage('Yarın elektrik kesintisi yapılacaktır'), true);
   assert.equal(looksLikeOutage('Enerji kesilecektir'), true);
+  assert.equal(looksLikeOutage('Elektrikler kesildi'), true);
   assert.equal(looksLikeOutage('Hurda kabloların satış ilanı'), false);
   assert.equal(looksLikeOutage('Orta Gerilim Switchgear Teknik Şartnameleri'), false);
+});
+
+// Both of these reached the review queue on the first live run.
+test('looksLikeOutage is not fooled by words that merely start with "kesin"', () => {
+  assert.equal(
+    looksLikeOutage(
+      'Yunanistan enerji çerçevesi: bu tür saldırılara kesinlikle müsaade edilmemelidir',
+    ),
+    false,
+  );
+  assert.equal(looksLikeOutage('İhale sonucu kesinleşti, enerji yatırımı başlıyor'), false);
+});
+
+test('looksLikeOutage rejects "kesintisiz", which means the opposite', () => {
+  assert.equal(looksLikeOutage('Kesintisiz enerji kaynağı devreye alındı'), false);
 });

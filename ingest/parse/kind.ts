@@ -91,6 +91,10 @@ export function isCancellation(text: string): boolean {
 export function looksLikeOutage(text: string): boolean {
   const lower = toLowerTr(text);
   const mentionsPower = /elektrik|enerji/.test(lower);
-  const mentionsCut = /kesin|kesil|kesint/.test(lower);
+  // Anchored on the actual outage words. A bare 'kesin' stem also matches
+  // 'kesinlikle' ("definitely"), which pulled unrelated news into the review
+  // queue on the first live run.
+  // 'kesintisiz' is the opposite word ("uninterrupted"), so it is excluded.
+  const mentionsCut = /kesinti(?!siz)|kesil(ecek|di|iyor|mi[şs]|ir)|kesme/.test(lower);
   return mentionsPower && mentionsCut;
 }

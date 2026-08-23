@@ -60,17 +60,16 @@ async function currentRows() {
 }
 
 describe('store round-trip', () => {
-  before(async (context) => {
-    if (!(await reachable())) {
-      // No Docker or no local stack: the suite still runs everywhere else.
-      context.skip('no local Supabase reachable');
-      return;
+  before(async () => {
+    // No Docker or no local stack: these tests skip, the rest still run.
+    if (await reachable()) {
+      await client!.from('outages').delete().gte('starts_at', '2099-01-01T00:00:00.000Z');
     }
-    await client!.from('outages').delete().gte('starts_at', '2099-01-01T00:00:00.000Z');
   });
 
   // The invariant SPEC §13 step 15 asks to check after adding each adapter.
-  test('adding sources for one event never grows the row count', async () => {
+  test('adding sources for one event never grows the row count', async (t) => {
+    if (!client) return t.skip('no local Supabase reachable');
     const first = await storeOutages(client!, dedupe([outage('aaa1', ['Gönyeli', 'Hamitköy'], [OFFICIAL])]));
     assert.equal(first.created, 1);
     assert.equal((await currentRows()).length, 1);
@@ -91,7 +90,8 @@ describe('store round-trip', () => {
     assert.equal(rows[0].sources[0].kind, 'official');
   });
 
-  test('re-running the same batch changes nothing', async () => {
+  test('re-running the same batch changes nothing', async (t) => {
+    if (!client) return t.skip('no local Supabase reachable');
     const batch = dedupe([
       outage('aaa1', ['Gönyeli', 'Hamitköy'], [OFFICIAL]),
       outage('bbb2', ['Gönyeli'], [PRESS_A]),
@@ -105,7 +105,8 @@ describe('store round-trip', () => {
   });
 
   // Corrections are updates; the row stays for the archive (§10.6).
-  test('a cancellation retracts the record without deleting it', async () => {
+  test('a cancellation retracts the record without deleting it', async (t) => {
+    if (!client) return t.skip('no local Supabase reachable');
     const retracted = await retractOutages(client!, [outage('aaa1', ['Gönyeli'], [OFFICIAL])]);
     assert.equal(retracted, 1);
     const rows = await currentRows();
