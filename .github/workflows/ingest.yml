@@ -1,0 +1,72 @@
+name: ingest
+
+# The ingest is a standalone cron script, deliberately not a Next.js route
+# handler (SPEC §8). Running it here rather than on Vercel keeps the service
+# role key — which bypasses row level security — out of the environment that
+# serves the public site.
+
+on:
+  schedule:
+    # Every ten minutes. Nothing in the announcements changes faster (§10.3).
+    # GitHub may delay a scheduled run under load; at this interval that is fine.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      adapter:
+        description: 'Run a single adapter only (e.g. kibtek). Blank runs all six.'
+        required: false
+        type: string
+      dry_run:
+        description: 'Parse and report without writing to the database'
+        required: false
+        type: boolean
+        default: false
+      no_fallback:
+        description: 'Skip the LLM stage, to see what the rules alone can parse'
+        required: false
+        type: boolean
+        default: false
+
+# One run at a time. The upserts are idempotent, so an overlap would not corrupt
+# anything, but queueing keeps the logs readable and the sources politely used.
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    # Well above a normal run, low enough that a hung fetch cannot idle for long.
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run ingest
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          INGEST_CONTACT: ${{ secrets.INGEST_CONTACT }}
+          # Optional. Without it Stage 2 is skipped and unparsed announcements
+          # go to the review queue rather than being dropped (§10.4).
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Dispatch inputs travel through the environment instead of being
+          # interpolated into the shell command, so a crafted input cannot
+          # become part of it. On a scheduled run they are simply empty.
+          ADAPTER: ${{ inputs.adapter }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          NO_FALLBACK: ${{ inputs.no_fallback }}
+        run: |
+          ARGS=""
+          if [ -n "$ADAPTER" ]; then ARGS="$ARGS $ADAPTER"; fi
+          if [ "$DRY_RUN" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ "$NO_FALLBACK" = "true" ]; then ARGS="$ARGS --no-fallback"; fi
+          echo "running: npm run ingest --$ARGS"
+          npm run ingest -- $ARGS
