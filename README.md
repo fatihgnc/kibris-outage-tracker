@@ -46,6 +46,16 @@ Cron-invoked standalone script, never a Next.js route. Add `--dry-run` to parse
 without writing, `--no-fallback` to skip the LLM stage, or an adapter id to run
 just one source. `npm run backfill` walks the outlets' archives for history.
 
+Parsing runs rules first (SPEC §10.4) and only falls back to a language model
+for announcements the rules cannot fully parse. That second stage works with
+either **OpenAI** (`OPENAI_API_KEY`) or **Anthropic** (`ANTHROPIC_API_KEY`) —
+set whichever you have, and `LLM_MODEL` if your account lacks the default.
+With neither set, the stage is skipped and unparsed announcements go to
+`review_queue` with their raw text; nothing is ever silently dropped. Whatever
+the model returns is validated against a schema, place names are re-matched
+against `data/places.json`, and the resulting records are marked
+`confidence: low` and show as "unverified" on the card.
+
 Sources: `kibtek` (the utility) plus `yeniduzen`, `kibrispostasi`,
 `detaykibris`, `gundemkibris`, and `kibrisgazetesi`. A single outage typically
 arrives five or six times, so `ingest/dedupe.ts` collapses duplicates — taking

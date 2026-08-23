@@ -10,8 +10,73 @@ import { matchPlaces } from './places';
 // exists to catch the tail, not to do the work. Results are marked
 // confidence: 'low' and the response is validated before it is trusted.
 
-const MODEL = 'claude-sonnet-5';
-const API_URL = 'https://api.anthropic.com/v1/messages';
+// Either provider can drive Stage 2 — whichever key is present. Only the
+// request shape and where the text sits in the response differ; validation,
+// place matching and record building below are identical either way.
+type Provider = {
+  name: 'openai' | 'anthropic';
+  url: string;
+  headers: Record<string, string>;
+  body: Record<string, unknown>;
+  extract(payload: unknown): string;
+};
+
+// Overridable, because model availability differs per account.
+const OPENAI_MODEL = process.env.LLM_MODEL ?? 'gpt-4o-mini';
+const ANTHROPIC_MODEL = process.env.LLM_MODEL ?? 'claude-sonnet-5';
+
+export function selectProvider(system: string, user: string): Provider | null {
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey) {
+    return {
+      name: 'openai',
+      url: 'https://api.openai.com/v1/chat/completions',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${openaiKey}` },
+      body: {
+        model: OPENAI_MODEL,
+        max_completion_tokens: 1024,
+        // The system prompt already demands a JSON object, which this enforces.
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      },
+      extract: (payload) => {
+        const choices = (payload as { choices?: { message?: { content?: string } }[] }).choices ?? [];
+        return choices[0]?.message?.content ?? '';
+      },
+    };
+  }
+
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (anthropicKey) {
+    return {
+      name: 'anthropic',
+      url: 'https://api.anthropic.com/v1/messages',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: {
+        model: ANTHROPIC_MODEL,
+        max_tokens: 1024,
+        system,
+        messages: [{ role: 'user', content: user }],
+      },
+      extract: (payload) => {
+        const blocks = (payload as { content?: { type: string; text?: string }[] }).content ?? [];
+        return blocks
+          .filter((block) => block.type === 'text')
+          .map((block) => block.text ?? '')
+          .join('');
+      },
+    };
+  }
+
+  return null;
+}
 
 const SYSTEM_PROMPT = `You extract structured facts from Turkish electricity outage announcements from Northern Cyprus.
 
@@ -36,36 +101,29 @@ type FallbackOutage = {
 export type FallbackResult = { records: Outage[]; cancellation: boolean };
 
 export async function runFallback(announcement: RawAnnouncement): Promise<FallbackResult | null> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
-
   const publishedDate = announcement.publishedAt.slice(0, 10);
   const userText = `Publication date: ${publishedDate}\n\nTitle: ${announcement.title}\n\nBody:\n${announcement.body.slice(0, 6000)}`;
 
+  // No key configured: Stage 2 is simply skipped and the announcement goes to
+  // the review queue with its raw text. It is never silently dropped.
+  const provider = selectProvider(SYSTEM_PROMPT, userText);
+  if (!provider) return null;
+
   let raw: string;
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch(provider.url, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userText }],
-      }),
+      headers: provider.headers,
+      body: JSON.stringify(provider.body),
       signal: AbortSignal.timeout(30000),
     });
-    if (!response.ok) return null;
-    const payload = (await response.json()) as { content?: { type: string; text?: string }[] };
-    raw = (payload.content ?? [])
-      .filter((block) => block.type === 'text')
-      .map((block) => block.text ?? '')
-      .join('');
-  } catch {
+    if (!response.ok) {
+      console.warn(`[fallback] ${provider.name} returned ${response.status} for ${announcement.source.url}`);
+      return null;
+    }
+    raw = provider.extract(await response.json());
+  } catch (error) {
+    console.warn(`[fallback] ${provider.name} request failed: ${(error as Error).message}`);
     return null;
   }
 

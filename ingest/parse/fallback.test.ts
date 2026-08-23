@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { validate } from './fallback';
+import { selectProvider, validate } from './fallback';
 
 // The fallback's output is never trusted on shape: it is validated against the
 // expected schema before any of it is accepted (§10.4).
@@ -53,4 +53,76 @@ test('keeps the valid entries and drops the invalid ones in a mixed response', (
   );
   assert.equal(parsed?.length, 1);
   assert.equal(parsed![0].areas[0], 'Girne');
+});
+
+// Stage 2 runs on whichever provider is configured. Only the request shape
+// differs; everything validate() does afterwards is identical either way.
+// process.env coerces an assigned undefined to the string "undefined", which
+// is truthy — so an unset key has to be deleted, not assigned.
+function withEnv(env: Record<string, string | undefined>, run: () => void): void {
+  const saved = new Map(Object.keys(env).map((key) => [key, process.env[key]]));
+  const apply = (key: string, value: string | undefined) => {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  };
+  for (const [key, value] of Object.entries(env)) apply(key, value);
+  try {
+    run();
+  } finally {
+    for (const [key, value] of saved) apply(key, value);
+  }
+}
+
+test('no key configured means Stage 2 is skipped, not failed', () => {
+  withEnv({ OPENAI_API_KEY: undefined, ANTHROPIC_API_KEY: undefined }, () => {
+    assert.equal(selectProvider('sys', 'user'), null);
+  });
+});
+
+test('an OpenAI key builds a chat-completions request in JSON mode', () => {
+  withEnv({ OPENAI_API_KEY: 'sk-test', ANTHROPIC_API_KEY: undefined }, () => {
+    const provider = selectProvider('sys', 'user')!;
+    assert.equal(provider.name, 'openai');
+    assert.match(provider.url, /api\.openai\.com/);
+    assert.equal(provider.headers.authorization, 'Bearer sk-test');
+    const body = provider.body as Record<string, unknown>;
+    assert.deepEqual(body.response_format, { type: 'json_object' });
+    assert.deepEqual(body.messages, [
+      { role: 'system', content: 'sys' },
+      { role: 'user', content: 'user' },
+    ]);
+  });
+});
+
+test('an Anthropic key builds a messages request with a top-level system', () => {
+  withEnv({ OPENAI_API_KEY: undefined, ANTHROPIC_API_KEY: 'sk-ant-test' }, () => {
+    const provider = selectProvider('sys', 'user')!;
+    assert.equal(provider.name, 'anthropic');
+    assert.match(provider.url, /api\.anthropic\.com/);
+    assert.equal(provider.headers['x-api-key'], 'sk-ant-test');
+    const body = provider.body as Record<string, unknown>;
+    assert.equal(body.system, 'sys');
+    assert.deepEqual(body.messages, [{ role: 'user', content: 'user' }]);
+  });
+});
+
+test('OpenAI wins when both keys are present', () => {
+  withEnv({ OPENAI_API_KEY: 'sk-test', ANTHROPIC_API_KEY: 'sk-ant-test' }, () => {
+    assert.equal(selectProvider('sys', 'user')!.name, 'openai');
+  });
+});
+
+// Each provider puts the answer in a different place; both must reach validate.
+test('each provider extracts the model text from its own response shape', () => {
+  const json = '{"outages":[]}';
+  withEnv({ OPENAI_API_KEY: 'sk-test', ANTHROPIC_API_KEY: undefined }, () => {
+    const provider = selectProvider('s', 'u')!;
+    assert.equal(provider.extract({ choices: [{ message: { content: json } }] }), json);
+    assert.equal(provider.extract({}), '');
+  });
+  withEnv({ OPENAI_API_KEY: undefined, ANTHROPIC_API_KEY: 'sk-ant-test' }, () => {
+    const provider = selectProvider('s', 'u')!;
+    assert.equal(provider.extract({ content: [{ type: 'text', text: json }] }), json);
+    assert.equal(provider.extract({ content: [{ type: 'thinking' }] }), '');
+  });
 });
