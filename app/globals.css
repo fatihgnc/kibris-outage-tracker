@@ -1,26 +1,98 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * The full color set (§2.1). Do not introduce colors outside it; no gradients.
+ * Surfaced to Tailwind (bg-night, text-lamp, border-dark, ...) via @theme.
+ */
+@theme {
+  --color-night: #0b1220;
+  --color-lamp: #f5c86b;
+  --color-dark: #2a3446;
+  --color-fault: #e5573f;
+  --color-text: #c9d1dc;
+  --color-muted: #7c8699;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-public-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* The five-step type scale (§2.2). Do not add intermediate sizes. */
+  --text-display: clamp(30px, 6.4vw, 48px);
+  --text-display--line-height: 1.16;
+  --text-h2: 24px;
+  --text-h2--line-height: 32px;
+  --text-body: 16px;
+  --text-body--line-height: 26px;
+  --text-small: 14px;
+  --text-small--line-height: 22px;
+  --text-meta: 13px;
+  --text-meta--line-height: 18px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-night);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-night);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-lamp);
+  color: var(--color-night);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-lamp);
+  outline-offset: 2px;
+}
+
+/* Optical size steps for the Fraunces variable axis. */
+.opsz-120 {
+  font-variation-settings: "opsz" 120;
+}
+.opsz-40 {
+  font-variation-settings: "opsz" 40;
+}
+.opsz-24 {
+  font-variation-settings: "opsz" 24;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* The one animation on the site: map points igniting west to east, then the
+ * points under an outage fading back to dark (§3.5). */
+@keyframes ignite {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes extinguish {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-anim {
+    animation: none !important;
+  }
 }
