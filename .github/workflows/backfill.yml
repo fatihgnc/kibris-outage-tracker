@@ -1,0 +1,63 @@
+name: backfill
+
+# One-off historical walk (SPEC §10.8). Six months of history makes the archive
+# and the twelve-month chart meaningful from launch instead of a year from now.
+#
+# Manual only — this is not something to run on a timer. It reads each outlet's
+# sitemap, which is large, and the upserts are idempotent so a repeat run
+# updates rather than duplicates.
+
+on:
+  workflow_dispatch:
+    inputs:
+      months:
+        description: 'How far back to walk'
+        required: false
+        default: '6'
+        type: string
+      per_source:
+        description: 'Cap on articles fetched per outlet'
+        required: false
+        default: '45'
+        type: string
+      dry_run:
+        description: 'Parse and report without writing to the database'
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: backfill
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    # Generous: this fetches hundreds of articles with a polite delay between
+    # each one.
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run backfill
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          INGEST_CONTACT: ${{ secrets.INGEST_CONTACT }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MONTHS: ${{ inputs.months }}
+          PER_SOURCE: ${{ inputs.per_source }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          ARGS="--months ${MONTHS:-6} --per-source ${PER_SOURCE:-45}"
+          if [ "$DRY_RUN" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          echo "running: npm run backfill -- $ARGS"
+          npm run backfill -- $ARGS
