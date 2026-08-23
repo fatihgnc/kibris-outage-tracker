@@ -1,78 +1,1542 @@
 {
   "$comment": "Canonical place list for the ingest parser (SPEC §10.4). `name` is the real Turkish spelling used for display; `aliases` cover the spellings that appear in announcements and press articles — ASCII-folded forms, all-caps forms with Turkish characters dropped, historical names, and common misspellings. Parsing quality is capped by this file.",
   "places": [
-    { "name": "Lefkoşa", "district": "lefkosa", "aliases": ["Lefkosa", "LEFKOSA", "Nicosia", "Lefkoşa Merkez"] },
-    { "name": "Gönyeli", "district": "lefkosa", "aliases": ["Gonyeli", "GONYELI"] },
-    { "name": "Hamitköy", "district": "lefkosa", "aliases": ["Hamitkoy", "Hamit Köy", "HAMITKOY"] },
-    { "name": "Alayköy", "district": "lefkosa", "aliases": ["Alaykoy", "ALAYKOY"] },
-    { "name": "Haspolat", "district": "lefkosa", "aliases": ["HASPOLAT", "Mia Milia"] },
-    { "name": "Değirmenlik", "district": "lefkosa", "aliases": ["Degirmenlik", "DEGIRMENLIK", "Kythrea"] },
-    { "name": "Kanlıköy", "district": "lefkosa", "aliases": ["Kanlikoy", "Kanlı Köy"] },
-    { "name": "Yılmazköy", "district": "lefkosa", "aliases": ["Yilmazkoy", "YILMAZKOY"] },
-    { "name": "Akıncılar", "district": "lefkosa", "aliases": ["Akincilar", "AKINCILAR"] },
-    { "name": "Ulukışla", "district": "lefkosa", "aliases": ["Ulukisla", "ULUKISLA"] },
-    { "name": "Gökhan", "district": "lefkosa", "aliases": ["Gokhan"] },
-    { "name": "Balıkesir", "district": "lefkosa", "aliases": ["Balikesir"] },
-    { "name": "Meriç", "district": "lefkosa", "aliases": ["Meric"] },
-    { "name": "Düzova", "district": "lefkosa", "aliases": ["Duzova"] },
-    { "name": "Girne", "district": "girne", "aliases": ["GIRNE", "Kyrenia", "Girne Merkez"] },
-    { "name": "Lapta", "district": "girne", "aliases": ["LAPTA", "Lapithos"] },
-    { "name": "Alsancak", "district": "girne", "aliases": ["ALSANCAK", "Karavas"] },
-    { "name": "Karaoğlanoğlu", "district": "girne", "aliases": ["Karaoglanoglu", "KARAOGLANOGLU"] },
-    { "name": "Çatalköy", "district": "girne", "aliases": ["Catalkoy", "CATALKOY"] },
-    { "name": "Ozanköy", "district": "girne", "aliases": ["Ozankoy", "OZANKOY"] },
-    { "name": "Karaman", "district": "girne", "aliases": ["KARAMAN", "Karmi"] },
-    { "name": "Karşıyaka", "district": "girne", "aliases": ["Karsiyaka", "KARSIYAKA"] },
-    { "name": "Esentepe", "district": "girne", "aliases": ["ESENTEPE"] },
-    { "name": "Lapta Yolu", "district": "girne", "aliases": ["Lapta yolu"] },
-    { "name": "Zeytinlik", "district": "girne", "aliases": ["ZEYTINLIK"] },
-    { "name": "Boğaz", "district": "girne", "aliases": ["Bogaz", "BOGAZ", "Boğaz Girne"] },
-    { "name": "Sütlüce", "district": "girne", "aliases": ["Sutluce", "SUTLUCE"] },
-    { "name": "Bahçeli", "district": "girne", "aliases": ["Bahceli", "BAHCELI"] },
-    { "name": "Tatlısu", "district": "iskele", "aliases": ["Tatlisu", "TATLISU"] },
-    { "name": "Gazimağusa", "district": "gazimagusa", "aliases": ["Gazimagusa", "Mağusa", "Magusa", "GAZI MAGOSA", "Famagusta", "GAZIMAGUSA"] },
-    { "name": "Yeniboğaziçi", "district": "gazimagusa", "aliases": ["Yenibogazici", "YENIBOGAZICI"] },
-    { "name": "Mutluyaka", "district": "gazimagusa", "aliases": ["MUTLUYAKA"] },
-    { "name": "Akdoğan", "district": "gazimagusa", "aliases": ["Akdogan", "AKDOGAN", "Lysi"] },
-    { "name": "Beyarmudu", "district": "gazimagusa", "aliases": ["BEYARMUDU", "Pergamos"] },
-    { "name": "Serdarlı", "district": "gazimagusa", "aliases": ["Serdarli", "SERDARLI"] },
-    { "name": "Geçitkale", "district": "gazimagusa", "aliases": ["Gecitkale", "GECITKALE"] },
-    { "name": "Paşaköy", "district": "gazimagusa", "aliases": ["Pasakoy", "PASAKOY"] },
-    { "name": "Gönendere", "district": "gazimagusa", "aliases": ["Gonendere", "GONENDERE"] },
-    { "name": "Tirmen", "district": "gazimagusa", "aliases": ["TIRMEN"] },
-    { "name": "Ergenekon", "district": "gazimagusa", "aliases": ["ERGENEKON"] },
-    { "name": "Vadili", "district": "gazimagusa", "aliases": ["VADILI"] },
-    { "name": "Dörtyol", "district": "gazimagusa", "aliases": ["Dortyol", "DORTYOL"] },
-    { "name": "İnönü", "district": "gazimagusa", "aliases": ["Inonu", "INONU"] },
-    { "name": "Güzelyurt", "district": "guzelyurt", "aliases": ["Guzelyurt", "GUZELYURT", "Morphou", "Omorfo"] },
-    { "name": "Zümrütköy", "district": "guzelyurt", "aliases": ["Zumrutkoy", "ZUMRUTKOY"] },
-    { "name": "Kalkanlı", "district": "guzelyurt", "aliases": ["Kalkanli", "KALKANLI"] },
-    { "name": "Yayla", "district": "guzelyurt", "aliases": ["YAYLA"] },
-    { "name": "Gaziveren", "district": "guzelyurt", "aliases": ["GAZIVEREN"] },
-    { "name": "Bostancı", "district": "guzelyurt", "aliases": ["Bostanci", "BOSTANCI"] },
-    { "name": "Aydınköy", "district": "guzelyurt", "aliases": ["Aydinkoy", "AYDINKOY"] },
-    { "name": "Serhatköy", "district": "guzelyurt", "aliases": ["Serhatkoy", "SERHATKOY"] },
-    { "name": "Akçay", "district": "guzelyurt", "aliases": ["Akcay", "AKCAY"] },
-    { "name": "Lefke", "district": "lefke", "aliases": ["LEFKE"] },
-    { "name": "Yeşilyurt", "district": "lefke", "aliases": ["Yesilyurt", "YESILYURT"] },
-    { "name": "Gemikonağı", "district": "lefke", "aliases": ["Gemikonagi", "GEMIKONAGI", "Karavostasi"] },
-    { "name": "Doğancı", "district": "lefke", "aliases": ["Doganci", "DOGANCI"] },
-    { "name": "Cengizköy", "district": "lefke", "aliases": ["Cengizkoy", "CENGIZKOY"] },
-    { "name": "Bağlıköy", "district": "lefke", "aliases": ["Baglikoy", "BAGLIKOY"] },
-    { "name": "Yedidalga", "district": "lefke", "aliases": ["YEDIDALGA"] },
-    { "name": "İskele", "district": "iskele", "aliases": ["Iskele", "ISKELE", "Trikomo"] },
-    { "name": "Yeni Erenköy", "district": "iskele", "aliases": ["Yeni Erenkoy", "YENI ERENKOY", "Yenierenköy", "Yenierenkoy"] },
-    { "name": "Dipkarpaz", "district": "iskele", "aliases": ["DIPKARPAZ", "Rizokarpaso"] },
-    { "name": "Kumyalı", "district": "iskele", "aliases": ["Kumyali", "KUMYALI"] },
-    { "name": "Boğaztepe", "district": "iskele", "aliases": ["Bogaztepe", "BOGAZTEPE"] },
-    { "name": "Büyükkonuk", "district": "iskele", "aliases": ["Buyukkonuk", "BUYUKKONUK"] },
-    { "name": "Bafra", "district": "iskele", "aliases": ["BAFRA"] },
-    { "name": "Pınarlı", "district": "iskele", "aliases": ["Pinarli", "PINARLI"] },
-    { "name": "Ziyamet", "district": "iskele", "aliases": ["ZIYAMET"] },
-    { "name": "Mehmetçik", "district": "iskele", "aliases": ["Mehmetcik", "MEHMETCIK"] },
-    { "name": "Çayırova", "district": "iskele", "aliases": ["Cayirova", "CAYIROVA"] },
-    { "name": "Balalan", "district": "iskele", "aliases": ["BALALAN"] },
-    { "name": "Sipahi", "district": "iskele", "aliases": ["SIPAHI"] },
-    { "name": "Kaplıca", "district": "iskele", "aliases": ["Kaplica", "KAPLICA"] }
+    {
+      "name": "Akdoğan",
+      "district": "gazimagusa",
+      "aliases": [
+        "Akdogan",
+        "AKDOGAN",
+        "Lysi"
+      ]
+    },
+    {
+      "name": "Akova",
+      "district": "gazimagusa",
+      "aliases": [
+        "AKOVA"
+      ]
+    },
+    {
+      "name": "Alaniçi",
+      "district": "gazimagusa",
+      "aliases": [
+        "ALANICI",
+        "ALANIÇI",
+        "Alanici"
+      ]
+    },
+    {
+      "name": "Arıdamı",
+      "district": "gazimagusa",
+      "aliases": [
+        "ARIDAMI",
+        "Aridami"
+      ]
+    },
+    {
+      "name": "Atlılar",
+      "district": "gazimagusa",
+      "aliases": [
+        "ATLILAR",
+        "Atlilar"
+      ]
+    },
+    {
+      "name": "Beyarmudu",
+      "district": "gazimagusa",
+      "aliases": [
+        "BEYARMUDU",
+        "Pergamos"
+      ]
+    },
+    {
+      "name": "Dörtyol",
+      "district": "gazimagusa",
+      "aliases": [
+        "Dortyol",
+        "DORTYOL"
+      ]
+    },
+    {
+      "name": "Düzce",
+      "district": "gazimagusa",
+      "aliases": [
+        "DUZCE",
+        "Duzce",
+        "DÜZCE"
+      ]
+    },
+    {
+      "name": "Ergenekon",
+      "district": "gazimagusa",
+      "aliases": [
+        "ERGENEKON"
+      ]
+    },
+    {
+      "name": "Gazimağusa",
+      "district": "gazimagusa",
+      "aliases": [
+        "Gazimagusa",
+        "Mağusa",
+        "Magusa",
+        "GAZI MAGOSA",
+        "Famagusta",
+        "GAZIMAGUSA"
+      ]
+    },
+    {
+      "name": "Geçitkale",
+      "district": "gazimagusa",
+      "aliases": [
+        "Gecitkale",
+        "GECITKALE"
+      ]
+    },
+    {
+      "name": "Gönendere",
+      "district": "gazimagusa",
+      "aliases": [
+        "Gonendere",
+        "GONENDERE"
+      ]
+    },
+    {
+      "name": "Görneç",
+      "district": "gazimagusa",
+      "aliases": [
+        "GORNEC",
+        "Gornec",
+        "GÖRNEÇ"
+      ]
+    },
+    {
+      "name": "Güvercinlik",
+      "district": "gazimagusa",
+      "aliases": [
+        "GUVERCINLIK",
+        "Guvercinlik",
+        "GÜVERCINLIK"
+      ]
+    },
+    {
+      "name": "Kurudere",
+      "district": "gazimagusa",
+      "aliases": [
+        "KURUDERE"
+      ]
+    },
+    {
+      "name": "Köprülü",
+      "district": "gazimagusa",
+      "aliases": [
+        "KOPRULU",
+        "Koprulu",
+        "KÖPRÜLÜ"
+      ]
+    },
+    {
+      "name": "Mallıdağ",
+      "district": "gazimagusa",
+      "aliases": [
+        "MALLIDAG",
+        "MALLIDAĞ",
+        "Mallidag"
+      ]
+    },
+    {
+      "name": "Maraş",
+      "district": "gazimagusa",
+      "aliases": [
+        "MARAS",
+        "MARAŞ",
+        "Maras"
+      ]
+    },
+    {
+      "name": "Mormenekşe",
+      "district": "gazimagusa",
+      "aliases": [
+        "MORMENEKSE",
+        "MORMENEKŞE",
+        "Mormenekse"
+      ]
+    },
+    {
+      "name": "Muratağa",
+      "district": "gazimagusa",
+      "aliases": [
+        "MURATAGA",
+        "MURATAĞA",
+        "Murataga"
+      ]
+    },
+    {
+      "name": "Mutluyaka",
+      "district": "gazimagusa",
+      "aliases": [
+        "MUTLUYAKA"
+      ]
+    },
+    {
+      "name": "Nergisli",
+      "district": "gazimagusa",
+      "aliases": [
+        "NERGISLI"
+      ]
+    },
+    {
+      "name": "Paşaköy",
+      "district": "gazimagusa",
+      "aliases": [
+        "Pasakoy",
+        "PASAKOY"
+      ]
+    },
+    {
+      "name": "Sandallar",
+      "district": "gazimagusa",
+      "aliases": [
+        "SANDALLAR"
+      ]
+    },
+    {
+      "name": "Serdarlı",
+      "district": "gazimagusa",
+      "aliases": [
+        "Serdarli",
+        "SERDARLI"
+      ]
+    },
+    {
+      "name": "Suriçi",
+      "district": "gazimagusa",
+      "aliases": [
+        "SURICI",
+        "SURIÇI",
+        "Surici"
+      ]
+    },
+    {
+      "name": "Tirmen",
+      "district": "gazimagusa",
+      "aliases": [
+        "TIRMEN"
+      ]
+    },
+    {
+      "name": "Tuzla",
+      "district": "gazimagusa",
+      "aliases": [
+        "TUZLA"
+      ]
+    },
+    {
+      "name": "Türkmenköy",
+      "district": "gazimagusa",
+      "aliases": [
+        "TURKMENKOY",
+        "Turkmenkoy",
+        "TÜRKMENKÖY"
+      ]
+    },
+    {
+      "name": "Vadili",
+      "district": "gazimagusa",
+      "aliases": [
+        "VADILI"
+      ]
+    },
+    {
+      "name": "Yamaçköy",
+      "district": "gazimagusa",
+      "aliases": [
+        "YAMACKOY",
+        "YAMAÇKÖY",
+        "Yamackoy"
+      ]
+    },
+    {
+      "name": "Yeniboğaziçi",
+      "district": "gazimagusa",
+      "aliases": [
+        "Yenibogazici",
+        "YENIBOGAZICI"
+      ]
+    },
+    {
+      "name": "Yiğitler",
+      "district": "gazimagusa",
+      "aliases": [
+        "YIGITLER",
+        "YIĞITLER",
+        "Yigitler"
+      ]
+    },
+    {
+      "name": "Yıldırım",
+      "district": "gazimagusa",
+      "aliases": [
+        "YILDIRIM",
+        "Yildirim"
+      ]
+    },
+    {
+      "name": "Çamlıca",
+      "district": "gazimagusa",
+      "aliases": [
+        "CAMLICA",
+        "Camlica",
+        "ÇAMLICA"
+      ]
+    },
+    {
+      "name": "Çınarlı",
+      "district": "gazimagusa",
+      "aliases": [
+        "CINARLI",
+        "Cinarli",
+        "ÇINARLI"
+      ]
+    },
+    {
+      "name": "İncirli",
+      "district": "gazimagusa",
+      "aliases": [
+        "INCIRLI",
+        "Incirli",
+        "İNCIRLI"
+      ]
+    },
+    {
+      "name": "İnönü",
+      "district": "gazimagusa",
+      "aliases": [
+        "Inonu",
+        "INONU"
+      ]
+    },
+    {
+      "name": "Akdeniz",
+      "district": "girne",
+      "aliases": [
+        "AKDENIZ"
+      ]
+    },
+    {
+      "name": "Alevkayası",
+      "district": "girne",
+      "aliases": [
+        "ALEVKAYASI",
+        "Alevkayasi"
+      ]
+    },
+    {
+      "name": "Alsancak",
+      "district": "girne",
+      "aliases": [
+        "ALSANCAK",
+        "Karavas"
+      ]
+    },
+    {
+      "name": "Arapköy",
+      "district": "girne",
+      "aliases": [
+        "ARAPKOY",
+        "ARAPKÖY",
+        "Arapkoy"
+      ]
+    },
+    {
+      "name": "Bahçeli",
+      "district": "girne",
+      "aliases": [
+        "Bahceli",
+        "BAHCELI"
+      ]
+    },
+    {
+      "name": "Boğaz",
+      "district": "girne",
+      "aliases": [
+        "Bogaz",
+        "BOGAZ",
+        "Boğaz Girne"
+      ]
+    },
+    {
+      "name": "Doğanköy",
+      "district": "girne",
+      "aliases": [
+        "DOGANKOY",
+        "DOĞANKÖY",
+        "Dogankoy"
+      ]
+    },
+    {
+      "name": "Edremit",
+      "district": "girne",
+      "aliases": [
+        "EDREMIT"
+      ]
+    },
+    {
+      "name": "Esentepe",
+      "district": "girne",
+      "aliases": [
+        "ESENTEPE"
+      ]
+    },
+    {
+      "name": "Geçitköy",
+      "district": "girne",
+      "aliases": [
+        "GECITKOY",
+        "GEÇITKÖY",
+        "Gecitkoy"
+      ]
+    },
+    {
+      "name": "Girne",
+      "district": "girne",
+      "aliases": [
+        "GIRNE",
+        "Kyrenia",
+        "Girne Merkez"
+      ]
+    },
+    {
+      "name": "Ilgaz",
+      "district": "girne",
+      "aliases": [
+        "ILGAZ"
+      ]
+    },
+    {
+      "name": "Karaağaç",
+      "district": "girne",
+      "aliases": [
+        "KARAAGAC",
+        "KARAAĞAÇ",
+        "Karaagac"
+      ]
+    },
+    {
+      "name": "Karakum",
+      "district": "girne",
+      "aliases": [
+        "KARAKUM"
+      ]
+    },
+    {
+      "name": "Karaman",
+      "district": "girne",
+      "aliases": [
+        "KARAMAN",
+        "Karmi"
+      ]
+    },
+    {
+      "name": "Karaoğlanoğlu",
+      "district": "girne",
+      "aliases": [
+        "Karaoglanoglu",
+        "KARAOGLANOGLU"
+      ]
+    },
+    {
+      "name": "Karpaşa",
+      "district": "girne",
+      "aliases": [
+        "KARPASA",
+        "KARPAŞA",
+        "Karpasa"
+      ]
+    },
+    {
+      "name": "Karşıyaka",
+      "district": "girne",
+      "aliases": [
+        "Karsiyaka",
+        "KARSIYAKA"
+      ]
+    },
+    {
+      "name": "Kayalar",
+      "district": "girne",
+      "aliases": [
+        "KAYALAR"
+      ]
+    },
+    {
+      "name": "Lapta",
+      "district": "girne",
+      "aliases": [
+        "LAPTA",
+        "Lapithos"
+      ]
+    },
+    {
+      "name": "Lapta Yolu",
+      "district": "girne",
+      "aliases": [
+        "Lapta yolu"
+      ]
+    },
+    {
+      "name": "Malatya",
+      "district": "girne",
+      "aliases": [
+        "MALATYA"
+      ]
+    },
+    {
+      "name": "Ozanköy",
+      "district": "girne",
+      "aliases": [
+        "Ozankoy",
+        "OZANKOY"
+      ]
+    },
+    {
+      "name": "Sadrazamköy",
+      "district": "girne",
+      "aliases": [
+        "SADRAZAMKOY",
+        "SADRAZAMKÖY",
+        "Sadrazamkoy"
+      ]
+    },
+    {
+      "name": "Sütlüce",
+      "district": "girne",
+      "aliases": [
+        "Sutluce",
+        "SUTLUCE"
+      ]
+    },
+    {
+      "name": "Tepebaşı",
+      "district": "girne",
+      "aliases": [
+        "TEPEBASI",
+        "TEPEBAŞI",
+        "Tepebasi"
+      ]
+    },
+    {
+      "name": "Yeşiltepe",
+      "district": "girne",
+      "aliases": [
+        "YESILTEPE",
+        "YEŞILTEPE",
+        "Yesiltepe"
+      ]
+    },
+    {
+      "name": "Zeytinlik",
+      "district": "girne",
+      "aliases": [
+        "ZEYTINLIK"
+      ]
+    },
+    {
+      "name": "Çamlıbel",
+      "district": "girne",
+      "aliases": [
+        "CAMLIBEL",
+        "Camlibel",
+        "ÇAMLIBEL"
+      ]
+    },
+    {
+      "name": "Çatalköy",
+      "district": "girne",
+      "aliases": [
+        "Catalkoy",
+        "CATALKOY"
+      ]
+    },
+    {
+      "name": "Akçay",
+      "district": "guzelyurt",
+      "aliases": [
+        "Akcay",
+        "AKCAY"
+      ]
+    },
+    {
+      "name": "Aydınköy",
+      "district": "guzelyurt",
+      "aliases": [
+        "Aydinkoy",
+        "AYDINKOY"
+      ]
+    },
+    {
+      "name": "Aşağı Bostancı",
+      "district": "guzelyurt",
+      "aliases": [
+        "ASAGI BOSTANCI",
+        "Asagi Bostanci",
+        "AŞAĞI BOSTANCI"
+      ]
+    },
+    {
+      "name": "Bostancı",
+      "district": "guzelyurt",
+      "aliases": [
+        "Bostanci",
+        "BOSTANCI"
+      ]
+    },
+    {
+      "name": "Gayretköy",
+      "district": "guzelyurt",
+      "aliases": [
+        "GAYRETKOY",
+        "GAYRETKÖY",
+        "Gayretkoy"
+      ]
+    },
+    {
+      "name": "Gaziveren",
+      "district": "guzelyurt",
+      "aliases": [
+        "GAZIVEREN"
+      ]
+    },
+    {
+      "name": "Güneşköy",
+      "district": "guzelyurt",
+      "aliases": [
+        "GUNESKOY",
+        "Guneskoy",
+        "GÜNEŞKÖY"
+      ]
+    },
+    {
+      "name": "Güzelyurt",
+      "district": "guzelyurt",
+      "aliases": [
+        "Guzelyurt",
+        "GUZELYURT",
+        "Morphou",
+        "Omorfo"
+      ]
+    },
+    {
+      "name": "Kalkanlı",
+      "district": "guzelyurt",
+      "aliases": [
+        "Kalkanli",
+        "KALKANLI"
+      ]
+    },
+    {
+      "name": "Mevlevi",
+      "district": "guzelyurt",
+      "aliases": [
+        "MEVLEVI"
+      ]
+    },
+    {
+      "name": "Serhatköy",
+      "district": "guzelyurt",
+      "aliases": [
+        "Serhatkoy",
+        "SERHATKOY"
+      ]
+    },
+    {
+      "name": "Yayla",
+      "district": "guzelyurt",
+      "aliases": [
+        "YAYLA"
+      ]
+    },
+    {
+      "name": "Yukarı Bostancı",
+      "district": "guzelyurt",
+      "aliases": [
+        "YUKARI BOSTANCI",
+        "Yukari Bostanci"
+      ]
+    },
+    {
+      "name": "Yuvacık",
+      "district": "guzelyurt",
+      "aliases": [
+        "YUVACIK",
+        "Yuvacik"
+      ]
+    },
+    {
+      "name": "Zümrütköy",
+      "district": "guzelyurt",
+      "aliases": [
+        "Zumrutkoy",
+        "ZUMRUTKOY"
+      ]
+    },
+    {
+      "name": "Şahinler",
+      "district": "guzelyurt",
+      "aliases": [
+        "SAHINLER",
+        "Sahinler",
+        "ŞAHINLER"
+      ]
+    },
+    {
+      "name": "Adaçay",
+      "district": "iskele",
+      "aliases": [
+        "ADACAY",
+        "ADAÇAY",
+        "Adacay"
+      ]
+    },
+    {
+      "name": "Altınova",
+      "district": "iskele",
+      "aliases": [
+        "ALTINOVA",
+        "Altinova"
+      ]
+    },
+    {
+      "name": "Ardahan",
+      "district": "iskele",
+      "aliases": [
+        "ARDAHAN"
+      ]
+    },
+    {
+      "name": "Aslanköy",
+      "district": "iskele",
+      "aliases": [
+        "ASLANKOY",
+        "ASLANKÖY",
+        "Aslankoy"
+      ]
+    },
+    {
+      "name": "Avtepe",
+      "district": "iskele",
+      "aliases": [
+        "AVTEPE"
+      ]
+    },
+    {
+      "name": "Ağıllar",
+      "district": "iskele",
+      "aliases": [
+        "AGILLAR",
+        "Agillar",
+        "AĞILLAR"
+      ]
+    },
+    {
+      "name": "Bafra",
+      "district": "iskele",
+      "aliases": [
+        "BAFRA"
+      ]
+    },
+    {
+      "name": "Bahçeler",
+      "district": "iskele",
+      "aliases": [
+        "BAHCELER",
+        "BAHÇELER",
+        "Bahceler"
+      ]
+    },
+    {
+      "name": "Balalan",
+      "district": "iskele",
+      "aliases": [
+        "BALALAN"
+      ]
+    },
+    {
+      "name": "Boltaşlı",
+      "district": "iskele",
+      "aliases": [
+        "BOLTASLI",
+        "BOLTAŞLI",
+        "Boltasli"
+      ]
+    },
+    {
+      "name": "Boğaziçi",
+      "district": "iskele",
+      "aliases": [
+        "BOGAZICI",
+        "BOĞAZIÇI",
+        "Bogazici"
+      ]
+    },
+    {
+      "name": "Boğaztepe",
+      "district": "iskele",
+      "aliases": [
+        "Bogaztepe",
+        "BOGAZTEPE"
+      ]
+    },
+    {
+      "name": "Büyükkonuk",
+      "district": "iskele",
+      "aliases": [
+        "Buyukkonuk",
+        "BUYUKKONUK"
+      ]
+    },
+    {
+      "name": "Derince",
+      "district": "iskele",
+      "aliases": [
+        "DERINCE"
+      ]
+    },
+    {
+      "name": "Dipkarpaz",
+      "district": "iskele",
+      "aliases": [
+        "DIPKARPAZ",
+        "Rizokarpaso"
+      ]
+    },
+    {
+      "name": "Ergazi",
+      "district": "iskele",
+      "aliases": [
+        "ERGAZI"
+      ]
+    },
+    {
+      "name": "Esenköy",
+      "district": "iskele",
+      "aliases": [
+        "ESENKOY",
+        "ESENKÖY",
+        "Esenkoy"
+      ]
+    },
+    {
+      "name": "Gelincik",
+      "district": "iskele",
+      "aliases": [
+        "GELINCIK"
+      ]
+    },
+    {
+      "name": "Kaleburnu",
+      "district": "iskele",
+      "aliases": [
+        "KALEBURNU"
+      ]
+    },
+    {
+      "name": "Kalecik",
+      "district": "iskele",
+      "aliases": [
+        "KALECIK"
+      ]
+    },
+    {
+      "name": "Kantara",
+      "district": "iskele",
+      "aliases": [
+        "KANTARA"
+      ]
+    },
+    {
+      "name": "Kaplıca",
+      "district": "iskele",
+      "aliases": [
+        "Kaplica",
+        "KAPLICA"
+      ]
+    },
+    {
+      "name": "Kilitkaya",
+      "district": "iskele",
+      "aliases": [
+        "KILITKAYA"
+      ]
+    },
+    {
+      "name": "Kumyalı",
+      "district": "iskele",
+      "aliases": [
+        "Kumyali",
+        "KUMYALI"
+      ]
+    },
+    {
+      "name": "Kurtuluş",
+      "district": "iskele",
+      "aliases": [
+        "KURTULUS",
+        "KURTULUŞ",
+        "Kurtulus"
+      ]
+    },
+    {
+      "name": "Kuruova",
+      "district": "iskele",
+      "aliases": [
+        "KURUOVA"
+      ]
+    },
+    {
+      "name": "Kuzucuk",
+      "district": "iskele",
+      "aliases": [
+        "KUZUCUK"
+      ]
+    },
+    {
+      "name": "Mehmetçik",
+      "district": "iskele",
+      "aliases": [
+        "Mehmetcik",
+        "MEHMETCIK"
+      ]
+    },
+    {
+      "name": "Mersinlik",
+      "district": "iskele",
+      "aliases": [
+        "MERSINLIK"
+      ]
+    },
+    {
+      "name": "Pamuklu",
+      "district": "iskele",
+      "aliases": [
+        "PAMUKLU"
+      ]
+    },
+    {
+      "name": "Pirhan",
+      "district": "iskele",
+      "aliases": [
+        "PIRHAN"
+      ]
+    },
+    {
+      "name": "Pınarlı",
+      "district": "iskele",
+      "aliases": [
+        "Pinarli",
+        "PINARLI"
+      ]
+    },
+    {
+      "name": "Sazlıköy",
+      "district": "iskele",
+      "aliases": [
+        "SAZLIKOY",
+        "SAZLIKÖY",
+        "Sazlikoy"
+      ]
+    },
+    {
+      "name": "Sipahi",
+      "district": "iskele",
+      "aliases": [
+        "SIPAHI"
+      ]
+    },
+    {
+      "name": "Sınırüstü",
+      "district": "iskele",
+      "aliases": [
+        "SINIRUSTU",
+        "SINIRÜSTÜ",
+        "Sinirustu"
+      ]
+    },
+    {
+      "name": "Tatlısu",
+      "district": "iskele",
+      "aliases": [
+        "Tatlisu",
+        "TATLISU"
+      ]
+    },
+    {
+      "name": "Taşlıca",
+      "district": "iskele",
+      "aliases": [
+        "TASLICA",
+        "TAŞLICA",
+        "Taslica"
+      ]
+    },
+    {
+      "name": "Topçuköy",
+      "district": "iskele",
+      "aliases": [
+        "TOPCUKOY",
+        "TOPÇUKÖY",
+        "Topcukoy"
+      ]
+    },
+    {
+      "name": "Turnalar",
+      "district": "iskele",
+      "aliases": [
+        "TURNALAR"
+      ]
+    },
+    {
+      "name": "Turunçlu",
+      "district": "iskele",
+      "aliases": [
+        "TURUNCLU",
+        "TURUNÇLU",
+        "Turunclu"
+      ]
+    },
+    {
+      "name": "Tuzluca",
+      "district": "iskele",
+      "aliases": [
+        "TUZLUCA"
+      ]
+    },
+    {
+      "name": "Yarköy",
+      "district": "iskele",
+      "aliases": [
+        "YARKOY",
+        "YARKÖY",
+        "Yarkoy"
+      ]
+    },
+    {
+      "name": "Yedikonuk",
+      "district": "iskele",
+      "aliases": [
+        "YEDIKONUK"
+      ]
+    },
+    {
+      "name": "Yeni Erenköy",
+      "district": "iskele",
+      "aliases": [
+        "Yeni Erenkoy",
+        "YENI ERENKOY",
+        "Yenierenköy",
+        "Yenierenkoy"
+      ]
+    },
+    {
+      "name": "Yeşilköy",
+      "district": "iskele",
+      "aliases": [
+        "YESILKOY",
+        "YEŞILKÖY",
+        "Yesilkoy"
+      ]
+    },
+    {
+      "name": "Zeybekköy",
+      "district": "iskele",
+      "aliases": [
+        "ZEYBEKKOY",
+        "ZEYBEKKÖY",
+        "Zeybekkoy"
+      ]
+    },
+    {
+      "name": "Ziyamet",
+      "district": "iskele",
+      "aliases": [
+        "ZIYAMET"
+      ]
+    },
+    {
+      "name": "Çayırova",
+      "district": "iskele",
+      "aliases": [
+        "Cayirova",
+        "CAYIROVA"
+      ]
+    },
+    {
+      "name": "Ötüken",
+      "district": "iskele",
+      "aliases": [
+        "OTUKEN",
+        "Otuken",
+        "ÖTÜKEN"
+      ]
+    },
+    {
+      "name": "İskele",
+      "district": "iskele",
+      "aliases": [
+        "Iskele",
+        "ISKELE",
+        "Trikomo"
+      ]
+    },
+    {
+      "name": "Bademliköy",
+      "district": "lefke",
+      "aliases": [
+        "BADEMLIKOY",
+        "BADEMLIKÖY",
+        "Bademlikoy"
+      ]
+    },
+    {
+      "name": "Bağlıköy",
+      "district": "lefke",
+      "aliases": [
+        "Baglikoy",
+        "BAGLIKOY"
+      ]
+    },
+    {
+      "name": "Cengizköy",
+      "district": "lefke",
+      "aliases": [
+        "Cengizkoy",
+        "CENGIZKOY"
+      ]
+    },
+    {
+      "name": "Denizli",
+      "district": "lefke",
+      "aliases": [
+        "DENIZLI"
+      ]
+    },
+    {
+      "name": "Doğancı",
+      "district": "lefke",
+      "aliases": [
+        "Doganci",
+        "DOGANCI"
+      ]
+    },
+    {
+      "name": "Gemikonağı",
+      "district": "lefke",
+      "aliases": [
+        "Gemikonagi",
+        "GEMIKONAGI",
+        "Karavostasi"
+      ]
+    },
+    {
+      "name": "Günebakan",
+      "district": "lefke",
+      "aliases": [
+        "GUNEBAKAN",
+        "Gunebakan",
+        "GÜNEBAKAN"
+      ]
+    },
+    {
+      "name": "Lefke",
+      "district": "lefke",
+      "aliases": [
+        "LEFKE"
+      ]
+    },
+    {
+      "name": "Madenliköy",
+      "district": "lefke",
+      "aliases": [
+        "MADENLIKOY",
+        "MADENLIKÖY",
+        "Madenlikoy"
+      ]
+    },
+    {
+      "name": "Süleymaniye",
+      "district": "lefke",
+      "aliases": [
+        "SULEYMANIYE",
+        "Suleymaniye",
+        "SÜLEYMANIYE"
+      ]
+    },
+    {
+      "name": "Taşköy",
+      "district": "lefke",
+      "aliases": [
+        "TASKOY",
+        "TAŞKÖY",
+        "Taskoy"
+      ]
+    },
+    {
+      "name": "Taşpınar",
+      "district": "lefke",
+      "aliases": [
+        "TASPINAR",
+        "TAŞPINAR",
+        "Taspinar"
+      ]
+    },
+    {
+      "name": "Yedidalga",
+      "district": "lefke",
+      "aliases": [
+        "YEDIDALGA"
+      ]
+    },
+    {
+      "name": "Yeşilyurt",
+      "district": "lefke",
+      "aliases": [
+        "Yesilyurt",
+        "YESILYURT"
+      ]
+    },
+    {
+      "name": "Yeşilırmak",
+      "district": "lefke",
+      "aliases": [
+        "YESILIRMAK",
+        "YEŞILIRMAK",
+        "Yesilirmak"
+      ]
+    },
+    {
+      "name": "Yukarı Yeşilırmak",
+      "district": "lefke",
+      "aliases": [
+        "YUKARI YESILIRMAK",
+        "YUKARI YEŞILIRMAK",
+        "Yukari Yesilirmak"
+      ]
+    },
+    {
+      "name": "Çamlıköy",
+      "district": "lefke",
+      "aliases": [
+        "CAMLIKOY",
+        "Camlikoy",
+        "ÇAMLIKÖY"
+      ]
+    },
+    {
+      "name": "Ömerli",
+      "district": "lefke",
+      "aliases": [
+        "OMERLI",
+        "Omerli",
+        "ÖMERLI"
+      ]
+    },
+    {
+      "name": "Şirinköy",
+      "district": "lefke",
+      "aliases": [
+        "SIRINKOY",
+        "Sirinkoy",
+        "ŞIRINKÖY"
+      ]
+    },
+    {
+      "name": "Akıncılar",
+      "district": "lefkosa",
+      "aliases": [
+        "Akincilar",
+        "AKINCILAR"
+      ]
+    },
+    {
+      "name": "Alayköy",
+      "district": "lefkosa",
+      "aliases": [
+        "Alaykoy",
+        "ALAYKOY"
+      ]
+    },
+    {
+      "name": "Balıkesir",
+      "district": "lefkosa",
+      "aliases": [
+        "Balikesir"
+      ]
+    },
+    {
+      "name": "Başpınar",
+      "district": "lefkosa",
+      "aliases": [
+        "BASPINAR",
+        "BAŞPINAR",
+        "Baspinar"
+      ]
+    },
+    {
+      "name": "Boğazköy",
+      "district": "lefkosa",
+      "aliases": [
+        "BOGAZKOY",
+        "BOĞAZKÖY",
+        "Bogazkoy"
+      ]
+    },
+    {
+      "name": "Demirhan",
+      "district": "lefkosa",
+      "aliases": [
+        "DEMIRHAN"
+      ]
+    },
+    {
+      "name": "Değirmenlik",
+      "district": "lefkosa",
+      "aliases": [
+        "Degirmenlik",
+        "DEGIRMENLIK",
+        "Kythrea"
+      ]
+    },
+    {
+      "name": "Değirmenlik Yolu",
+      "district": "lefkosa",
+      "aliases": [
+        "DEGIRMENLIK YOLU",
+        "DEĞIRMENLIK YOLU",
+        "Degirmenlik Yolu"
+      ]
+    },
+    {
+      "name": "Dikmen",
+      "district": "lefkosa",
+      "aliases": [
+        "DIKMEN"
+      ]
+    },
+    {
+      "name": "Düzova",
+      "district": "lefkosa",
+      "aliases": [
+        "Duzova"
+      ]
+    },
+    {
+      "name": "Ercan",
+      "district": "lefkosa",
+      "aliases": [
+        "ERCAN"
+      ]
+    },
+    {
+      "name": "Gaziköy",
+      "district": "lefkosa",
+      "aliases": [
+        "GAZIKOY",
+        "GAZIKÖY",
+        "Gazikoy"
+      ]
+    },
+    {
+      "name": "Gökhan",
+      "district": "lefkosa",
+      "aliases": [
+        "Gokhan"
+      ]
+    },
+    {
+      "name": "Gönyeli",
+      "district": "lefkosa",
+      "aliases": [
+        "Gonyeli",
+        "GONYELI"
+      ]
+    },
+    {
+      "name": "Göçmenköy",
+      "district": "lefkosa",
+      "aliases": [
+        "GOCMENKOY",
+        "Gocmenkoy",
+        "GÖÇMENKÖY"
+      ]
+    },
+    {
+      "name": "Hamitköy",
+      "district": "lefkosa",
+      "aliases": [
+        "Hamitkoy",
+        "Hamit Köy",
+        "HAMITKOY"
+      ]
+    },
+    {
+      "name": "Haspolat",
+      "district": "lefkosa",
+      "aliases": [
+        "HASPOLAT",
+        "Mia Milia"
+      ]
+    },
+    {
+      "name": "Kalavaç",
+      "district": "lefkosa",
+      "aliases": [
+        "KALAVAC",
+        "KALAVAÇ",
+        "Kalavac"
+      ]
+    },
+    {
+      "name": "Kanlıköy",
+      "district": "lefkosa",
+      "aliases": [
+        "Kanlikoy",
+        "Kanlı Köy"
+      ]
+    },
+    {
+      "name": "Kaymaklı",
+      "district": "lefkosa",
+      "aliases": [
+        "KAYMAKLI",
+        "Kaymakli"
+      ]
+    },
+    {
+      "name": "Kermiya",
+      "district": "lefkosa",
+      "aliases": [
+        "KERMIYA"
+      ]
+    },
+    {
+      "name": "Köşklüçiftlik",
+      "district": "lefkosa",
+      "aliases": [
+        "KOSKLUCIFTLIK",
+        "Koskluciftlik",
+        "KÖŞKLÜÇIFTLIK"
+      ]
+    },
+    {
+      "name": "Küçük Kaymaklı",
+      "district": "lefkosa",
+      "aliases": [
+        "KUCUK KAYMAKLI",
+        "Kucuk Kaymakli",
+        "KÜÇÜK KAYMAKLI"
+      ]
+    },
+    {
+      "name": "Kızılbaş",
+      "district": "lefkosa",
+      "aliases": [
+        "KIZILBAS",
+        "KIZILBAŞ",
+        "Kizilbas"
+      ]
+    },
+    {
+      "name": "Lefkoşa",
+      "district": "lefkosa",
+      "aliases": [
+        "Lefkosa",
+        "LEFKOSA",
+        "Nicosia",
+        "Lefkoşa Merkez"
+      ]
+    },
+    {
+      "name": "Marmara",
+      "district": "lefkosa",
+      "aliases": [
+        "MARMARA"
+      ]
+    },
+    {
+      "name": "Meriç",
+      "district": "lefkosa",
+      "aliases": [
+        "Meric"
+      ]
+    },
+    {
+      "name": "Minareliköy",
+      "district": "lefkosa",
+      "aliases": [
+        "MINARELIKOY",
+        "MINARELIKÖY",
+        "Minarelikoy"
+      ]
+    },
+    {
+      "name": "Ortaköy",
+      "district": "lefkosa",
+      "aliases": [
+        "ORTAKOY",
+        "ORTAKÖY",
+        "Ortakoy"
+      ]
+    },
+    {
+      "name": "Taşkınköy",
+      "district": "lefkosa",
+      "aliases": [
+        "TASKINKOY",
+        "TAŞKINKÖY",
+        "Taskinkoy"
+      ]
+    },
+    {
+      "name": "Ulukışla",
+      "district": "lefkosa",
+      "aliases": [
+        "Ulukisla",
+        "ULUKISLA"
+      ]
+    },
+    {
+      "name": "Yenikent",
+      "district": "lefkosa",
+      "aliases": [
+        "YENIKENT"
+      ]
+    },
+    {
+      "name": "Yenişehir",
+      "district": "lefkosa",
+      "aliases": [
+        "YENISEHIR",
+        "YENIŞEHIR",
+        "Yenisehir"
+      ]
+    },
+    {
+      "name": "Yılmazköy",
+      "district": "lefkosa",
+      "aliases": [
+        "Yilmazkoy",
+        "YILMAZKOY"
+      ]
+    },
+    {
+      "name": "Çağlayan",
+      "district": "lefkosa",
+      "aliases": [
+        "CAGLAYAN",
+        "Caglayan",
+        "ÇAĞLAYAN"
+      ]
+    }
   ]
 }

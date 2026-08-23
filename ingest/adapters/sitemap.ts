@@ -66,7 +66,18 @@ export const OUTAGE_SLUG = /elektrik|elektriksiz|enerji-veril/i;
 export async function collectSitemapEntries(
   rootUrl: string,
   cache: ConditionalCache,
-  options: { match?: RegExp; maxSitemaps?: number; since?: number } = {},
+  options: {
+    match?: RegExp;
+    maxSitemaps?: number;
+    since?: number;
+    // Which sitemaps in an index to follow, e.g. /post-sitemap/ to skip an
+    // outlet's author and gallery sitemaps.
+    sitemapMatch?: RegExp;
+    // Where the newest entries sit in the index. gundemkibris lists the
+    // current month first; yeniduzen and kibrisgazetesi number their chunks
+    // oldest-first, so the newest is last.
+    newest?: 'first' | 'last';
+  } = {},
 ): Promise<SitemapEntry[]> {
   const match = options.match ?? OUTAGE_SLUG;
   const maxSitemaps = options.maxSitemaps ?? 8;
@@ -74,7 +85,14 @@ export async function collectSitemapEntries(
   const root = await politeFetch(rootUrl, cache);
   if (root.status !== 'ok') return [];
 
-  const sitemaps = isSitemapIndex(root.body) ? parseSitemapIndex(root.body).slice(0, maxSitemaps) : [rootUrl];
+  let sitemaps = [rootUrl];
+  if (isSitemapIndex(root.body)) {
+    let listed = parseSitemapIndex(root.body);
+    if (options.sitemapMatch) listed = listed.filter((url) => options.sitemapMatch!.test(url));
+    // Take from the end when the newest chunk is last, so a six-month backfill
+    // does not spend its budget on a 2011 archive.
+    sitemaps = options.newest === 'last' ? listed.slice(-maxSitemaps).reverse() : listed.slice(0, maxSitemaps);
+  }
   const entries: SitemapEntry[] = [];
   const seen = new Set<string>();
 

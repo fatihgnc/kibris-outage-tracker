@@ -26,8 +26,12 @@ type ArchiveSource = {
   kind: 'official' | 'press';
   // Root sitemap. An index is followed one level down.
   sitemap: string;
-  // How many sitemaps to follow from an index, newest first.
+  // How many sitemaps to follow from an index.
   maxSitemaps?: number;
+  // Which sitemaps in an index are article sitemaps.
+  sitemapMatch?: RegExp;
+  // Where the newest chunk sits in the index.
+  newest?: 'first' | 'last';
 };
 
 // Sitemaps rather than tag pages: none of these outlets surface outage
@@ -52,13 +56,20 @@ const SOURCES: ArchiveSource[] = [
     name: 'Kıbrıs Gazetesi',
     kind: 'press',
     sitemap: 'https://kibrisgazetesi.com/sitemap_index.xml',
-    maxSitemaps: 8,
+    sitemapMatch: /post-sitemap/i,
+    newest: 'last',
+    maxSitemaps: 3,
   },
   {
     id: 'yeniduzen',
     name: 'Yenidüzen',
+    // sitemap.xsd is the index; its news chunks run oldest-first, so only the
+    // last one is inside a six-month window.
     kind: 'press',
-    sitemap: 'https://www.yeniduzen.com/sitemap-news-01.xml',
+    sitemap: 'https://www.yeniduzen.com/sitemap.xsd',
+    sitemapMatch: /sitemap-news-\d+/i,
+    newest: 'last',
+    maxSitemaps: 2,
   },
 ];
 
@@ -72,6 +83,8 @@ export async function backfill(options: { perSource?: number; dryRun?: boolean; 
   for (const source of SOURCES) {
     const entries = await collectSitemapEntries(source.sitemap, cache, {
       maxSitemaps: source.maxSitemaps,
+      sitemapMatch: source.sitemapMatch,
+      newest: source.newest,
       since: options.since,
     });
     const capped = entries.slice(0, perSource);
