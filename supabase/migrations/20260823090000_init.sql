@@ -66,6 +66,19 @@ create policy outages_anon_select on outages
 create policy ingest_runs_anon_select on ingest_runs
   for select to anon using (true);
 
+-- A policy alone is not enough: PostgREST also needs the table privilege.
+-- Revoke first so an inherited default grant cannot leave anon holding write
+-- rights, then grant exactly select on the two public tables and nothing else.
+revoke all on outages, ingest_runs, review_queue from anon, authenticated;
+grant select on outages, ingest_runs to anon;
+grant usage on schema public to anon;
+
+-- The ingest writes as the service role, which bypasses RLS but still needs
+-- the table privileges. Granted explicitly rather than relying on a platform
+-- default, so the schema is reproducible from this file alone.
+grant select, insert, update on outages, ingest_runs, review_queue to service_role;
+grant usage, select on all sequences in schema public to service_role;
+
 -- Corrections are updates, never deletes — the archive's value depends on the
 -- history staying intact (§10.6).
 create or replace function set_updated_at() returns trigger
