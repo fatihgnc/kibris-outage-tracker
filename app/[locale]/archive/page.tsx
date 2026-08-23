@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
@@ -10,6 +11,8 @@ import type { DistrictId, Outage } from '@/lib/types';
 import DistrictFilter from '@/components/DistrictFilter';
 import ArchiveMonthSelect from '@/components/ArchiveMonthSelect';
 import OutageCard from '@/components/OutageCard';
+import AdSlot from '@/components/AdSlot';
+import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -41,6 +44,7 @@ export default async function ArchivePage({ params, searchParams }: Props) {
   const monthRaw = typeof sp.month === 'string' ? sp.month : null;
 
   const now = await getNow();
+  const consent = readConsent((await cookies()).get(CONSENT_COOKIE)?.value);
   const outages = await getArchivedOutages(now);
   const past = outages
     .filter((o) => deriveStatus(o, now) === 'past')
@@ -123,6 +127,10 @@ export default async function ArchivePage({ params, searchParams }: Props) {
           </div>
         )}
       </section>
+
+      {/* The archive carries at most one unit, near the bottom, and none on an
+       * empty result — that is already a poorly served moment (§11.3). */}
+      {groups.length > 0 && <AdSlot slot="archive-foot" label={dict.ad.label} consent={consent} />}
     </>
   );
 }

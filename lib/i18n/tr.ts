@@ -40,6 +40,32 @@ export const tr = {
   nav: {
     home: 'Ana sayfa',
     archive: 'Arşiv',
+    guides: 'Rehberler',
+  },
+  guides: {
+    title: 'Rehberler',
+    lead: 'Elektrik kesintileriyle ilgili bilmekte fayda olan şeyler: arıza nasıl bildirilir, uzun bir kesintide ne yapılır, fatura nasıl okunur.',
+    updated: 'güncellendi {date}',
+    backToIndex: 'tüm rehberler',
+    readMore: 'Devamını oku',
+  },
+  legal: {
+    about: 'Hakkında',
+    privacy: 'Gizlilik',
+    terms: 'Kullanım koşulları',
+  },
+  consent: {
+    // The question is asked once, and a refusal is honoured (§11.6).
+    title: 'Reklam çerezleri',
+    body: 'Sunucu masraflarını reklamla karşılıyoruz. Reklam ağının çerez kullanmasına izin veriyor musunuz? Reddederseniz site aynen çalışmaya devam eder, reklamlar kişiselleştirilmeden gösterilir.',
+    accept: 'Kabul et',
+    reject: 'Reddet',
+    more: 'Ayrıntılar',
+  },
+  ad: {
+    // Required label: honest, and on a restrained dark layout an unlabelled
+    // unit reads as if the site endorses whatever it shows (§11.5).
+    label: 'reklam',
   },
   statusBar: {
     allClear: 'Bilinen kesinti yok, ada ışıkta.',

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
@@ -10,6 +11,8 @@ import type { Outage } from '@/lib/types';
 import IslandMapMini from '@/components/IslandMapMini';
 import OutageCard from '@/components/OutageCard';
 import HistoryChart from '@/components/HistoryChart';
+import AdSlot from '@/components/AdSlot';
+import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -38,11 +41,13 @@ export default async function DistrictPage({ params }: Props) {
   const dict = await getDictionary(locale);
 
   const now = await getNow();
-  const [outages, totals, freshness] = await Promise.all([
+  const [outages, totals, freshness, cookieStore] = await Promise.all([
     getOutages(now),
     getMonthlyTotals(id, now),
     getFreshness(now),
+    cookies(),
   ]);
+  const consent = readConsent(cookieStore.get(CONSENT_COOKIE)?.value);
 
   const byStart = (a: Outage, b: Outage) => Date.parse(a.startsAt) - Date.parse(b.startsAt);
   const districtOutages = outages.filter((o) => o.district === id);
@@ -127,6 +132,10 @@ export default async function DistrictPage({ params }: Props) {
           )}
         </section>
       </div>
+
+      {/* Between "upcoming" and the history chart — never between "now" and
+       * "upcoming", and never while the data is stale (§11.3). */}
+      <AdSlot slot="district-mid" label={dict.ad.label} consent={consent} suppressed={freshness.stale} />
 
       <section className="pt-7">
         <div className="mb-3.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">

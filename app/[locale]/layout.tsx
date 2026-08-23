@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, IBM_Plex_Mono, Public_Sans } from 'next/font/google';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import '../globals.css';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
@@ -9,6 +10,8 @@ import { getFreshness, getNow, getOutages } from '@/lib/data';
 import { formatClock } from '@/lib/time';
 import StatusBar from '@/components/StatusBar';
 import NavLinks from '@/components/NavLinks';
+import ConsentBanner from '@/components/ConsentBanner';
+import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 
 // Latin Extended so Turkish characters (ı, İ, ş, ğ, ü, ö, ç) render correctly.
 const fraunces = Fraunces({
@@ -76,7 +79,8 @@ export default async function LocaleLayout({
   const locale: Locale = raw;
   const dict = await getDictionary(locale);
   const now = await getNow();
-  const [outages, freshness] = await Promise.all([getOutages(now), getFreshness(now)]);
+  const [outages, freshness, cookieStore] = await Promise.all([getOutages(now), getFreshness(now), cookies()]);
+  const consent = readConsent(cookieStore.get(CONSENT_COOKIE)?.value);
 
   return (
     <html lang={locale} className={`${fraunces.variable} ${publicSans.variable} ${plexMono.variable}`}>
@@ -90,7 +94,12 @@ export default async function LocaleLayout({
           >
             {dict.brand}
           </Link>
-          <NavLinks locale={locale} homeLabel={dict.nav.home} archiveLabel={dict.nav.archive} />
+          <NavLinks
+            locale={locale}
+            homeLabel={dict.nav.home}
+            archiveLabel={dict.nav.archive}
+            guidesLabel={dict.nav.guides}
+          />
         </header>
 
         <main className="mx-auto w-full max-w-[1060px] flex-1 px-5 pb-2">{children}</main>
@@ -99,14 +108,28 @@ export default async function LocaleLayout({
           <div className="mx-auto flex w-full max-w-[1060px] flex-col gap-2 px-5 pb-9 pt-4">
             {/* The persistent disclaimer (§1.4): every duration is an estimate. */}
             <p className="m-0 max-w-[68ch] text-meta text-muted">{dict.footer.disclaimer}</p>
-            <p className="m-0 font-mono text-meta text-muted">
-              {dict.brand} ·{' '}
-              {freshness.lastCheckedAt
-                ? fill(dict.footer.lastChecked, { time: formatClock(freshness.lastCheckedAt, locale) })
-                : dict.statusBar.neverChecked}
+            <p className="m-0 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-meta text-muted">
+              <span>
+                {dict.brand} ·{' '}
+                {freshness.lastCheckedAt
+                  ? fill(dict.footer.lastChecked, { time: formatClock(freshness.lastCheckedAt, locale) })
+                  : dict.statusBar.neverChecked}
+              </span>
+              <Link href={`/${locale}/about`} className="text-muted no-underline hover:text-text">
+                {dict.legal.about}
+              </Link>
+              <Link href={`/${locale}/privacy`} className="text-muted no-underline hover:text-text">
+                {dict.legal.privacy}
+              </Link>
+              <Link href={`/${locale}/terms`} className="text-muted no-underline hover:text-text">
+                {dict.legal.terms}
+              </Link>
             </p>
           </div>
         </footer>
+
+        {/* Asked once; a refusal is never re-prompted (§11.6). */}
+        {consent === 'unanswered' && <ConsentBanner locale={locale} strings={dict.consent} />}
       </body>
     </html>
   );

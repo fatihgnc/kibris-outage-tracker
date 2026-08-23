@@ -21,6 +21,29 @@ export const en: Dictionary = {
   nav: {
     home: 'Home',
     archive: 'Archive',
+    guides: 'Guides',
+  },
+  guides: {
+    title: 'Guides',
+    lead: 'Things worth knowing about power cuts: how to report a fault, what to do during a long outage, and how to read your bill.',
+    updated: 'updated {date}',
+    backToIndex: 'all guides',
+    readMore: 'Read more',
+  },
+  legal: {
+    about: 'About',
+    privacy: 'Privacy',
+    terms: 'Terms of use',
+  },
+  consent: {
+    title: 'Advertising cookies',
+    body: 'Advertising covers our server costs. May the ad network use cookies? If you refuse, the site works exactly the same and ads are shown without personalisation.',
+    accept: 'Accept',
+    reject: 'Reject',
+    more: 'Details',
+  },
+  ad: {
+    label: 'advertisement',
   },
   statusBar: {
     allClear: 'No known outages — the island is lit.',

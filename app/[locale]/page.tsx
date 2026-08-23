@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
@@ -10,6 +11,12 @@ import IslandMap from '@/components/IslandMap';
 import DistrictFilter from '@/components/DistrictFilter';
 import OutageCard from '@/components/OutageCard';
 import Countdown from '@/components/Countdown';
+import AdSlot from '@/components/AdSlot';
+import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
+
+// One full row on a desktop grid, so the ad can never appear before a reader
+// has seen the first cards.
+const FIRST_BLOCK = 6;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -37,7 +44,8 @@ export default async function HomePage({ params, searchParams }: Props) {
     typeof districtRaw === 'string' && isDistrictId(districtRaw) ? districtRaw : null;
 
   const now = await getNow();
-  const [outages, freshness] = await Promise.all([getOutages(now), getFreshness(now)]);
+  const [outages, freshness, cookieStore] = await Promise.all([getOutages(now), getFreshness(now), cookies()]);
+  const consent = readConsent(cookieStore.get(CONSENT_COOKIE)?.value);
 
   const byStart = (a: Outage, b: Outage) => Date.parse(a.startsAt) - Date.parse(b.startsAt);
   const active = outages.filter((o) => deriveStatus(o, now) === 'active').sort(byStart);
@@ -122,19 +130,46 @@ export default async function HomePage({ params, searchParams }: Props) {
           </span>
         </div>
         {list.length > 0 ? (
-          <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
-            {list.map((outage) => (
-              <li key={outage.id}>
-                <OutageCard
-                  outage={outage}
-                  status={deriveStatus(outage, now)}
-                  locale={locale}
-                  dict={dict}
-                  now={now}
+          <>
+            <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
+              {list.slice(0, FIRST_BLOCK).map((outage) => (
+                <li key={outage.id}>
+                  <OutageCard
+                    outage={outage}
+                    status={deriveStatus(outage, now)}
+                    locale={locale}
+                    dict={dict}
+                    now={now}
+                  />
+                </li>
+              ))}
+            </ul>
+            {list.length > FIRST_BLOCK && (
+              <>
+                {/* After the first block of cards, never before one, and never
+                 * while the data is stale (§11.3). */}
+                <AdSlot
+                  slot="home-mid"
+                  label={dict.ad.label}
+                  consent={consent}
+                  suppressed={freshness.stale}
                 />
-              </li>
-            ))}
-          </ul>
+                <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
+                  {list.slice(FIRST_BLOCK).map((outage) => (
+                    <li key={outage.id}>
+                      <OutageCard
+                        outage={outage}
+                        status={deriveStatus(outage, now)}
+                        locale={locale}
+                        dict={dict}
+                        now={now}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </>
         ) : (
           <div className="flex flex-col gap-2 rounded-[4px] border border-dark px-5 py-6">
             <p className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{dict.list.empty}</p>

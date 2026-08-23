@@ -4,22 +4,23 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '@/lib/i18n/config';
 
-type Props = { locale: Locale; homeLabel: string; archiveLabel: string };
+type Props = { locale: Locale; homeLabel: string; archiveLabel: string; guidesLabel: string };
 
-export default function NavLinks({ locale, homeLabel, archiveLabel }: Props) {
+export default function NavLinks({ locale, homeLabel, archiveLabel, guidesLabel }: Props) {
   const pathname = usePathname() ?? '';
-  const isArchive = pathname.startsWith(`/${locale}/archive`);
-  const isHome = pathname === `/${locale}`;
   const linkClass = (active: boolean) =>
     `text-small no-underline ${active ? 'text-lamp' : 'text-muted hover:text-text'}`;
 
   return (
     <nav className="flex gap-4">
-      <Link href={`/${locale}`} className={linkClass(isHome)}>
+      <Link href={`/${locale}`} className={linkClass(pathname === `/${locale}`)}>
         {homeLabel}
       </Link>
-      <Link href={`/${locale}/archive`} className={linkClass(isArchive)}>
+      <Link href={`/${locale}/archive`} className={linkClass(pathname.startsWith(`/${locale}/archive`))}>
         {archiveLabel}
+      </Link>
+      <Link href={`/${locale}/guides`} className={linkClass(pathname.startsWith(`/${locale}/guides`))}>
+        {guidesLabel}
       </Link>
     </nav>
   );
