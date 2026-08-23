@@ -82,6 +82,17 @@ export async function ingest(options: IngestOptions = {}) {
   );
 
   if (options.dryRun) {
+    // A dry run exists to be read: print what was parsed so the rows can be
+    // compared against the real announcements before any of it is stored.
+    for (const record of collapsed) {
+      const end = record.endsAt ? record.endsAt.slice(11, 16) : '??:??';
+      console.log(
+        `  ${record.kind.padEnd(8)} ${record.startsAt.slice(0, 16).replace('T', ' ')}-${end} ` +
+          `${record.district.padEnd(11)} ${record.areas.join(', ')}`,
+      );
+      console.log(`           ${record.sources[0].url}`);
+    }
+    for (const item of review) console.log(`  REVIEW  ${item.reason}  ${item.source.url}`);
     return { startedAt, records: collapsed, retractions, review, adaptersOk, adaptersFailed };
   }
 

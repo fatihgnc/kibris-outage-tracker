@@ -1,7 +1,8 @@
 import type { SourceRef } from '../../lib/types';
 import { politeFetch, type ConditionalCache } from '../http';
 import { looksLikeOutage } from '../parse/kind';
-import { extractArticle, extractArticleLinks, parseFeed } from './feed';
+import { extractArticle, extractArticleLinks } from './feed';
+import { collectSitemapEntries, OUTAGE_SLUG } from './sitemap';
 import type { RawAnnouncement, SourceAdapter } from './types';
 
 export type OutletConfig = {
@@ -9,9 +10,14 @@ export type OutletConfig = {
   // Display name shown in the card footer, in the outlet's own spelling.
   name: string;
   origin: string;
-  // RSS/Atom feeds, tried in order.
-  feeds?: string[];
-  // Tag or category listing pages, for outlets whose feed omits outages.
+  // Sitemaps, tried in order. Preferred where the outlet publishes a compact
+  // news sitemap: it is machine-readable and carries <lastmod>.
+  sitemaps?: string[];
+  // How far back a run looks. Anything older was seen by an earlier run.
+  sinceDays?: number;
+  // Listing pages, for outlets with no compact sitemap. The homepage works:
+  // it is the page everyone already loads, and it is far smaller than a full
+  // archive sitemap.
   listings?: string[];
   // Which paths on a listing page are articles.
   articlePattern?: RegExp;
@@ -35,30 +41,33 @@ export function createOutletAdapter(config: OutletConfig): SourceAdapter {
       const announcements: RawAnnouncement[] = [];
       const seen = new Set<string>();
 
-      // Feeds first: they carry a publication date, which the parser needs to
-      // resolve relative words like 'yarın'.
-      for (const feedUrl of config.feeds ?? []) {
-        const result = await politeFetch(feedUrl, cache);
-        if (result.status !== 'ok') continue;
+      // Sitemaps first: they name the article in the URL, so most of the
+      // archive is filtered out before anything is downloaded, and each entry
+      // carries <lastmod> — the publication date the parser needs to resolve
+      // relative words like 'yarın' (§10.4).
+      //
+      // The outlets' RSS feeds are deliberately not used: every one of them
+      // was checked against live data and none carried a single outage
+      // article. They are short rolling windows of headline news.
+      const since = Date.now() - (config.sinceDays ?? 3) * 86400000;
+      for (const sitemapUrl of config.sitemaps ?? []) {
+        if (announcements.length >= maxArticles) break;
+        const entries = await collectSitemapEntries(sitemapUrl, cache, { since });
 
-        for (const item of parseFeed(result.body)) {
-          if (!item.link || seen.has(item.link)) continue;
-          if (!looksLikeOutage(`${item.title} ${item.description}`)) continue;
-          seen.add(item.link);
-          if (announcements.length >= maxArticles) break;
+        for (const entry of entries) {
+          if (seen.has(entry.url) || announcements.length >= maxArticles) continue;
+          seen.add(entry.url);
 
-          // Feed summaries are truncated, and the time range is often in the
-          // part that was cut, so the article itself is fetched.
-          const article = await politeFetch(item.link, cache);
-          const extracted = article.status === 'ok' ? extractArticle(article.body) : null;
-          const body =
-            extracted && extracted.body.length > item.description.length ? extracted.body : item.description;
+          const article = await politeFetch(entry.url, cache);
+          if (article.status !== 'ok') continue;
+          const extracted = extractArticle(article.body);
+          if (!looksLikeOutage(`${extracted.title} ${extracted.body}`)) continue;
 
           announcements.push({
-            source: source(item.link),
-            title: item.title || extracted?.title || '',
-            body,
-            publishedAt: item.publishedAt ?? fetchedAt,
+            source: source(entry.url),
+            title: extracted.title,
+            body: extracted.body,
+            publishedAt: entry.lastmod ?? articleDate(article.body) ?? fetchedAt,
             fetchedAt,
           });
         }
@@ -72,6 +81,10 @@ export function createOutletAdapter(config: OutletConfig): SourceAdapter {
 
         for (const link of extractArticleLinks(listing.body, listingUrl, pattern)) {
           if (seen.has(link) || announcements.length >= maxArticles) continue;
+          // The slug names the subject, so it filters the listing before
+          // anything is downloaded. Without this a run pulls a dozen unrelated
+          // articles off the homepage and discards them after the fetch.
+          if (!OUTAGE_SLUG.test(link)) continue;
           seen.add(link);
 
           const article = await politeFetch(link, cache);
