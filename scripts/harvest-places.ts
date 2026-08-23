@@ -24,7 +24,12 @@ const SITEMAPS = [
 ];
 
 // Tokens that look like a Turkish place name in an announcement's place list.
-const CANDIDATE = /\b([A-ZÇĞİÖŞÜ][a-zçğıöşü]{2,}(?:\s(?:köyü|Köyü|Bölgesi|bölgesi))?)\b/g;
+// The boundaries are Unicode lookarounds, not \b. JavaScript's \b is defined
+// on ASCII word characters, so c-cedilla, s-cedilla, dotless-i and friends do
+// not count as letters to it — which silently truncated every name ending in
+// one. "Karaagac" came out as "Karaaga", never matched the place list, and so
+// reappeared as unknown on every run no matter how often it had been added.
+const CANDIDATE = /(?<!\p{L})([A-ZÇĞİÖŞÜ][a-zçğıöşü]{2,}(?:\s(?:köyü|Köyü|Bölgesi|bölgesi))?)(?!\p{L})/gu;
 const STOP = new Set([
   'Kıbrıs','Türk','Elektrik','Kurumu','Bugün','Yarın','Ayrıca','Ancak','Bunun','Saat','Saatleri',
   'Sokak','Sokağı','Caddesi','Bölge','Bölgesi','Bölgesinde','Merkezi','Trafo','Orta','Gerilim',
@@ -62,6 +67,6 @@ async function main() {
 
   const ranked = [...counts.entries()].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]);
   console.log(`scanned ${scanned} outage article(s); ${ranked.length} unknown name(s) seen twice or more\n`);
-  for (const [name, n] of ranked.slice(0, 70)) console.log(`${String(n).padStart(3)}  ${name}`);
+  for (const [name, n] of ranked.slice(0, 200)) console.log(`${String(n).padStart(3)}  ${name}`);
 }
 main();

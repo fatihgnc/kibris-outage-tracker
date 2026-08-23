@@ -43,6 +43,20 @@
       ]
     },
     {
+      "name": "Ayluga",
+      "district": "gazimagusa",
+      "aliases": [
+        "AYLUGA"
+      ]
+    },
+    {
+      "name": "Baykal",
+      "district": "gazimagusa",
+      "aliases": [
+        "BAYKAL"
+      ]
+    },
+    {
       "name": "Beyarmudu",
       "district": "gazimagusa",
       "aliases": [
@@ -118,6 +132,22 @@
         "GUVERCINLIK",
         "Guvercinlik",
         "GÜVERCINLIK"
+      ]
+    },
+    {
+      "name": "Karakeşliler",
+      "district": "gazimagusa",
+      "aliases": [
+        "KARAKESLILER",
+        "KARAKEŞLILER",
+        "Karakesliler"
+      ]
+    },
+    {
+      "name": "Kombos",
+      "district": "gazimagusa",
+      "aliases": [
+        "KOMBOS"
       ]
     },
     {
@@ -1420,6 +1450,13 @@
       ]
     },
     {
+      "name": "Kumsal",
+      "district": "lefkosa",
+      "aliases": [
+        "KUMSAL"
+      ]
+    },
+    {
       "name": "Köşklüçiftlik",
       "district": "lefkosa",
       "aliases": [
@@ -1468,6 +1505,13 @@
       "district": "lefkosa",
       "aliases": [
         "Meric"
+      ]
+    },
+    {
+      "name": "Metehan",
+      "district": "lefkosa",
+      "aliases": [
+        "METEHAN"
       ]
     },
     {
