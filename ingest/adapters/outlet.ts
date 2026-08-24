@@ -109,19 +109,43 @@ export function createOutletAdapter(config: OutletConfig): SourceAdapter {
   };
 }
 
-// Publication date from the page's own metadata, which every one of these
-// sites emits in at least one of these forms.
-function articleDate(html: string): string | null {
-  const patterns = [
-    /<meta[^>]+property=["']article:published_time["'][^>]+content=["']([^"']+)["']/i,
-    /<meta[^>]+name=["']pubdate["'][^>]+content=["']([^"']+)["']/i,
-    /<time[^>]+datetime=["']([^"']+)["']/i,
-    /"datePublished"\s*:\s*"([^"]+)"/i,
-  ];
-  for (const pattern of patterns) {
-    const match = pattern.exec(html);
-    if (!match) continue;
-    const parsed = Date.parse(match[1]);
+// Publication date from the page's own metadata. Every one of these sites
+// emits it, but not in the same shape: a <meta> tag, a microdata `itemprop` on
+// an arbitrary element, or a JSON-LD block. Attribute order varies too, so the
+// key and the value are read independently of where they sit in the tag.
+// Getting this wrong is not a small miss: without a date the fetch time stands
+// in, and a body that says 'bugün' then resolves to the day of the run, so a
+// three-day-old announcement is republished as today's outage (§10.4).
+const DATE_KEYS = [
+  'article:published_time',
+  'datepublished',
+  'pubdate',
+  'dc.date.issued',
+  'datecreated',
+  'date',
+];
+
+export function articleDate(html: string): string | null {
+  const found = new Map<string, string>();
+
+  for (const tag of html.matchAll(/<[a-z][^>]*\bcontent=[^>]*>/gi)) {
+    const key = /\b(?:property|name|itemprop)=["']([^"']+)["']/i.exec(tag[0]);
+    const content = /\bcontent=["']([^"']+)["']/i.exec(tag[0]);
+    if (!key || !content) continue;
+    const normalised = key[1].trim().toLowerCase();
+    if (!found.has(normalised)) found.set(normalised, content[1]);
+  }
+
+  const jsonLd = /"datePublished"\s*:\s*"([^"]+)"/i.exec(html);
+  if (jsonLd && !found.has('datepublished')) found.set('datepublished', jsonLd[1]);
+
+  const time = /<time[^>]+datetime=["']([^"']+)["']/i.exec(html);
+  if (time) found.set('time', time[1]);
+
+  for (const key of [...DATE_KEYS, 'time']) {
+    const value = found.get(key);
+    if (!value) continue;
+    const parsed = Date.parse(value);
     if (!Number.isNaN(parsed)) return new Date(parsed).toISOString();
   }
   return null;

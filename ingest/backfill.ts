@@ -5,6 +5,10 @@ import type { Outage } from '../lib/types';
 import { createServiceClient } from './supabase';
 import { errorMessage, politeFetch, type ConditionalCache } from './http';
 import { extractArticle } from './adapters/feed';
+// The same reader the live ingest uses. This file had its own narrower copy,
+// which missed the microdata and Dublin Core forms and so fell back to the run
+// time — the exact bug that dated a three-day-old announcement as today's.
+import { articleDate } from './adapters/outlet';
 import { collectSitemapEntries } from './adapters/sitemap';
 import { looksLikeOutage } from './parse/kind';
 import { parseAnnouncement } from './parse';
@@ -110,7 +114,7 @@ export async function backfill(options: { perSource?: number; dryRun?: boolean; 
         title,
         body,
         // The sitemap's own <lastmod> beats scraping the page for a date.
-        publishedAt: entry.lastmod ?? publishedDate(article.body) ?? fetchedAt,
+        publishedAt: entry.lastmod ?? articleDate(article.body) ?? fetchedAt,
         fetchedAt,
       });
 
@@ -156,20 +160,6 @@ ${body}`,
   return collapsed;
 }
 
-function publishedDate(html: string): string | null {
-  const patterns = [
-    /<meta[^>]+property=["']article:published_time["'][^>]+content=["']([^"']+)["']/i,
-    /"datePublished"\s*:\s*"([^"]+)"/i,
-    /<time[^>]+datetime=["']([^"']+)["']/i,
-  ];
-  for (const pattern of patterns) {
-    const match = pattern.exec(html);
-    if (!match) continue;
-    const parsed = Date.parse(match[1]);
-    if (!Number.isNaN(parsed)) return new Date(parsed).toISOString();
-  }
-  return null;
-}
 
 const invokedDirectly = process.argv[1]?.replace(/\\/g, '/').endsWith('ingest/backfill.ts');
 
