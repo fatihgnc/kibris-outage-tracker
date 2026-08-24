@@ -4,14 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { fill as fillTemplate } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
-import {
-  LABEL_PX,
-  MAX_MAP_HEIGHT,
-  coreRadius,
-  glowRadius,
-  type MapDistrict,
-  type MapSettlement,
-} from '@/lib/geography';
+import type { MapDistrict, MapSettlement } from '@/lib/geography';
+import { LABEL_PX, MAX_MAP_HEIGHT, coreRadius, glowRadius } from '@/lib/map-style';
 
 export type Props = {
   viewBox: string;

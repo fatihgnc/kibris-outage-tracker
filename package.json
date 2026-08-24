@@ -11,7 +11,8 @@
     "ingest": "node --import tsx ingest/run.ts",
     "backfill": "node --import tsx ingest/backfill.ts",
     "check:secrets": "node scripts/check-secrets.mjs",
-    "prebuild": "node scripts/check-secrets.mjs",
+    "build:map": "node --import tsx scripts/build-map-geometry.ts",
+    "prebuild": "node scripts/check-secrets.mjs && npm run build:map",
     "harvest:places": "node --import tsx scripts/harvest-places.ts"
   },
   "dependencies": {
