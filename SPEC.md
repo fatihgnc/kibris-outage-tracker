@@ -1,4 +1,4 @@
-# Dark Island — Product & Design Spec
+# kesintimivar.com — Product & Design Spec
 
 **Power outage tracker for Northern Cyprus**
 Version 0.1 · Frontend-only scope with mocked data

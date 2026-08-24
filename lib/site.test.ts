@@ -9,12 +9,12 @@ test('accepts a bare hostname, the common dashboard paste', () => {
 });
 
 test('keeps an explicit protocol', () => {
-  assert.equal(resolveSiteUrl('https://sonenada.com').href, 'https://sonenada.com/');
+  assert.equal(resolveSiteUrl('https://kesintimivar.com').href, 'https://kesintimivar.com/');
   assert.equal(resolveSiteUrl('http://localhost:3000').href, 'http://localhost:3000/');
 });
 
 test('tolerates whitespace and a trailing slash', () => {
-  assert.equal(resolveSiteUrl('  sonenada.com/  ').href, 'https://sonenada.com/');
+  assert.equal(resolveSiteUrl('  kesintimivar.com/  ').href, 'https://kesintimivar.com/');
 });
 
 test('falls back when unset or empty', () => {

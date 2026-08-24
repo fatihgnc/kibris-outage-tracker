@@ -4,12 +4,12 @@ summary: Bu hizmetin ne vaat ettiği, neyi vaat etmediği ve içeriğin kullanı
 updated: 2026-08-23
 ---
 
-Bu sayfa, Sönen Ada'yı kullanırken geçerli olan koşulları anlatır. Sitede
+Bu sayfa, kesintimivar.com'u kullanırken geçerli olan koşulları anlatır. Sitede
 gezinerek bunları kabul etmiş olursunuz.
 
 ## Hizmet nedir
 
-Sönen Ada, Kuzey Kıbrıs'taki elektrik kesintisi duyurularını kamuya açık
+kesintimivar.com, Kuzey Kıbrıs'taki elektrik kesintisi duyurularını kamuya açık
 kaynaklardan derleyip tek bir sayfada gösteren ücretsiz bir bilgi hizmetidir.
 
 Ücretsizdir, üyelik gerektirmez ve ücretli bir sürümü yoktur.

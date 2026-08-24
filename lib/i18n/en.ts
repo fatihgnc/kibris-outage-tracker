@@ -6,8 +6,8 @@ import type { Dictionary } from './dictionaries';
 // error because this object must satisfy the Dictionary type.
 export const en: Dictionary = {
   meta: {
-    title: 'Sönen Ada — power outages in Northern Cyprus',
-    titleTemplate: '%s — Sönen Ada',
+    title: 'kesintimivar.com — power outages in Northern Cyprus',
+    titleTemplate: '%s — kesintimivar.com',
     description:
       'Power outages in Northern Cyprus on one page: districts with an outage right now, upcoming planned work, and past records. Compiled from official announcements.',
     archiveTitle: 'Past outages',
@@ -17,7 +17,7 @@ export const en: Dictionary = {
     districtDescription: (district: string) =>
       `The current power status in ${district}, upcoming planned work, and a summary of the last 12 months.`,
   },
-  brand: 'Sönen Ada',
+  brand: 'kesintimivar.com',
   nav: {
     home: 'Home',
     archive: 'Archive',

@@ -6,7 +6,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 // with a short delay, and bounded retries.
 
 const CONTACT = process.env.INGEST_CONTACT ?? 'fathgnc.dev@gmail.com';
-export const USER_AGENT = `SonenAdaBot/0.1 (+https://github.com/sonen-ada; outage tracker for Northern Cyprus; contact: ${CONTACT})`;
+export const USER_AGENT = `KesintiMiVarBot/0.1 (+https://github.com/fatihgnc/kibris-outage-tracker; outage tracker for Northern Cyprus; contact: ${CONTACT})`;
 
 const REQUEST_TIMEOUT_MS = 20000;
 const HOST_DELAY_MS = 1500;

@@ -4,14 +4,14 @@ summary: Bu siteyi kim yürütüyor, veriler nereden geliyor, nasıl ulaşabilir
 updated: 2026-08-23
 ---
 
-Sönen Ada, Kuzey Kıbrıs'taki elektrik kesintilerini tek bir sayfada gösteren
+kesintimivar.com, Kuzey Kıbrıs'taki elektrik kesintilerini tek bir sayfada gösteren
 ücretsiz bir hizmettir. Tek bir soruya cevap vermek için yapıldı:
 
 > **Bölgemde elektrik kesik mi, ne zaman gelecek?**
 
 ## Bu siteyi kim yürütüyor
 
-Sönen Ada, **Fatih Genç** tarafından yürütülen bağımsız ve kişisel bir
+kesintimivar.com, **Fatih Genç** tarafından yürütülen bağımsız ve kişisel bir
 projedir. Bir şirket, kurum ya da dernek değildir.
 
 **Bu site KIB-TEK'in resmî sitesi değildir ve KIB-TEK ile hiçbir bağlantısı

@@ -4,12 +4,12 @@ summary: What this service promises, what it does not, and how the content may b
 updated: 2026-08-23
 ---
 
-This page sets out the terms that apply when you use Sönen Ada. By browsing the
+This page sets out the terms that apply when you use kesintimivar.com. By browsing the
 site you accept them.
 
 ## What the service is
 
-Sönen Ada is a free information service that compiles electricity outage
+kesintimivar.com is a free information service that compiles electricity outage
 announcements for Northern Cyprus from public sources and shows them on a single
 page.
 

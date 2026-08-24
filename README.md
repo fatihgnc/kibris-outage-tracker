@@ -1,4 +1,4 @@
-# Sönen Ada — Dark Island
+# kesintimivar.com — Kıbrıs kesinti takibi
 
 Power outage tracker for Northern Cyprus. Answers one question: **"Is the power
 out in my area, and when does it come back?"**

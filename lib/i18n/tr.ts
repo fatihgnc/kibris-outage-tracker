@@ -25,8 +25,8 @@ function locative(name: string): string {
 
 export const tr = {
   meta: {
-    title: 'Sönen Ada — Kuzey Kıbrıs elektrik kesintileri',
-    titleTemplate: '%s — Sönen Ada',
+    title: 'kesintimivar.com — Kuzey Kıbrıs elektrik kesintileri',
+    titleTemplate: '%s — kesintimivar.com',
     description:
       'Kuzey Kıbrıs elektrik kesintilerini tek sayfada gösterir: şu an kesinti olan bölgeler, yaklaşan planlı çalışmalar ve geçmiş kayıtlar. Resmi duyurulardan derlenir.',
     archiveTitle: 'Geçmiş kesintiler',
@@ -36,7 +36,7 @@ export const tr = {
     districtDescription: (district: string) =>
       `${locative(district)} şu anki elektrik durumu, yaklaşan planlı çalışmalar ve son 12 ayın özeti.`,
   },
-  brand: 'Sönen Ada',
+  brand: 'kesintimivar.com',
   nav: {
     home: 'Ana sayfa',
     archive: 'Arşiv',

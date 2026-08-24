@@ -12,7 +12,7 @@ export default function NotFound() {
       </p>
       <p className="mb-0 mt-4">
         <Link href="/" className="font-mono text-small text-lamp underline underline-offset-[3px]">
-          ← Sönen Ada
+          ← kesintimivar.com
         </Link>
       </p>
     </section>

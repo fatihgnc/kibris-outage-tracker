@@ -4,14 +4,14 @@ summary: Who runs this site, where the data comes from, and how to get in touch.
 updated: 2026-08-23
 ---
 
-Sönen Ada is a free service that shows electricity outages in Northern Cyprus on
+kesintimivar.com is a free service that shows electricity outages in Northern Cyprus on
 a single page. It was built to answer one question:
 
 > **Is the power out in my area, and when does it come back?**
 
 ## Who runs this site
 
-Sönen Ada is an independent, personal project run by **Fatih Genç**. It is not a
+kesintimivar.com is an independent, personal project run by **Fatih Genç**. It is not a
 company, an institution, or an association.
 
 **This is not KIB-TEK's official site, and it has no connection to KIB-TEK.** It
