@@ -12,6 +12,7 @@
     "backfill": "node --import tsx ingest/backfill.ts",
     "check:secrets": "node scripts/check-secrets.mjs",
     "build:map": "node --import tsx scripts/build-map-geometry.ts",
+    "build:icons": "node --import tsx scripts/build-icons.ts",
     "prebuild": "node scripts/check-secrets.mjs && npm run build:map",
     "harvest:places": "node --import tsx scripts/harvest-places.ts"
   },
@@ -31,6 +32,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5"
