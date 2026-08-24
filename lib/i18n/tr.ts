@@ -120,6 +120,7 @@ export const tr = {
     endUnknown: 'belirsiz',
     published: '{time} yayınlandı',
     unverified: 'doğrulanmadı',
+    cancelled: 'iptal edildi',
   },
   countdown: {
     untilEnd: 'tahmini {duration} sonra gelecek',

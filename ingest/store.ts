@@ -10,7 +10,7 @@ export type StoreResult = {
 };
 
 const OUTAGE_COLUMNS =
-  'id, utility, kind, starts_at, ends_at, district, areas, sources, published_at, ingested_at, confidence, cancelled_at';
+  'id, utility, kind, starts_at, ends_at, district, areas, sources, published_at, ingested_at, confidence, cancelled_at, cancelled_reason';
 
 // The stored form carries the retraction flag, which the public Outage type
 // deliberately does not expose to the frontend.
@@ -95,7 +95,7 @@ export async function retractOutages(client: SupabaseClient, records: Outage[]):
 
   const { error } = await client
     .from('outages')
-    .update({ cancelled_at: new Date().toISOString() })
+    .update({ cancelled_at: new Date().toISOString(), cancelled_reason: 'retracted' })
     .in('id', [...ids])
     .is('cancelled_at', null);
   if (error) throw new Error(`retractOutages: ${error.message}`);

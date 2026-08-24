@@ -30,6 +30,11 @@ export type Outage = {
   confidence: 'high' | 'low'; // 'low' = parsed by fallback
 };
 
+// The archive is the one view that shows retracted records, so it is the one
+// place the retraction flag crosses into the frontend. The plain Outage type
+// stays free of it: nothing else may render a cancelled record at all.
+export type ArchivedOutage = Outage & { cancelled: boolean };
+
 export type Settlement = {
   name: string;
   lat: number;

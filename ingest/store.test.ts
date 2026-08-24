@@ -30,13 +30,27 @@ async function reachable(): Promise<boolean> {
   }
 }
 
-// Fixed far-future window so the fixtures never collide with real rows.
-const START = '2099-03-01T06:00:00.000Z';
-const END = '2099-03-01T12:00:00.000Z';
+// A far-future window, so the fixtures never collide with real rows, and a
+// fresh day and id prefix per run, so they never collide with each other.
+//
+// The obvious setup — one fixed window wiped in `before` — cannot work here:
+// the schema grants the ingest no delete (§10.6), so the wipe silently does
+// nothing and every run inherits the previous run's rows. That was survivable
+// only while an upsert quietly cleared `cancelled_at`, which is precisely the
+// revival bug these tests exist to rule out. Giving each run its own window
+// removes the shared state instead of relying on a delete that never happens.
+const RUN = `${Date.now().toString(36)}`;
+const RUN_DAY = new Date(Date.UTC(2099, 0, 1) + (Date.now() % 3_000) * 86400000);
+const isoAt = (hour: number) =>
+  new Date(Date.UTC(RUN_DAY.getUTCFullYear(), RUN_DAY.getUTCMonth(), RUN_DAY.getUTCDate(), hour)).toISOString();
 
-function outage(id: string, areas: string[], sources: SourceRef[]): Outage {
+const START = isoAt(6);
+const END = isoAt(12);
+const id = (name: string) => `${name}-${RUN}`;
+
+function outage(name: string, areas: string[], sources: SourceRef[]): Outage {
   return {
-    id,
+    id: id(name),
     utility: 'electricity',
     kind: 'planned',
     startsAt: START,
@@ -44,8 +58,8 @@ function outage(id: string, areas: string[], sources: SourceRef[]): Outage {
     district: 'lefkosa',
     areas,
     sources,
-    publishedAt: '2099-02-28T14:00:00.000Z',
-    ingestedAt: '2099-02-28T14:10:00.000Z',
+    publishedAt: isoAt(0),
+    ingestedAt: isoAt(1),
     confidence: 'high',
   };
 }
@@ -53,18 +67,23 @@ function outage(id: string, areas: string[], sources: SourceRef[]): Outage {
 async function currentRows() {
   const { data, error } = await client!
     .from('outages')
-    .select('id, areas, sources, cancelled_at')
-    .gte('starts_at', '2099-01-01T00:00:00.000Z');
+    .select('id, areas, sources, cancelled_at, cancelled_reason')
+    .eq('starts_at', START);
   if (error) throw new Error(error.message);
-  return data as { id: string; areas: string[]; sources: SourceRef[]; cancelled_at: string | null }[];
+  return data as {
+    id: string;
+    areas: string[];
+    sources: SourceRef[];
+    cancelled_at: string | null;
+    cancelled_reason: string | null;
+  }[];
 }
 
 describe('store round-trip', () => {
   before(async () => {
     // No Docker or no local stack: these tests skip, the rest still run.
-    if (await reachable()) {
-      await client!.from('outages').delete().gte('starts_at', '2099-01-01T00:00:00.000Z');
-    }
+    // Nothing to clean up: this run's window is its own.
+    await reachable();
   });
 
   // The invariant SPEC §13 step 15 asks to check after adding each adapter.
@@ -84,7 +103,7 @@ describe('store round-trip', () => {
 
     const rows = await currentRows();
     assert.equal(rows.length, 1, `expected one row, got ${rows.length}`);
-    assert.equal(rows[0].id, 'aaa1', 'the original id must survive the merges');
+    assert.equal(rows[0].id, id('aaa1'), 'the original id must survive the merges');
     assert.deepEqual([...rows[0].areas].sort(), ['Alayköy', 'Gönyeli', 'Hamitköy']);
     assert.equal(rows[0].sources.length, 3);
     assert.equal(rows[0].sources[0].kind, 'official');
@@ -101,7 +120,7 @@ describe('store round-trip', () => {
     assert.equal(result.created, 0);
     const rows = await currentRows();
     assert.equal(rows.length, 1);
-    assert.equal(rows[0].id, 'aaa1');
+    assert.equal(rows[0].id, id('aaa1'));
   });
 
   // Corrections are updates; the row stays for the archive (§10.6).
@@ -112,6 +131,21 @@ describe('store round-trip', () => {
     const rows = await currentRows();
     assert.equal(rows.length, 1, 'the row must survive the retraction');
     assert.ok(rows[0].cancelled_at, 'the row must be marked cancelled');
+    assert.equal(rows[0].cancelled_reason, 'retracted', 'a retraction is not bad data');
+  });
+
+  // The ingest re-reads the same announcement every few minutes, so a retracted
+  // record's fingerprint comes round again on the very next run. The upsert used
+  // to carry `cancelled_at: null` in its payload and quietly revive it — an
+  // outage the utility had called off reappeared on the site as if it were still
+  // happening, and a record retired as bad data came back with it.
+  test('a later run does not revive a retracted record', async (t) => {
+    if (!client) return t.skip('no local Supabase reachable');
+    await storeOutages(client!, dedupe([outage('aaa1', ['Gönyeli', 'Hamitköy'], [OFFICIAL])]));
+    const rows = await currentRows();
+    const revived = rows.find((row) => row.id === id('aaa1'));
+    assert.ok(revived, 'the retracted row is still there');
+    assert.ok(revived.cancelled_at, 'and it is still cancelled');
   });
 
   // The queue is one person's work list, and an announcement the parser cannot

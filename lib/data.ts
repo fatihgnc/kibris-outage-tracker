@@ -1,4 +1,4 @@
-import type { DistrictId, MonthlyTotal, Outage } from './types';
+import type { ArchivedOutage, DistrictId, MonthlyTotal, Outage } from './types';
 import { getMockLastCheckedAt, getMockMonthlyTotals, getMockOutages } from './mock';
 import {
   fetchArchivedOutages,
@@ -28,8 +28,9 @@ export async function getOutages(now: number): Promise<Outage[]> {
 
 // Finished outages for the archive. Retracted records stay here, marked
 // cancelled, because the archive's value depends on history staying intact.
-export async function getArchivedOutages(now: number): Promise<Outage[]> {
-  if (mocksEnabled()) return getMockOutages(now);
+export async function getArchivedOutages(now: number): Promise<ArchivedOutage[]> {
+  // The mocks describe a healthy day; none of them is a retraction.
+  if (mocksEnabled()) return (await getMockOutages(now)).map((outage) => ({ ...outage, cancelled: false }));
   return fetchArchivedOutages(now);
 }
 

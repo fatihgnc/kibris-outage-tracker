@@ -93,6 +93,7 @@ export const en: Dictionary = {
     statusPast: 'ended',
     endUnknown: 'unknown',
     published: 'published {time}',
+    cancelled: 'cancelled',
     unverified: 'unverified',
   },
   countdown: {

@@ -15,10 +15,16 @@ type Props = {
   now: number;
   // Archive variant: smaller time block, no countdown.
   compact?: boolean;
+  // Archive only: the outage was announced and then called off (§10.6). It has
+  // to say so on the card — an unmarked retraction reads as an outage that
+  // happened, which is the opposite of the truth.
+  cancelled?: boolean;
 };
 
-export default function OutageCard({ outage, status, locale, dict, now, compact = false }: Props) {
-  const timeColor = outage.kind === 'fault' ? 'text-fault' : 'text-lamp';
+export default function OutageCard({ outage, status, locale, dict, now, compact = false, cancelled = false }: Props) {
+  // A cancelled outage did not happen, so its hours must not read as fact:
+  // they are struck through and drop to the muted colour.
+  const timeColor = cancelled ? 'text-muted line-through' : outage.kind === 'fault' ? 'text-fault' : 'text-lamp';
   const statusText =
     status === 'active'
       ? dict.card.statusActive
@@ -42,7 +48,7 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
     <article className="flex h-full flex-col gap-2 rounded-[4px] border border-dark bg-night px-4 pb-2.5 pt-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <KindBadge kind={outage.kind} dict={dict} />
-        <span className="font-mono text-meta text-muted">{statusText}</span>
+        <span className="font-mono text-meta text-muted">{cancelled ? dict.card.cancelled : statusText}</span>
       </div>
 
       <div className="flex flex-col gap-0.5">

@@ -1,4 +1,4 @@
-import type { DistrictId, MonthlyTotal, Outage, SourceRef } from './types';
+import type { ArchivedOutage, DistrictId, MonthlyTotal, Outage, SourceRef } from './types';
 import { getAnonClient } from './supabase';
 import { isDistrictId } from './geography';
 import { nicosiaWallClock } from './time';
@@ -20,10 +20,18 @@ export type OutageRow = {
   ingested_at: string;
   confidence: Outage['confidence'];
   cancelled_at: string | null;
+  cancelled_reason: CancellationReason | null;
 };
 
+// Why a row was cancelled decides whether the archive may show it. A record
+// the utility called off is news and stays, marked; one the ingest invented is
+// not a retraction and must not be presented as one.
+export type CancellationReason = 'retracted' | 'bad_data';
+
+// One string literal, not a concatenation: supabase-js reads the column list
+// off the literal to type the rows it returns.
 const OUTAGE_COLUMNS =
-  'id, utility, kind, starts_at, ends_at, district, areas, sources, published_at, ingested_at, confidence, cancelled_at';
+  'id, utility, kind, starts_at, ends_at, district, areas, sources, published_at, ingested_at, confidence, cancelled_at, cancelled_reason';
 
 export function mapOutageRow(row: OutageRow): Outage {
   if (!isDistrictId(row.district)) {
@@ -44,7 +52,12 @@ export function mapOutageRow(row: OutageRow): Outage {
   };
 }
 
-export function toOutageRow(outage: Outage, cancelledAt: string | null = null) {
+// Deliberately writes no cancellation columns. The ingest upserts through this
+// on every run, and a payload carrying `cancelled_at: null` would clear the
+// retraction on any row whose fingerprint comes round again — quietly reviving
+// a record that was called off, or one retired as bad data. Cancelling is
+// retractOutages' job alone; on insert the columns take their null default.
+export function toOutageRow(outage: Outage) {
   return {
     id: outage.id,
     utility: outage.utility,
@@ -57,7 +70,6 @@ export function toOutageRow(outage: Outage, cancelledAt: string | null = null) {
     published_at: outage.publishedAt,
     ingested_at: outage.ingestedAt,
     confidence: outage.confidence,
-    cancelled_at: cancelledAt,
   };
 }
 
@@ -75,15 +87,25 @@ export async function fetchLiveOutages(now: number): Promise<Outage[]> {
   return (data as OutageRow[]).map(mapOutageRow);
 }
 
-export async function fetchArchivedOutages(now: number, limit = 500): Promise<Outage[]> {
+// Retracted records belong here, marked cancelled (§10.6) — that a planned
+// outage was called off is exactly the kind of thing the archive exists to
+// remember. Records retired as bad data are the opposite: they never described
+// a real announcement, and listing one as a retraction would tell the reader an
+// outage was announced and cancelled when neither happened.
+//
+// The null case has to be spelled out: in SQL `cancelled_reason <> 'bad_data'`
+// is null, not true, for a row that was never cancelled, which would drop the
+// entire live archive.
+export async function fetchArchivedOutages(now: number, limit = 500): Promise<ArchivedOutage[]> {
   const { data, error } = await getAnonClient()
     .from('outages')
     .select(OUTAGE_COLUMNS)
     .lt('starts_at', new Date(now).toISOString())
+    .or('cancelled_reason.is.null,cancelled_reason.neq.bad_data')
     .order('starts_at', { ascending: false })
     .limit(limit);
   if (error) throw new Error(`fetchArchivedOutages: ${error.message}`);
-  return (data as OutageRow[]).map(mapOutageRow);
+  return (data as OutageRow[]).map((row) => ({ ...mapOutageRow(row), cancelled: row.cancelled_at !== null }));
 }
 
 // Twelve months of totals for one district, bucketed in the island's zone.
