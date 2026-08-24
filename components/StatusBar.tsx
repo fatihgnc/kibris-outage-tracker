@@ -49,6 +49,11 @@ export default function StatusBar({ locale, dict, outages, now, freshness }: Pro
               ? fill(dict.statusBar.checked, { time: formatClock(lastCheckedAt, locale) })
               : dict.statusBar.neverChecked}
           </span>
+          {/* The same decorative middot the footer uses: it parts the update
+            * stamp from the language switcher without being announced. */}
+          <span aria-hidden="true" className="font-mono text-meta text-muted">
+            ·
+          </span>
           <Suspense fallback={null}>
             <LocaleSwitcher locale={locale} labels={dict.switcher} />
           </Suspense>

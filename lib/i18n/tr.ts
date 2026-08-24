@@ -71,13 +71,13 @@ export const tr = {
     allClear: 'Bilinen kesinti yok, ada ışıkta.',
     oneActive: (district: string) => `${locative(district)} kesinti sürüyor`,
     manyActive: '{count} bölgede kesinti sürüyor',
-    checked: 'kontrol {time}',
+    checked: 'son güncelleme {time}',
     // Errors say what happened and what to do: name the failure, then show
     // the last known state with its timestamp (§7.5, §10.7).
     staleTitle: 'Güncellemeler gecikiyor.',
     staleBody: 'Duyuru kaynaklarına {time} tarihinden beri ulaşılamadı. Aşağıdaki bilgiler o ana ait; şu an kesinti olabilir ya da bitmiş olabilir. Kesin bilgi için KIB-TEK duyurularına bakın.',
     staleNeverBody: 'Duyuru kaynaklarına henüz ulaşılamadı. Aşağıda gösterilecek bir bilgi yok. Kesin bilgi için KIB-TEK duyurularına bakın.',
-    neverChecked: 'kontrol edilemedi',
+    neverChecked: 'henüz güncellenmedi',
   },
   hero: {
     allClear: 'Ada şu anda tamamen ışıkta.',
@@ -167,7 +167,7 @@ export const tr = {
   footer: {
     disclaimer:
       'Buradaki bilgiler resmi duyurulardan otomatik derlenir. Çalışmalar erken bitebilir, uzayabilir veya iptal olabilir. Her saati tahmin olarak okuyun; kesin bilgi için KIB-TEK duyurularına bakın.',
-    lastChecked: 'son kontrol {time}',
+    lastChecked: 'son güncelleme {time}',
   },
   switcher: {
     ariaLabel: 'Dil seçimi',

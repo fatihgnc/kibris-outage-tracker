@@ -49,11 +49,11 @@ export const en: Dictionary = {
     allClear: 'No known outages — the island is lit.',
     oneActive: (district: string) => `Outage in progress in ${district}`,
     manyActive: 'Outages in progress in {count} districts',
-    checked: 'checked {time}',
+    checked: 'last updated {time}',
     staleTitle: 'Updates are delayed.',
     staleBody: 'We have not been able to reach the announcement sources since {time}. What you see below is from then — an outage may have started or ended since. For definitive information, check the KIB-TEK announcements.',
     staleNeverBody: 'We have not been able to reach the announcement sources yet, so there is nothing to show below. For definitive information, check the KIB-TEK announcements.',
-    neverChecked: 'not yet checked',
+    neverChecked: 'not yet updated',
   },
   hero: {
     allClear: 'The whole island has power right now.',
@@ -143,7 +143,7 @@ export const en: Dictionary = {
   footer: {
     disclaimer:
       'The information here is compiled automatically from official announcements. Work can finish early, run long, or be cancelled — read every time as an estimate. For definitive information, check the KIB-TEK announcements.',
-    lastChecked: 'last checked {time}',
+    lastChecked: 'last updated {time}',
   },
   switcher: {
     ariaLabel: 'Language',

@@ -116,7 +116,7 @@ değeri geçmişin bozulmadan durmasına bağlıdır.
 
 ## Veriler eskirse ne oluyor
 
-Sayfanın üstünde son kontrol saati yazar. Bu değer, başarıyla tamamlanan son
+Sayfanın üstünde son güncelleme saati yazar. Bu değer, başarıyla tamamlanan son
 derleme işleminden gelir; sabit bir yazı değildir.
 
 Son başarılı kontrol bir saatten eskiyse bunu sayfada açıkça söylüyoruz. Eski

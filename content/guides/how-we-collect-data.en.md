@@ -118,7 +118,7 @@ value depends on the history staying intact.
 
 ## What happens when the data goes stale
 
-The top of every page shows when we last checked. That value comes from the last
+The top of every page shows when it was last updated. That value comes from the last
 successfully completed collection run — it is not a fixed piece of text.
 
 If the last successful check is more than an hour old, we say so on the page.
