@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
@@ -91,13 +90,13 @@ export default async function ArchivePage({ params, searchParams }: Props) {
           basePath="/archive"
           extraQuery={selectedMonth ? { month: selectedMonth } : {}}
         />
-        <Suspense fallback={null}>
-          <ArchiveMonthSelect
-            value={selectedMonth ?? 'all'}
-            options={monthOptions}
-            label={dict.archive.monthLabel}
-          />
-        </Suspense>
+        <ArchiveMonthSelect
+          value={selectedMonth ?? 'all'}
+          options={monthOptions}
+          label={dict.archive.monthLabel}
+          basePath={`/${locale}/archive`}
+          preserve={selectedDistrict ? { district: selectedDistrict } : {}}
+        />
       </section>
 
       <section className="pt-5">
