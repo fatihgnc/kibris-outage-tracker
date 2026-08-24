@@ -18,7 +18,7 @@ import { queueForReview, storeOutages, type ReviewItem } from './store';
 // Runs through the same parser as the live ingest, so a record backfilled
 // today is indistinguishable from one ingested at the time.
 //
-//   npm run backfill -- --pages 20
+//   npm run backfill -- --per-source 20 --months 6 [--dry-run]
 
 type ArchiveSource = {
   id: string;

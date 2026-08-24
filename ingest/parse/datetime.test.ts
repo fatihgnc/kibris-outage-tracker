@@ -92,3 +92,53 @@ test('parseSchedule defaults to the publication date when none is stated', () =>
   assert.ok(schedule);
   assert.equal(schedule.startsAt.slice(0, 10), '2026-08-22');
 });
+
+// Copied from detaykibris.com/lefkosada-persembe-gunu-... , published on the
+// Wednesday. Without weekday resolution the date fell back to the publication
+// date, so the outage was published a day early — and because the date is part
+// of the fingerprint, the day-before and day-of stories about the one outage
+// never collapsed into a single record.
+test('a named weekday resolves to its next occurrence, not the publication date', () => {
+  const wednesday = '2026-08-05T05:08:00.000Z';
+  assert.deepEqual(
+    parseDate('Proje çalışması nedeniyle perşembe günü Lefkoşa’da iki saatlik elektrik kesintisi yapılacak.', wednesday),
+    { year: 2026, month: 8, day: 6 },
+  );
+});
+
+test('a weekday named on the day itself is that day, not a week later', () => {
+  const thursday = '2026-08-06T05:59:00.000Z';
+  assert.deepEqual(
+    parseDate('Perşembe günü Lefkoşa’da elektrik kesintisi yapılacak.', thursday),
+    { year: 2026, month: 8, day: 6 },
+  );
+});
+
+test('bugün and yarın still win over a weekday mentioned in the same story', () => {
+  const thursday = '2026-08-06T05:59:00.000Z';
+  assert.deepEqual(
+    parseDate('Bugün Lefkoşa’da iki saatlik elektrik kesintisi yapılacak. Proje çalışması nedeniyle perşembe günü...', thursday),
+    { year: 2026, month: 8, day: 6 },
+  );
+  assert.deepEqual(
+    parseDate('Yarın Lefkoşa’da kesinti var; cuma günü tamamlanacak.', thursday),
+    { year: 2026, month: 8, day: 7 },
+  );
+});
+
+test('cumartesi is not read as cuma, nor pazartesi as pazar', () => {
+  const thursday = '2026-08-06T05:59:00.000Z';
+  assert.deepEqual(parseDate('cumartesi günü kesinti', thursday), { year: 2026, month: 8, day: 8 });
+  assert.deepEqual(parseDate('pazartesi günü kesinti', thursday), { year: 2026, month: 8, day: 10 });
+  assert.deepEqual(parseDate('cuma günü kesinti', thursday), { year: 2026, month: 8, day: 7 });
+  assert.deepEqual(parseDate('pazar günü kesinti', thursday), { year: 2026, month: 8, day: 9 });
+});
+
+test('an explicit date still beats a weekday in the same sentence', () => {
+  const wednesday = '2026-08-05T05:08:00.000Z';
+  assert.deepEqual(
+    parseDate('15 Ağustos cumartesi günü kesinti yapılacak', wednesday),
+    { year: 2026, month: 8, day: 15 },
+  );
+});
+

@@ -1,5 +1,5 @@
 import { nicosiaWallClock, zonedTimeToUtc } from '../../lib/time';
-import { toLowerTr } from './text';
+import { foldKey, toLowerTr } from './text';
 
 export type TimeRange = {
   startHour: number;
@@ -74,6 +74,37 @@ const MONTHS: Record<string, number> = {
 
 export type CalendarDate = { year: number; month: number; day: number };
 
+// Announcements name the day as often as they say "yarın": KIB-TEK publishes on
+// Wednesday that the work is "perşembe günü". Without this the date fell back
+// to the publication date, which put the outage on the wrong day and — because
+// the date is part of the record fingerprint — stopped the day-before and
+// day-of stories about one outage from collapsing into a single record.
+//
+// Longest first, so 'cumartesi' is not read as 'cuma' and 'pazartesi' not as
+// 'pazar'.
+// Matched against foldKey(text), which is ASCII. Writing the Turkish letters
+// into the pattern instead makes the match depend on which Unicode
+// normalisation the outlet's HTML happens to use — the same word can arrive
+// precomposed or as a letter plus a combining mark, and only one of them
+// matches. Folding first also picks up the 'persembe' spelling several
+// outlets publish.
+const WEEKDAYS: [RegExp, number][] = [
+  [/\bcumartesi\b/, 6],
+  [/\bpazartesi\b/, 1],
+  [/\bcarsamba\b/, 3],
+  [/\bpersembe\b/, 4],
+  [/\bsali\b/, 2],
+  [/\bcuma\b/, 5],
+  [/\bpazar\b/, 0],
+];
+
+// The next occurrence at or after publication: an announcement is about work
+// still to come, and one published on the day itself says "perşembe" too.
+function nextWeekday(published: CalendarDate, weekday: number): CalendarDate {
+  const publishedDow = new Date(Date.UTC(published.year, published.month - 1, published.day)).getUTCDay();
+  return shiftDays(published, (weekday - publishedDow + 7) % 7);
+}
+
 // Resolves the announcement's date. Relative words are resolved against the
 // announcement's own publishedAt, never the run time — a job running at 00:05
 // must not read yesterday's 'yarın' as today (§10.4).
@@ -104,6 +135,13 @@ export function parseDate(text: string, publishedAt: string): CalendarDate | nul
   if (/\byar[ıi]n\b/.test(lower)) return shiftDays(published, 1);
   if (/\bbug[üu]n\b/.test(lower)) return shiftDays(published, 0);
   if (/\bd[üu]n\b/.test(lower)) return shiftDays(published, -1);
+
+  // After the explicit words, which win when a story carries both: "Bugün
+  // Lefkoşa'da ... perşembe günü ..." is about today.
+  const folded = foldKey(text);
+  for (const [pattern, weekday] of WEEKDAYS) {
+    if (pattern.test(folded)) return nextWeekday(published, weekday);
+  }
 
   return null;
 }

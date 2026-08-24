@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
-import { selectProvider, validate } from './fallback';
+import { afterEach, test } from 'node:test';
+import type { RawAnnouncement } from './index';
+import { runFallback, selectProvider, validate } from './fallback';
 
 // The fallback's output is never trusted on shape: it is validated against the
 // expected schema before any of it is accepted (§10.4).
@@ -126,3 +127,74 @@ test('each provider extracts the model text from its own response shape', () => 
     assert.equal(provider.extract({ content: [{ type: 'thinking' }] }), '');
   });
 });
+
+// --- Stage 2 end to end -----------------------------------------------------
+//
+// validate() checks the shape. These check the thing the shape cannot: that
+// nothing the model asserts is taken on trust. A model is perfectly capable of
+// returning a confident, well-formed answer about a village that does not
+// exist, or of putting a real village in the wrong district.
+
+const ANNOUNCEMENT: RawAnnouncement = {
+  source: { name: 'Detay Kıbrıs', url: 'https://example.invalid/a', kind: 'press' },
+  title: 'Elektrik kesintisi',
+  body: 'Bir duyuru metni.',
+  publishedAt: '2026-08-23T06:00:00.000Z',
+  fetchedAt: '2026-08-23T06:05:00.000Z',
+};
+
+const realFetch = globalThis.fetch;
+function answerWith(body: unknown, ok = true, status = 200) {
+  process.env.OPENAI_API_KEY = 'test-key';
+  globalThis.fetch = (async () =>
+    ({ ok, status, json: async () => ({ choices: [{ message: { content: JSON.stringify(body) } }] }) }) as Response) as typeof fetch;
+}
+
+afterEach(() => {
+  globalThis.fetch = realFetch;
+  delete process.env.OPENAI_API_KEY;
+});
+
+test('a village the model invented produces no record at all', async () => {
+  answerWith({ outages: [{ kind: 'planned', date: '2026-08-23', start: '09:00', end: '11:00', areas: ['Yeşilvadi Ovası'] }] });
+  assert.equal(await runFallback(ANNOUNCEMENT), null, 'an unmatched place must not become an outage');
+});
+
+test('the district comes from places.json, not from the model', async () => {
+  answerWith({ outages: [{ kind: 'planned', date: '2026-08-23', start: '09:00', end: '11:00', areas: ['Lapta'] }] });
+  const result = await runFallback(ANNOUNCEMENT);
+  assert.equal(result?.records.length, 1);
+  assert.equal(result!.records[0].district, 'girne', 'Lapta is in Girne whatever the model says');
+  assert.deepEqual(result!.records[0].areas, ['Lapta']);
+});
+
+test('everything Stage 2 produces is marked low confidence', async () => {
+  answerWith({ outages: [{ kind: 'fault', date: '2026-08-23', start: '14:00', end: null, areas: ['Lapta'] }] });
+  const result = await runFallback(ANNOUNCEMENT);
+  assert.equal(result?.records[0].confidence, 'low');
+  assert.equal(result?.records[0].endsAt, null, 'an open-ended fault stays open-ended');
+  assert.deepEqual(result?.records[0].sources, [ANNOUNCEMENT.source]);
+});
+
+test('places in two districts become one record each', async () => {
+  answerWith({ outages: [{ kind: 'planned', date: '2026-08-23', start: '09:00', end: '11:00', areas: ['Lapta', 'Gönyeli'] }] });
+  const result = await runFallback(ANNOUNCEMENT);
+  assert.deepEqual(result?.records.map((r) => r.district).sort(), ['girne', 'lefkosa']);
+});
+
+test('a refused or failed request is skipped, not thrown', async () => {
+  answerWith({ outages: [] }, false, 429);
+  assert.equal(await runFallback(ANNOUNCEMENT), null);
+
+  process.env.OPENAI_API_KEY = 'test-key';
+  globalThis.fetch = (async () => { throw new Error('network down'); }) as typeof fetch;
+  assert.equal(await runFallback(ANNOUNCEMENT), null, 'a network failure must not stop the run');
+});
+
+test('an unparseable answer is skipped, so the announcement still reaches review', async () => {
+  process.env.OPENAI_API_KEY = 'test-key';
+  globalThis.fetch = (async () =>
+    ({ ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'Sorry, I cannot help.' } }] }) }) as Response) as typeof fetch;
+  assert.equal(await runFallback(ANNOUNCEMENT), null);
+});
+
