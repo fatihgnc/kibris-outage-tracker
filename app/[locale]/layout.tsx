@@ -88,7 +88,10 @@ export default async function LocaleLayout({
       <body className="flex min-h-screen flex-col">
         <StatusBar locale={locale} dict={dict} outages={outages} now={now} freshness={freshness} />
 
-        <header className="mx-auto flex w-full max-w-[1060px] items-baseline justify-between gap-4 px-5 pt-4">
+        {/* Wraps rather than squeezes: with a long brand there is not enough
+          * room at 360px for both, and without this the nav keeps its width by
+          * breaking a label across two lines. */}
+        <header className="mx-auto flex w-full max-w-[1060px] flex-wrap items-baseline justify-between gap-x-4 gap-y-2 px-5 pt-4">
           <Link
             href={`/${locale}`}
             className="opsz-40 font-display text-body font-semibold tracking-[-0.01em] text-text no-underline"

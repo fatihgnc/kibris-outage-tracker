@@ -21,7 +21,7 @@ export default function LocaleSwitcher({ locale, labels }: Props) {
     document.cookie = `${LOCALE_COOKIE}=${target}; path=/; max-age=31536000; samesite=lax`;
   };
   const linkClass = (target: Locale) =>
-    target === locale ? 'text-lamp no-underline' : 'text-muted no-underline hover:text-text';
+    target === locale ? 'tap-target text-lamp no-underline' : 'tap-target text-muted no-underline hover:text-text';
 
   return (
     <nav aria-label={labels.ariaLabel} className="flex items-center font-mono text-meta">

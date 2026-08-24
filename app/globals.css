@@ -202,6 +202,20 @@ body {
   }
 }
 
+/* WCAG 2.2 asks for a 24 by 24 pixel target (2.5.8). The header links and the
+ * language switch are 13 and 14 pixel type, so their boxes come out at 18 and
+ * 22 pixels tall — fine for a mouse, thin for a thumb. The catchment is grown
+ * around them with a pseudo-element, which leaves the type, the baseline and
+ * the spacing between them exactly as they were. */
+.tap-target {
+  position: relative;
+}
+.tap-target::before {
+  content: "";
+  position: absolute;
+  inset: -12px -6px;
+}
+
 /* The click target is the district, not the point. The focus ring is a stroke
  * on the district shape rather than an outline: an outline traces the
  * element's box, and the element is the shape of a district. */

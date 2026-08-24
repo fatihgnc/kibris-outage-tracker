@@ -9,7 +9,9 @@ type Props = { locale: Locale; homeLabel: string; archiveLabel: string; guidesLa
 export default function NavLinks({ locale, homeLabel, archiveLabel, guidesLabel }: Props) {
   const pathname = usePathname() ?? '';
   const linkClass = (active: boolean) =>
-    `text-small no-underline ${active ? 'text-lamp' : 'text-muted hover:text-text'}`;
+    `tap-target whitespace-nowrap text-small no-underline ${
+      active ? 'text-lamp' : 'text-muted hover:text-text'
+    }`;
 
   return (
     <nav className="flex gap-4">
