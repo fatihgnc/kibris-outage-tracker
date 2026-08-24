@@ -74,3 +74,30 @@ test('districtsOf returns each district once, in first-seen order', () => {
   const matches = matchPlaces('Lapta, Gönyeli, Alsancak ve Hamitköy');
   assert.deepEqual(districtsOf(matches), ['girne', 'lefkosa']);
 });
+
+// Copied from detaykibris.com/mesarya-bolgesinde-iki-saatlik-elektrik-kesintisi.
+// "Vadili ağıllar" is the sheepfolds at Vadili, in Gazimağusa. Matched without
+// regard to case it became the village Ağıllar, in İskele, and the announcement
+// was split into a second record for a district it never mentioned — an outage
+// reported to people who were not going to have one.
+test('a common noun that is also a village name is not a place', () => {
+  const matches = matchPlaces(
+    'KIB-TEK’ten verilen bilgiye göre, kesintiden; Nergisli Köyü, Geçitkale Havaalanı, ' +
+      'İnönü kavşağı bölgesi, Vadili Köyü, Vadili ağıllar, Vadili Sanayi Sitesi, ' +
+      'Paşaköy ağıllar etkilenecek.',
+  );
+  const names = matches.map((m) => m.name);
+  assert.ok(names.includes('Vadili'), 'the village itself still matches');
+  assert.ok(names.includes('Nergisli'));
+  assert.ok(names.includes('Paşaköy'));
+  assert.ok(!names.includes('Ağıllar'), 'the sheepfolds are not the village Ağıllar');
+  assert.deepEqual(districtsOf(matches), ['gazimagusa'], 'and the announcement stays in one district');
+});
+
+// The capital is what carries the distinction, so an outlet writing the whole
+// list in caps must still resolve.
+test('an all-caps list still matches even where a name doubles as a word', () => {
+  const matches = matchPlaces('AGILLAR VADILI PASAKOY');
+  assert.ok(matches.map((m) => m.name).includes('Ağıllar'));
+});
+

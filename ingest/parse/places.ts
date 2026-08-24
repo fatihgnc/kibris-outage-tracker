@@ -26,6 +26,15 @@ const PLACES_PATH = fileURLToPath(new URL('../../data/places.json', import.meta.
 const FUZZY_THRESHOLD = 0.9;
 const MIN_FUZZY_LENGTH = 5;
 
+// A settlement is a proper noun and announcements write it that way, in title
+// case or in full caps. Several village names are also ordinary Turkish words,
+// and matching those without regard to case invents outages: "Vadili ağıllar"
+// — the sheepfolds at Vadili, in Gazimağusa — was read as the village Ağıllar
+// in İskele, and the announcement was split into a second record for a place
+// it never mentioned. Requiring the capital costs a village written in lower
+// case mid-sentence, which then goes to review; that is the cheaper mistake.
+const startsUpperTr = (word: string) => /^[A-ZÇĞİÖŞÜ]/.test(word);
+
 let cache: { places: Place[]; byKey: Map<string, Place> } | null = null;
 
 function load() {
@@ -70,6 +79,7 @@ export function matchPlaces(text: string): PlaceMatch[] {
     let consumed = 0;
     for (let span = Math.min(maxWords, tokens.length - index); span >= 1; span--) {
       const slice = tokens.slice(index, index + span);
+      if (!startsUpperTr(slice[0].text)) continue;
       const key = foldKey(slice.map((t) => t.text).join(' '));
       if (!key) continue;
       const exact = byKey.get(key);
@@ -83,7 +93,7 @@ export function matchPlaces(text: string): PlaceMatch[] {
       // Single-token fuzzy pass for typos, never for short words.
       const token = tokens[index];
       const key = foldKey(token.text);
-      if (key.length >= MIN_FUZZY_LENGTH && /^[a-zçğıöşüA-ZÇĞİÖŞÜ]/.test(token.text)) {
+      if (key.length >= MIN_FUZZY_LENGTH && startsUpperTr(token.text)) {
         let best: { place: Place; score: number } | null = null;
         for (const place of places) {
           for (const spelling of [place.name, ...place.aliases]) {

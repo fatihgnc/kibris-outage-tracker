@@ -7,7 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Outage, SourceRef } from '../lib/types';
 import { createServiceClient } from './supabase';
 import { dedupe } from './dedupe';
-import { retractOutages, storeOutages } from './store';
+import { queueForReview, retractOutages, storeOutages } from './store';
 
 // Round-trip against a local Supabase (`npx supabase start`). Skipped when one
 // is not reachable, so the suite still runs without Docker.
@@ -112,5 +112,35 @@ describe('store round-trip', () => {
     const rows = await currentRows();
     assert.equal(rows.length, 1, 'the row must survive the retraction');
     assert.ok(rows[0].cancelled_at, 'the row must be marked cancelled');
+  });
+
+  // The queue is one person's work list, and an announcement the parser cannot
+  // read is still there at the next poll. Without this it grew by a row per
+  // run: three runs by hand put the same item in three times.
+  //
+  // Asserted as an invariant rather than from a clean slate, because the schema
+  // grants the ingest no delete on this table — an item that has been queued is
+  // resolved, never removed — so the fixture row from an earlier run is
+  // expected to still be there.
+  test('an unparseable announcement is queued once, however often it is seen', async (t) => {
+    if (!client) return t.skip('no local Supabase reachable');
+    const item = {
+      source: { name: 'Gündem Kıbrıs', url: 'https://example.invalid/store-test-review' },
+      rawText: 'Fixture: an announcement with no time range in it at all.',
+      reason: 'no time range found',
+    };
+    const rows = async () => {
+      const { count } = await client!
+        .from('review_queue')
+        .select('*', { count: 'exact', head: true })
+        .eq('raw_text', item.rawText);
+      return count ?? 0;
+    };
+
+    await queueForReview(client!, [item]);
+    assert.equal(await rows(), 1, 'one sighting leaves exactly one row');
+    assert.equal(await queueForReview(client!, [item]), 0, 'a second sighting adds nothing');
+    assert.equal(await queueForReview(client!, [item, item]), 0, 'nor does a batch repeating it');
+    assert.equal(await rows(), 1, 'still exactly one row');
   });
 });

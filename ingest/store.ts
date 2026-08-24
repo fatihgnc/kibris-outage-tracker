@@ -110,15 +110,25 @@ export type ReviewItem = {
 
 // Anything both parser stages fail on is written here with the raw text and
 // the reason, and is never silently dropped (§10.4).
+//
+// An announcement the parser cannot read is still on the listing at the next
+// poll, so this has to be idempotent the way storeOutages is: the queue is one
+// person's work list, and a cron would otherwise fill it with copies of the
+// same item. The database keys each row on the source URL plus the raw text
+// and drops repeats; the count returned is what was actually added.
 export async function queueForReview(client: SupabaseClient, items: ReviewItem[]): Promise<number> {
   if (items.length === 0) return 0;
-  const { error } = await client.from('review_queue').insert(
-    items.map((item) => ({
-      source: item.source,
-      raw_text: item.rawText.slice(0, 8000),
-      reason: item.reason,
-    })),
-  );
+  const { data, error } = await client
+    .from('review_queue')
+    .upsert(
+      items.map((item) => ({
+        source: item.source,
+        raw_text: item.rawText.slice(0, 8000),
+        reason: item.reason,
+      })),
+      { onConflict: 'fingerprint', ignoreDuplicates: true },
+    )
+    .select('id');
   if (error) throw new Error(`queueForReview: ${error.message}`);
-  return items.length;
+  return data?.length ?? 0;
 }
