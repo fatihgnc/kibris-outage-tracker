@@ -129,7 +129,7 @@ export const en: Dictionary = {
     legendPlanned: 'planned hours',
     legendFault: 'fault hours',
     detail: '{month}: {planned} hr planned, {fault} hr fault',
-    detailHint: 'hover or focus a month for its figures',
+    detailHint: 'tap or focus a month for its figures',
     monthAria: '{month}: {planned} hours planned, {fault} hours of fault outages',
   },
   archive: {
