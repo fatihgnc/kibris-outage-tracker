@@ -68,7 +68,10 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
         <p className="opsz-24 m-0 font-display text-body font-semibold text-text">
           {DISTRICTS[outage.district].name}
         </p>
-        <p className="m-0 text-small text-muted">{outage.areas.join(', ')}</p>
+        {/* Area names come from parsed announcements, so a bad parse can put a
+          * run-on token here. Left to wrap on spaces alone, one of those widens
+          * the grid column and pushes the whole page sideways on a phone. */}
+        <p className="m-0 break-words text-small text-muted">{outage.areas.join(', ')}</p>
       </div>
 
       <div className="mt-auto flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono text-meta text-muted">
@@ -77,7 +80,7 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
           href={source.url}
           target="_blank"
           rel="noreferrer"
-          className="text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
+          className="break-words text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
         >
           {source.name}
         </a>

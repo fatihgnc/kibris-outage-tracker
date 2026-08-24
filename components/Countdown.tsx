@@ -21,10 +21,14 @@ export default function Countdown({ targetIso, pattern, units, initialNow }: Pro
     return () => clearInterval(id);
   }, []);
   const text = fill(pattern, { duration: formatDuration(Date.parse(targetIso) - now, units) });
-  // Reserve the initial width so a tick never shifts the layout around it.
+  // Reserve the initial width so a tick never shifts the layout around it —
+  // but never more than the line it sits on. A Turkish countdown to work
+  // announced ten days out runs to 36 characters, and an uncapped reservation
+  // pushed that fifteen pixels out through the side of the card. `min-width`
+  // beats `max-width` when the two disagree, so the cap belongs inside it.
   const [reservedCh] = useState(() => text.length);
   return (
-    <span className="inline-block" style={{ minWidth: `${reservedCh}ch` }}>
+    <span className="inline-block" style={{ minWidth: `min(${reservedCh}ch, 100%)` }}>
       {text}
     </span>
   );
