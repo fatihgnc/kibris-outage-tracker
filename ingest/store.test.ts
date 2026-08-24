@@ -82,8 +82,22 @@ async function currentRows() {
 describe('store round-trip', () => {
   before(async () => {
     // No Docker or no local stack: these tests skip, the rest still run.
-    // Nothing to clean up: this run's window is its own.
-    await reachable();
+    if (!(await reachable())) return;
+    // This run's own window needs no cleaning, but earlier runs' windows stay
+    // in the table for good — the schema grants no delete. Retiring them as bad
+    // data is what that flag is for, and it keeps them out of the archive and
+    // out of scripts/audit-records.ts, which would otherwise report a growing
+    // pile of fixtures it cannot re-derive.
+    await client!
+      .from('outages')
+      .update({ cancelled_at: new Date().toISOString(), cancelled_reason: 'bad_data' })
+      .gte('starts_at', '2099-01-01T00:00:00.000Z')
+      // Every fixture window except this one. Run windows are picked at random
+      // within the far-future range rather than in sequence, so "older" cannot
+      // be expressed as a date comparison. Rows the retraction test cancelled
+      // are relabelled too: a fixture is not a retraction, whatever the test
+      // did to it on the way past.
+      .neq('starts_at', START);
   });
 
   // The invariant SPEC §13 step 15 asks to check after adding each adapter.

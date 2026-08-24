@@ -10,6 +10,7 @@
     "test": "node --import tsx --test \"ingest/**/*.test.ts\" \"lib/**/*.test.ts\"",
     "ingest": "node --import tsx ingest/run.ts",
     "backfill": "node --import tsx ingest/backfill.ts",
+    "audit": "node --import tsx scripts/audit-records.ts",
     "check:secrets": "node scripts/check-secrets.mjs",
     "build:map": "node --import tsx scripts/build-map-geometry.ts",
     "build:icons": "node --import tsx scripts/build-icons.ts",
