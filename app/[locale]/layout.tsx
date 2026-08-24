@@ -49,7 +49,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const dict = await getDictionary(locale);
   return {
     metadataBase: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
-    title: { default: dict.meta.title, template: dict.meta.titleTemplate },
+    // No brand suffix: the domain is the brand, and a search result already
+    // prints it on the line above the title.
+    title: dict.meta.title,
     description: dict.meta.description,
     alternates: {
       languages: { tr: '/tr', en: '/en', 'x-default': '/tr' },

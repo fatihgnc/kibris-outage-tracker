@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { getDictionary } from '@/lib/i18n/dictionaries';
 import { getGuideIndex } from '@/lib/content';
+import { pageMetadata } from '@/lib/seo';
+import { breadcrumbJsonLd } from '@/lib/jsonld';
+import JsonLd from '@/components/JsonLd';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -11,13 +14,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const dict = await getDictionary(locale);
-  return {
+  return pageMetadata({
+    locale,
+    dict,
+    path: '/guides',
     title: dict.guides.title,
     description: dict.guides.lead,
-    alternates: {
-      languages: { tr: '/tr/guides', en: '/en/guides', 'x-default': '/tr/guides' },
-    },
-  };
+  });
 }
 
 // Index of the written explainers (§5.4). No outage cards on these pages.
@@ -30,6 +33,13 @@ export default async function GuidesPage({ params }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-[880px]">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: dict.nav.home, path: `/${locale}` },
+          { name: dict.guides.title, path: `/${locale}/guides` },
+        ])}
+      />
+
       <section className="pt-5">
         <h1 className="opsz-120 m-0 font-display text-display font-semibold tracking-[-0.02em] text-text">
           {dict.guides.title}

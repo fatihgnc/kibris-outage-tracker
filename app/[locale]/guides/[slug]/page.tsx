@@ -7,6 +7,9 @@ import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getGuide, GUIDE_SLUGS, isGuideSlug } from '@/lib/content';
 import { readConsent, CONSENT_COOKIE } from '@/lib/consent';
 import AdSlot from '@/components/AdSlot';
+import JsonLd from '@/components/JsonLd';
+import { pageMetadata } from '@/lib/seo';
+import { articleJsonLd, breadcrumbJsonLd } from '@/lib/jsonld';
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -15,18 +18,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isLocale(locale) || !isGuideSlug(slug)) return {};
   const guide = await getGuide(slug, locale);
   if (!guide) return {};
-  return {
+  return pageMetadata({
+    locale,
+    dict: await getDictionary(locale),
+    path: `/guides/${slug}`,
     title: guide.title,
     description: guide.summary,
-    alternates: {
-      languages: {
-        tr: `/tr/guides/${slug}`,
-        en: `/en/guides/${slug}`,
-        'x-default': `/tr/guides/${slug}`,
-      },
-    },
-    openGraph: { title: guide.title, description: guide.summary, type: 'article' },
-  };
+    type: 'article',
+  });
 }
 
 export function generateStaticParams() {
@@ -54,6 +53,24 @@ export default async function GuidePage({ params }: Props) {
 
   return (
     <article className="mx-auto w-full max-w-[880px]">
+      <JsonLd
+        data={articleJsonLd({
+          locale,
+          dict,
+          path: `/${locale}/guides/${slug}`,
+          title: guide.title,
+          description: guide.summary,
+          updated: guide.updated,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: dict.nav.home, path: `/${locale}` },
+          { name: dict.guides.title, path: `/${locale}/guides` },
+          { name: guide.title, path: `/${locale}/guides/${slug}` },
+        ])}
+      />
+
       <header className="pt-5">
         <Link href={`/${locale}/guides`} className="font-mono text-meta text-muted no-underline hover:text-text">
           ← {dict.guides.backToIndex}

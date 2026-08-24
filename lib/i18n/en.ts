@@ -6,13 +6,14 @@ import type { Dictionary } from './dictionaries';
 // error because this object must satisfy the Dictionary type.
 export const en: Dictionary = {
   meta: {
-    title: 'kesintimivar.com — power outages in Northern Cyprus',
-    titleTemplate: '%s — kesintimivar.com',
+    title: 'Current and past power outages in the TRNC',
     description:
-      'Power outages in Northern Cyprus on one page: districts with an outage right now, upcoming planned work, and past records. Compiled from official announcements.',
+      'View the power outages happening now and the ones already over in Northern Cyprus: districts with an outage right now, upcoming planned work, and an archive of past outages. Compiled from official announcements.',
+    share:
+      'Power outages in Northern Cyprus — where the power is out right now, upcoming planned work, and an archive of past outages.',
     archiveTitle: 'Past outages',
     archiveDescription:
-      'The archive of power outages in Northern Cyprus. Filter finished outages by district and month.',
+      'The archive of power outages in Northern Cyprus. Filter past outages by district and month to view them.',
     districtTitle: (district: string) => `Power outages in ${district}`,
     districtDescription: (district: string) =>
       `The current power status in ${district}, upcoming planned work, and a summary of the last 12 months.`,

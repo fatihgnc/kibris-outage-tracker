@@ -6,12 +6,15 @@ import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getArchivedOutages, getNow } from '@/lib/data';
 import { deriveStatus, formatMonthYear, monthKey } from '@/lib/time';
 import { isDistrictId } from '@/lib/geography';
-import type { DistrictId, Outage } from '@/lib/types';
+import type { ArchivedOutage, DistrictId } from '@/lib/types';
 import DistrictFilter from '@/components/DistrictFilter';
 import ArchiveMonthSelect from '@/components/ArchiveMonthSelect';
 import OutageCard from '@/components/OutageCard';
 import AdSlot from '@/components/AdSlot';
 import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
+import { pageMetadata } from '@/lib/seo';
+import { breadcrumbJsonLd } from '@/lib/jsonld';
+import JsonLd from '@/components/JsonLd';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -22,13 +25,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const dict = await getDictionary(locale);
-  return {
+  // The district and month filters are query parameters, so every combination
+  // canonicalises back to the bare archive.
+  return pageMetadata({
+    locale,
+    dict,
+    path: '/archive',
     title: dict.meta.archiveTitle,
     description: dict.meta.archiveDescription,
-    alternates: {
-      languages: { tr: '/tr/archive', en: '/en/archive', 'x-default': '/tr/archive' },
-    },
-  };
+  });
 }
 
 export default async function ArchivePage({ params, searchParams }: Props) {
@@ -47,7 +52,7 @@ export default async function ArchivePage({ params, searchParams }: Props) {
   const outages = await getArchivedOutages(now);
   const past = outages
     .filter((o) => deriveStatus(o, now) === 'past')
-    .sort((a: Outage, b: Outage) => Date.parse(b.startsAt) - Date.parse(a.startsAt));
+    .sort((a: ArchivedOutage, b: ArchivedOutage) => Date.parse(b.startsAt) - Date.parse(a.startsAt));
 
   const monthKeys = [...new Set(past.map((o) => monthKey(o.startsAt)))];
   const selectedMonth = monthRaw && monthKeys.includes(monthRaw) ? monthRaw : null;
@@ -59,7 +64,7 @@ export default async function ArchivePage({ params, searchParams }: Props) {
   );
 
   // Flat chronological list, grouped by month.
-  const groups: { month: string; records: Outage[] }[] = [];
+  const groups: { month: string; records: ArchivedOutage[] }[] = [];
   for (const outage of filtered) {
     const key = monthKey(outage.startsAt);
     const group = groups.find((g) => g.month === key);
@@ -75,6 +80,13 @@ export default async function ArchivePage({ params, searchParams }: Props) {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: dict.nav.home, path: `/${locale}` },
+          { name: dict.archive.title, path: `/${locale}/archive` },
+        ])}
+      />
+
       <section className="pt-5">
         <h1 className="opsz-120 m-0 font-display text-display font-semibold tracking-[-0.02em] text-text">
           {dict.archive.title}
@@ -113,7 +125,15 @@ export default async function ArchivePage({ params, searchParams }: Props) {
                 <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
                   {group.records.map((outage) => (
                     <li key={outage.id}>
-                      <OutageCard outage={outage} status="past" locale={locale} dict={dict} now={now} compact />
+                      <OutageCard
+                        outage={outage}
+                        status="past"
+                        locale={locale}
+                        dict={dict}
+                        now={now}
+                        compact
+                        cancelled={outage.cancelled}
+                      />
                     </li>
                   ))}
                 </ul>

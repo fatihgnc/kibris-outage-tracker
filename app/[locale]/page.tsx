@@ -13,6 +13,9 @@ import OutageCard from '@/components/OutageCard';
 import Countdown from '@/components/Countdown';
 import AdSlot from '@/components/AdSlot';
 import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
+import { pageMetadata } from '@/lib/seo';
+import { siteJsonLd } from '@/lib/jsonld';
+import JsonLd from '@/components/JsonLd';
 
 // One full row on a desktop grid, so the ad can never appear before a reader
 // has seen the first cards.
@@ -26,11 +29,9 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  return {
-    alternates: {
-      languages: { tr: '/tr', en: '/en', 'x-default': '/tr' },
-    },
-  };
+  // Title and description come from the layout; the district filter lives in
+  // the query string and the canonical points past it.
+  return pageMetadata({ locale, dict: await getDictionary(locale) });
 }
 
 export default async function HomePage({ params, searchParams }: Props) {
@@ -73,6 +74,8 @@ export default async function HomePage({ params, searchParams }: Props) {
 
   return (
     <>
+      <JsonLd data={siteJsonLd(locale, dict)} />
+
       <section className="pt-2">
         <h1 className="opsz-120 m-0 max-w-[22ch] text-pretty font-display text-display font-semibold tracking-[-0.02em] text-text">
           {heroTitle}

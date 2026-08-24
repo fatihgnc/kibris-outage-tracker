@@ -25,13 +25,16 @@ function locative(name: string): string {
 
 export const tr = {
   meta: {
-    title: 'kesintimivar.com — Kuzey Kıbrıs elektrik kesintileri',
-    titleTemplate: '%s — kesintimivar.com',
+    title: "KKTC'deki güncel ve geçmiş elektrik kesintileri",
     description:
-      'Kuzey Kıbrıs elektrik kesintilerini tek sayfada gösterir: şu an kesinti olan bölgeler, yaklaşan planlı çalışmalar ve geçmiş kayıtlar. Resmi duyurulardan derlenir.',
+      "Kuzey Kıbrıs'ta güncel yaşanan ve yaşanmış olan elektrik kesintilerini görüntüleyin: şu an kesinti olan bölgeler, yaklaşan planlı çalışmalar ve geçmiş kesintilerin arşivi. Resmi duyurulardan derlenir.",
+    // The one line a link preview has room for; the description above is
+    // written for a search result and is far too long for a card.
+    share:
+      "Kuzey Kıbrıs'ta yaşanan elektrik kesintileri — şu an kesinti yaşayan yerler, yaklaşan planlı çalışmalar ve geçmişte yaşanan kesintilerin arşivi.",
     archiveTitle: 'Geçmiş kesintiler',
     archiveDescription:
-      'Kuzey Kıbrıs elektrik kesintilerinin arşivi. Bitmiş kesintileri bölgeye ve aya göre süz.',
+      "Kuzey Kıbrıs'ta yaşanan elektrik kesintilerinin arşivi. Yaşanmış kesintileri bölgeye ve aya göre filtreleyip görüntüleyin.",
     districtTitle: (district: string) => `${district} elektrik kesintileri`,
     districtDescription: (district: string) =>
       `${locative(district)} şu anki elektrik durumu, yaklaşan planlı çalışmalar ve son 12 ayın özeti.`,
@@ -44,7 +47,7 @@ export const tr = {
   },
   guides: {
     title: 'Rehberler',
-    lead: 'Elektrik kesintileriyle ilgili bilmekte fayda olan şeyler: arıza nasıl bildirilir, uzun bir kesintide ne yapılır, fatura nasıl okunur.',
+    lead: 'Elektrik kesintileriyle alakalı bilinmesinde fayda olan şeyler: elektrik arızası nasıl bildirilir, uzun bir kesintide ne yapılır, fatura nasıl okunur',
     updated: 'güncellendi {date}',
     backToIndex: 'tüm rehberler',
     readMore: 'Devamını oku',

@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getPage } from '@/lib/content';
+import { pageMetadata } from '@/lib/seo';
+import { breadcrumbJsonLd } from '@/lib/jsonld';
+import JsonLd from '@/components/JsonLd';
 
 // about, privacy and terms differ only by which content file they render, so
 // they share this. No ad units on these pages.
@@ -12,13 +15,13 @@ export async function legalMetadata(slug: LegalSlug, rawLocale: string): Promise
   if (!isLocale(rawLocale)) return {};
   const page = await getPage(slug, rawLocale);
   if (!page) return {};
-  return {
+  return pageMetadata({
+    locale: rawLocale,
+    dict: await getDictionary(rawLocale),
+    path: `/${slug}`,
     title: page.title,
     description: page.summary,
-    alternates: {
-      languages: { tr: `/tr/${slug}`, en: `/en/${slug}`, 'x-default': `/tr/${slug}` },
-    },
-  };
+  });
 }
 
 export default async function LegalPage({ slug, rawLocale }: { slug: LegalSlug; rawLocale: string }) {
@@ -36,6 +39,13 @@ export default async function LegalPage({ slug, rawLocale }: { slug: LegalSlug; 
 
   return (
     <article className="mx-auto w-full max-w-[880px]">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: dict.nav.home, path: `/${locale}` },
+          { name: page.title, path: `/${locale}/${slug}` },
+        ])}
+      />
+
       <header className="pt-5">
         <h1 className="opsz-120 m-0 font-display text-display font-semibold tracking-[-0.02em] text-text">
           {page.title}

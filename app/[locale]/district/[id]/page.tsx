@@ -13,6 +13,9 @@ import OutageCard from '@/components/OutageCard';
 import HistoryChart from '@/components/HistoryChart';
 import AdSlot from '@/components/AdSlot';
 import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
+import { pageMetadata } from '@/lib/seo';
+import { breadcrumbJsonLd } from '@/lib/jsonld';
+import JsonLd from '@/components/JsonLd';
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -21,17 +24,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isLocale(locale) || !isDistrictId(id)) return {};
   const dict = await getDictionary(locale);
   const name = DISTRICTS[id].name;
-  return {
+  return pageMetadata({
+    locale,
+    dict,
+    path: `/district/${id}`,
     title: dict.meta.districtTitle(name),
     description: dict.meta.districtDescription(name),
-    alternates: {
-      languages: {
-        tr: `/tr/district/${id}`,
-        en: `/en/district/${id}`,
-        'x-default': `/tr/district/${id}`,
-      },
-    },
-  };
+  });
 }
 
 export default async function DistrictPage({ params }: Props) {
@@ -67,6 +66,13 @@ export default async function DistrictPage({ params }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-[880px]">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: dict.nav.home, path: `/${locale}` },
+          { name: district.name, path: `/${locale}/district/${id}` },
+        ])}
+      />
+
       <section className="flex flex-wrap items-start gap-x-7 gap-y-4 pt-4">
         <div className="min-w-[260px] flex-[1_1_300px]">
           <Link href={`/${locale}`} className="font-mono text-meta text-muted no-underline hover:text-text">
