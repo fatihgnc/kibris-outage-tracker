@@ -1,5 +1,5 @@
 ---
-title: Kullanım koşulları
+title: Kullanım Koşulları
 summary: Bu hizmetin ne vaat ettiği, neyi vaat etmediği ve içeriğin kullanımı.
 updated: 2026-08-23
 ---

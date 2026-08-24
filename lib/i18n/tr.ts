@@ -52,7 +52,7 @@ export const tr = {
   legal: {
     about: 'Hakkında',
     privacy: 'Gizlilik',
-    terms: 'Kullanım koşulları',
+    terms: 'Kullanım Koşulları',
   },
   consent: {
     // The question is asked once, and a refusal is honoured (§11.6).

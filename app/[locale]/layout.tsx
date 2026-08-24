@@ -59,8 +59,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       description: dict.meta.description,
       siteName: dict.brand,
       locale: locale === 'tr' ? 'tr_TR' : 'en_US',
+      alternateLocale: locale === 'tr' ? 'en_US' : 'tr_TR',
       type: 'website',
     },
+    // The card is 1200x630, so it is worth the wide treatment. Its image and
+    // text come from the Open Graph block above; only the shape is set here.
+    twitter: { card: 'summary_large_image' },
   };
 }
 
@@ -112,22 +116,30 @@ export default async function LocaleLayout({
           <div className="mx-auto flex w-full max-w-[1060px] flex-col gap-2 px-5 pb-9 pt-4">
             {/* The persistent disclaimer (§1.4): every duration is an estimate. */}
             <p className="m-0 max-w-[68ch] text-meta text-muted">{dict.footer.disclaimer}</p>
-            <p className="m-0 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-meta text-muted">
+            {/* Two ranks of separator: an em dash parts the imprint from the legal
+              * links, a middot parts the links from each other. Both are marked
+              * decorative so a screen reader announces the links back to back. */}
+            <p className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-meta text-muted">
               <span>
                 {dict.brand} ·{' '}
                 {freshness.lastCheckedAt
                   ? fill(dict.footer.lastChecked, { time: formatClock(freshness.lastCheckedAt, locale) })
                   : dict.statusBar.neverChecked}
               </span>
-              <Link href={`/${locale}/about`} className="text-muted no-underline hover:text-text">
-                {dict.legal.about}
-              </Link>
-              <Link href={`/${locale}/privacy`} className="text-muted no-underline hover:text-text">
-                {dict.legal.privacy}
-              </Link>
-              <Link href={`/${locale}/terms`} className="text-muted no-underline hover:text-text">
-                {dict.legal.terms}
-              </Link>
+              <span aria-hidden="true">—</span>
+              <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <Link href={`/${locale}/about`} className="text-muted no-underline hover:text-text">
+                  {dict.legal.about}
+                </Link>
+                <span aria-hidden="true">·</span>
+                <Link href={`/${locale}/privacy`} className="text-muted no-underline hover:text-text">
+                  {dict.legal.privacy}
+                </Link>
+                <span aria-hidden="true">·</span>
+                <Link href={`/${locale}/terms`} className="text-muted no-underline hover:text-text">
+                  {dict.legal.terms}
+                </Link>
+              </span>
             </p>
           </div>
         </footer>
