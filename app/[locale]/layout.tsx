@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Fraunces, IBM_Plex_Mono, Public_Sans } from 'next/font/google';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
+import { Analytics } from '@vercel/analytics/next';
 import { notFound } from 'next/navigation';
 import '../globals.css';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
@@ -148,6 +149,11 @@ export default async function LocaleLayout({
 
         {/* Asked once; a refusal is never re-prompted (§11.6). */}
         {consent === 'unanswered' && <ConsentBanner locale={locale} strings={dict.consent} />}
+
+        {/* Cookieless page counts: no identifier is stored on the device, so it
+          * sits outside the consent question above (§11.6), which guards the
+          * advertising cookies only. */}
+        <Analytics />
       </body>
     </html>
   );

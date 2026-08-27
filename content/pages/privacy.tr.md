@@ -1,7 +1,7 @@
 ---
 title: Gizlilik
 summary: Hangi çerezler kullanılıyor, kim tarafından, ne kadar süreyle ve nasıl reddedebilirsiniz.
-updated: 2026-08-23
+updated: 2026-08-27
 ---
 
 Bu sayfa, siteyi ziyaret ettiğinizde ne olduğunu anlatır. Kısa tutmaya ve
@@ -40,11 +40,14 @@ tespiti içindir, reklam veya profilleme için kullanılmaz.
 
 ## Analitik
 
-Şu anda bu sitede **üçüncü taraf bir analitik hizmeti kullanılmıyor.** Google
-Analytics ya da benzeri bir araç yok.
+Sitede yalnızca **Vercel Analytics** kullanılıyor: hangi sayfanın kaç kez
+görüntülendiğini sayar. Google Analytics ya da benzeri bir reklam analitiği
+aracı yok.
 
-İleride ziyaretçi sayısını ölçmek istersek, bunu kişisel veri toplamayan bir
-yöntemle yapmayı tercih ederiz ve bu sayfayı önceden güncelleriz.
+Bu ölçüm **çerezsizdir** — cihazınıza hiçbir tanımlayıcı yazılmaz ve ziyaretler
+arasında sizi takip etmez. Sayfa adresi, yönlendiren site, ülke ve cihaz türü
+gibi bilgilerden kimliği belirlenemeyen bir sayım üretilir; bu yüzden reklam
+çerezleri için sorduğumuz rıza sorusunun kapsamı dışındadır.
 
 ## Reklamlar
 

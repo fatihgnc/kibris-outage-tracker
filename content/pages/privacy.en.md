@@ -1,7 +1,7 @@
 ---
 title: Privacy
 summary: Which cookies are set, by whom, for how long, and how to refuse them.
-updated: 2026-08-23
+updated: 2026-08-27
 ---
 
 This page explains what happens when you visit the site. We have tried to keep
@@ -41,11 +41,15 @@ fault-finding. They are not used for advertising or profiling.
 
 ## Analytics
 
-There is currently **no third-party analytics service on this site.** No Google
-Analytics, nothing equivalent.
+The only analytics on this site is **Vercel Analytics**, which counts how many
+times each page is viewed. There is no Google Analytics or equivalent
+advertising analytics tool.
 
-If we later want to measure visitor numbers, we would prefer a method that
-collects no personal data, and we would update this page before doing it.
+The measurement is **cookieless** — no identifier is written to your device and
+you are not followed from one visit to the next. Details such as the page
+address, the referring site, the country and the device type are turned into a
+count that cannot be traced back to you, which is why it falls outside the
+consent question we ask for advertising cookies.
 
 ## Advertising
 
