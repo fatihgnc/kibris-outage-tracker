@@ -63,7 +63,7 @@ async function deriveFrom(source: SourceRef): Promise<Rederived | null> {
     const { title, body } = extractArticle(article.body);
     const publishedAt = articleDate(article.body);
     if (publishedAt) {
-      const outcome = parseAnnouncement({ source, title, body, publishedAt, fetchedAt: publishedAt });
+      const outcome = await parseAnnouncement({ source, title, body, publishedAt, fetchedAt: publishedAt });
       if (outcome.status === 'parsed') {
         result = {
           publishedAt,

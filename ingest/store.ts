@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createHash } from 'node:crypto';
 import type { Outage } from '../lib/types';
+import type { RawAnnouncement } from './parse';
 import { mapOutageRow, toOutageRow, type OutageRow } from '../lib/db';
 import { isSameEvent, mergeOutages } from './dedupe';
 
@@ -146,4 +148,110 @@ export async function queueForReview(client: SupabaseClient, items: ReviewItem[]
     throw new Error(`queueForReview: ${error.message}`);
   }
   return queued;
+}
+
+// How many times one unchanged article may be sent to the model before the
+// ingest stops trying. A transient API failure deserves another go; an article
+// the model cannot make sense of must not be re-sent every ten minutes forever.
+const MAX_PARSE_ATTEMPTS = 3;
+
+export type SeenState = { contentHash: string; attempts: number; parsedOk: boolean };
+
+/**
+ * Splits announcements into the ones worth reading and the ones already read.
+ *
+ * The adapters look three days back and the ingest runs every ten minutes, so
+ * the same article arrives hundreds of times. That was free when parsing was a
+ * pile of regexes; it is now a request to a model (§10.4).
+ *
+ * An article is worth reading when its text has not been read successfully and
+ * has not already failed MAX_PARSE_ATTEMPTS times. The hash is over the text,
+ * not the URL, because outlets rewrite these announcements in place and a
+ * rewritten one is new information.
+ */
+export async function selectUnread(
+  client: SupabaseClient,
+  announcements: RawAnnouncement[],
+): Promise<RawAnnouncement[]> {
+  if (announcements.length === 0) return [];
+  const urls = announcements.map((a) => a.source.url);
+  const { data, error } = await client
+    .from('seen_articles')
+    .select('url, content_hash, attempts, parsed_ok')
+    .in('url', urls);
+  // A failure here must not stop a run: reading everything again costs money,
+  // reading nothing costs the site its data.
+  if (error) {
+    console.warn(`selectUnread: ${error.message} — falling back to reading everything`);
+    return announcements;
+  }
+
+  const seen = new Map<string, SeenState>(
+    (data as { url: string; content_hash: string; attempts: number; parsed_ok: boolean }[]).map(
+      (row) => [row.url, { contentHash: row.content_hash, attempts: row.attempts, parsedOk: row.parsed_ok }],
+    ),
+  );
+
+  return announcements.filter((announcement) => {
+    const state = seen.get(announcement.source.url);
+    if (!state) return true;
+    if (state.contentHash !== articleHash(announcement)) return true; // rewritten
+    return !state.parsedOk && state.attempts < MAX_PARSE_ATTEMPTS;
+  });
+}
+
+/**
+ * Records what happened to each article that was read. `parsedOk` covers both
+ * useful outcomes — records extracted, and a confident "this is not an outage"
+ * — because both mean the text has been understood and need not be paid for
+ * again.
+ */
+export async function markRead(
+  client: SupabaseClient,
+  results: { announcement: RawAnnouncement; parsedOk: boolean }[],
+): Promise<void> {
+  if (results.length === 0) return;
+  const now = new Date().toISOString();
+  const rows = results.map(({ announcement, parsedOk }) => ({
+    url: announcement.source.url,
+    content_hash: articleHash(announcement),
+    // A fresh row starts at one attempt; a repeat is counted by the increment
+    // below, which reads the current value first.
+    attempts: 1,
+    parsed_ok: parsedOk,
+    last_seen: now,
+  }));
+
+  // Attempts have to accumulate across runs, so a plain upsert of `attempts: 1`
+  // would reset the count every time and defeat the cap. Read what is there and
+  // add to it.
+  const { data } = await client
+    .from('seen_articles')
+    .select('url, content_hash, attempts')
+    .in('url', rows.map((row) => row.url));
+  const existing = new Map(
+    ((data ?? []) as { url: string; content_hash: string; attempts: number }[]).map((row) => [
+      row.url,
+      row,
+    ]),
+  );
+  for (const row of rows) {
+    const previous = existing.get(row.url);
+    // A rewritten article starts its count again: it is a different text.
+    if (previous && previous.content_hash === row.content_hash) {
+      row.attempts = previous.attempts + 1;
+    }
+  }
+
+  const { error } = await client.from('seen_articles').upsert(rows, { onConflict: 'url' });
+  if (error) console.warn(`markRead: ${error.message}`);
+}
+
+// Over the text the model is actually shown, so a change to the page around it
+// — a related-links block, a view counter — does not read as a rewrite.
+function articleHash(announcement: RawAnnouncement): string {
+  return createHash('sha256')
+    .update(`${announcement.title}\u0000${announcement.body}`)
+    .digest('hex')
+    .slice(0, 32);
 }

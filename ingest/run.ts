@@ -6,11 +6,13 @@ import type { Outage } from '../lib/types';
 import { createServiceClient } from './supabase';
 import { errorMessage, type ConditionalCache } from './http';
 import { parseAnnouncement } from './parse';
-import { runFallback } from './parse/fallback';
+import { hasApiKey } from './parse/llm';
 import { dedupe } from './dedupe';
 import {
+  markRead,
   queueForReview,
   retractOutages,
+  selectUnread,
   storeOutages,
   type ReviewItem,
   type StoreResult,
@@ -25,7 +27,6 @@ import type { RawAnnouncement, SourceAdapter } from './adapters/types';
 export type IngestOptions = {
   adapters?: SourceAdapter[];
   dryRun?: boolean;
-  useFallback?: boolean;
   // A seam for the tests. The orchestration below decides what a run records
   // and when it gives up, and none of that is reachable while the only client
   // is the real one built from the environment.
@@ -35,6 +36,13 @@ export type IngestOptions = {
 export async function ingest(options: IngestOptions = {}) {
   const adapters = options.adapters ?? allAdapters;
   const startedAt = new Date().toISOString();
+
+  // Said once, loudly. Without a key nothing can be read at all and every
+  // announcement lands in the review queue — a run that looks like it worked
+  // and stored nothing.
+  if (!hasApiKey()) {
+    console.error('OPENAI_API_KEY is not set: nothing can be parsed, everything goes to review.');
+  }
   const cache: ConditionalCache = new Map();
 
   const announcements: RawAnnouncement[] = [];
@@ -59,19 +67,34 @@ export async function ingest(options: IngestOptions = {}) {
   const parsed: Outage[] = [];
   const retractions: Outage[] = [];
   const review: ReviewItem[] = [];
+  const read: { announcement: RawAnnouncement; parsedOk: boolean }[] = [];
 
-  for (const announcement of announcements) {
-    const outcome = parseAnnouncement(announcement);
+  // Reading is now a paid request, so an article is read once. The adapters
+  // look three days back and this runs every ten minutes, which means the same
+  // article arrives hundreds of times; without this the bill is that number
+  // times over for no new information. A dry run has no client to ask, and
+  // reads whatever the adapters handed it.
+  const readClient = options.dryRun ? null : (options.client ?? createServiceClient());
+  const unread = readClient ? await selectUnread(readClient, announcements) : announcements;
+  if (unread.length !== announcements.length) {
+    console.log(`${announcements.length - unread.length} announcement(s) already read, skipping`);
+  }
+
+  // One announcement per request rather than a batch in one prompt: batching
+  // lets a single malformed article spoil the reading of the others, and the
+  // volume here is a couple per run.
+  for (const announcement of unread) {
+    const outcome = await parseAnnouncement(announcement);
+    // 'skipped' is a real answer — the model read it and it is not an outage —
+    // so it counts as read. Only a failure is worth another attempt.
+    read.push({ announcement, parsedOk: outcome.status !== 'failed' });
 
     if (outcome.status === 'skipped') continue;
 
     if (outcome.status === 'failed') {
-      // Stage 2 — the fallback exists to catch the tail, not to do the work.
-      const fallback = options.useFallback === false ? null : await runFallback(announcement);
-      if (fallback) {
-        (fallback.cancellation ? retractions : parsed).push(...fallback.records);
-        continue;
-      }
+      // Never dropped. The review queue is what makes one parser safe to depend
+      // on: whatever the model does with an announcement, the raw text is kept
+      // and a person can see what was lost.
       review.push({
         source: { name: announcement.source.name, url: announcement.source.url },
         rawText: `${announcement.title}\n${announcement.body}`,
@@ -107,7 +130,7 @@ export async function ingest(options: IngestOptions = {}) {
     return { startedAt, records: collapsed, retractions, review, adaptersOk, adaptersFailed };
   }
 
-  const client = options.client ?? createServiceClient();
+  const client = readClient ?? createServiceClient();
   let stored: StoreResult = { created: 0, updated: 0, cancelled: 0 };
   let retracted = 0;
   let reviewCount = 0;
@@ -127,6 +150,10 @@ export async function ingest(options: IngestOptions = {}) {
     // Past here what a reader sees is current, whatever else goes wrong.
     refreshed = true;
     reviewCount = await queueForReview(client, review);
+    // Last, and only once the outcome of each article is settled. Recording an
+    // article as read before its records are stored would lose it for good if
+    // the write failed.
+    await markRead(client, read);
   } catch (error) {
     failure = error;
     // Printed before logRun, so the cause survives even if logging the run
@@ -165,11 +192,9 @@ const isEntryPoint = process.argv[1] && import.meta.url.endsWith(process.argv[1]
 if (isEntryPoint) {
   const only = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
   const dryRun = process.argv.includes('--dry-run');
-  const noFallback = process.argv.includes('--no-fallback');
   ingest({
     adapters: only.length ? allAdapters.filter((adapter) => only.includes(adapter.id)) : undefined,
     dryRun,
-    useFallback: !noFallback,
   })
     .then(() => process.exit(0))
     .catch((error) => {

@@ -1,80 +1,181 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { parseAnnouncement, type RawAnnouncement } from './index';
+import type { ExtractedOutage } from './llm';
 
-const source = { name: 'Kıbrıs Postası', url: 'https://example.invalid/a', kind: 'press' as const };
-const announce = (title: string, body: string, publishedAt: string): RawAnnouncement => ({
-  source,
-  title,
-  body,
-  publishedAt,
-  fetchedAt: publishedAt,
+// The model's reading is stubbed. What is under test is everything that happens
+// to its answer afterwards — place resolution, the district, time zones, the
+// stand-in start, the fingerprint — which is the half of the parser that has to
+// be deterministic (§10.4).
+function respondWith(outages: Partial<ExtractedOutage>[]): typeof fetch {
+  const body = {
+    choices: [
+      {
+        message: {
+          content: JSON.stringify({
+            outages: outages.map((o) => ({
+              kind: 'planned',
+              date: '2026-08-26',
+              start: '09:00',
+              end: '13:00',
+              areas: ['Gönyeli'],
+              cancelled: false,
+              ongoing: false,
+              ...o,
+            })),
+          }),
+        },
+      },
+    ],
+  };
+  return (async () =>
+    new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    })) as unknown as typeof fetch;
+}
+
+const announcement = (overrides: Partial<RawAnnouncement> = {}): RawAnnouncement => ({
+  source: { name: 'Kıbrıs Postası', url: 'https://example.invalid/a', kind: 'press' },
+  title: 'Elektrik kesintisi',
+  body: 'Gönyeli bölgesinde elektrik kesintisi yapılacaktır.',
+  publishedAt: '2026-08-26T05:00:00.000Z',
+  fetchedAt: '2026-08-26T05:05:00.000Z',
+  ...overrides,
 });
 
-// Taken from a real story the ingest threw away: a lorry hit a medium-voltage
-// line, several villages lost power, and no hours are given anywhere because
-// nobody knows when it comes back. Stage 1 failed it for 'no time range found'
-// and the outage never appeared. 78 of the first 82 stored records were planned
-// outages, and this is why.
-const LORRY_TITLE = 'Bazı bölgelerde elektrik kesintisi: Elektrik hatlarına iş aracı çarptı';
-const LORRY_BODY =
-  'Bir iş aracının orta gerilim elektrik hatlarına çarpması sonucu meydana gelen hasar ve kopma ' +
-  'nedeniyle bazı bölgelere elektrik verilemiyor. Kıbrıs Türk Elektrik Kurumu’ndan (KIB-TEK) ' +
-  'yapılan açıklamaya göre, bugün meydana gelen olay nedeniyle Yeniboğaziçi köyü, Yakın Doğu ' +
-  'Hastanesi bölgesi, Eski Tuzla köyü bölgesi ile Tuzla girişi karting bölgelerinde elektrik ' +
-  'kesintisi yaşanıyor. KIB-TEK, arızanın giderilmesi için çalışmaların devam ettiğini bildirdi.';
+test.before(() => {
+  process.env.OPENAI_API_KEY = 'test-key';
+});
 
-test('an ongoing fault with no hours is recorded, open ended', () => {
-  const outcome = parseAnnouncement(announce(LORRY_TITLE, LORRY_BODY, '2026-08-26T12:36:00.000Z'));
+test('a read announcement becomes a record with our own place data', async () => {
+  const outcome = await parseAnnouncement(announcement(), respondWith([{}]));
   assert.equal(outcome.status, 'parsed');
   if (outcome.status !== 'parsed') return;
-  assert.equal(outcome.records.length, 1);
   const [record] = outcome.records;
-  assert.equal(record.kind, 'fault');
-  assert.equal(record.district, 'gazimagusa');
-  // The announcement's own time stands in for a start nobody published.
-  assert.equal(record.startsAt, '2026-08-26T12:36:00.000Z');
-  assert.equal(record.endsAt, null);
-  assert.deepEqual(record.areas.sort(), ['Tuzla', 'Yeniboğaziçi']);
+  // The district comes from data/places.json, never from the model.
+  assert.equal(record.district, 'lefkosa');
+  assert.deepEqual(record.areas, ['Gönyeli']);
+  assert.equal(record.kind, 'planned');
+  assert.equal(record.confidence, 'high');
+  // 09:00 Nicosia in August is 06:00 UTC — the conversion is ours, not the
+  // model's, and goes through the same function the site reads back with.
+  assert.equal(record.startsAt, '2026-08-26T06:00:00.000Z');
+  assert.equal(record.endsAt, '2026-08-26T10:00:00.000Z');
 });
 
-test('a fault already reported as fixed is not turned into a live outage', () => {
-  const outcome = parseAnnouncement(
-    announce(
-      'Yeniboğaziçi bölgesindeki elektrik arızası giderildi',
-      'Yeniboğaziçi köyünde yaşanan elektrik kesintisine neden olan arıza giderildi, ' +
-        'elektrikler yeniden verildi.',
-      '2026-08-26T15:00:00.000Z',
-    ),
+test('the announcement spelling is resolved to the canonical one', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([{ areas: ['YENIBOGAZICI'] }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  // Without this the map cannot light a lamp for it (§3.2).
+  assert.deepEqual(outcome.records[0].areas, ['Yeniboğaziçi']);
+  assert.equal(outcome.records[0].district, 'gazimagusa');
+});
+
+test('one announcement spanning districts becomes one record each', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([{ areas: ['Gönyeli', 'Lapta'] }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.deepEqual(outcome.records.map((r) => r.district).sort(), ['girne', 'lefkosa']);
+});
+
+// The story that prompted the rewrite: a lorry hit a line, several villages lost
+// power, and no clock appears anywhere because nobody knows when it comes back.
+test('an ongoing fault with no start uses the publication time, open ended', async () => {
+  const outcome = await parseAnnouncement(
+    announcement({ publishedAt: '2026-08-26T12:36:00.000Z' }),
+    respondWith([
+      { kind: 'fault', start: null, end: null, ongoing: true, areas: ['Yeniboğaziçi'] },
+    ]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  const [record] = outcome.records;
+  assert.equal(record.startsAt, '2026-08-26T12:36:00.000Z');
+  assert.equal(record.endsAt, null);
+  // The one value not read off the page, and the record says so.
+  assert.equal(record.confidence, 'low');
+});
+
+// Only a fault in progress earns a stand-in. Planned work always states its
+// hours, so a missing one means the reading went wrong, and inventing a start
+// would print a made-up window on a card.
+test('planned work with no start is not given one', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([{ kind: 'planned', start: null, ongoing: false }]),
   );
   assert.equal(outcome.status, 'failed');
 });
 
-// Planned work always states its hours, so a missing range there means the parse
-// went wrong. Standing a time in would put an invented window on a card.
-test('planned work still has to state its hours', () => {
-  const outcome = parseAnnouncement(
-    announce(
-      'Gönyeli’de planlı elektrik kesintisi',
-      'Şebeke iyileştirme çalışması nedeniyle Gönyeli bölgesinde elektrik kesintisi yapılacaktır.',
-      '2026-08-26T06:00:00.000Z',
-    ),
+test('a fault reported as already over is not given one either', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([{ kind: 'fault', start: null, ongoing: false }]),
+  );
+  assert.equal(outcome.status, 'failed');
+});
+
+test('an outage running past midnight ends the next day', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([{ start: '22:00', end: '02:00' }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  const [record] = outcome.records;
+  assert.ok(Date.parse(record.endsAt!) > Date.parse(record.startsAt));
+  assert.equal(record.endsAt, '2026-08-26T23:00:00.000Z');
+});
+
+// A place the model invented, or mangled past recognition, must not reach the
+// database as somewhere that does not exist.
+test('names that match nothing we know are not stored', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([{ areas: ['Bilinmeyen Mahalle'] }]),
   );
   assert.equal(outcome.status, 'failed');
   if (outcome.status !== 'failed') return;
-  assert.equal(outcome.reason, 'no time range found');
+  assert.equal(outcome.reason, 'no known place names found');
 });
 
-test('a fault that does state its hours keeps them', () => {
-  const outcome = parseAnnouncement(
-    announce(
-      'Arıza nedeniyle kesinti',
-      'Meydana gelen arıza nedeniyle Lapta bölgesinde 09.00 ile 15.00 saatleri arasında ' +
-        'elektrik kesintisi yaşanacaktır.',
-      '2026-08-26T05:00:00.000Z',
-    ),
-  );
+test('an article the model finds no outage in is skipped, not failed', async () => {
+  const outcome = await parseAnnouncement(announcement(), respondWith([]));
+  assert.equal(outcome.status, 'skipped');
+});
+
+test('a retraction is reported as one', async () => {
+  const outcome = await parseAnnouncement(announcement(), respondWith([{ cancelled: true }]));
   assert.equal(outcome.status, 'parsed');
   if (outcome.status !== 'parsed') return;
-  assert.notEqual(outcome.records[0].endsAt, null);
+  assert.equal(outcome.cancellation, true);
+});
+
+// An API failure is not a parse result. It has to reach the review queue with
+// its raw text rather than looking like an article with no outage in it.
+test('a failed request fails the announcement rather than skipping it', async () => {
+  const refuse = (async () => new Response('rate limited', { status: 429 })) as unknown as typeof fetch;
+  const outcome = await parseAnnouncement(announcement(), refuse);
+  assert.equal(outcome.status, 'failed');
+  if (outcome.status !== 'failed') return;
+  assert.match(outcome.reason, /429/);
+  // The text is carried through so a person can see what was lost.
+  assert.match(outcome.text, /Gönyeli/);
+});
+
+test('two runs of the same announcement produce the same id', async () => {
+  const once = await parseAnnouncement(announcement(), respondWith([{}]));
+  const twice = await parseAnnouncement(announcement(), respondWith([{}]));
+  assert.equal(once.status, 'parsed');
+  assert.equal(twice.status, 'parsed');
+  if (once.status !== 'parsed' || twice.status !== 'parsed') return;
+  assert.equal(once.records[0].id, twice.records[0].id);
 });

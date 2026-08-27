@@ -936,74 +936,78 @@ This project is public and takes public data. Behave accordingly.
 
 ### 10.4 Parsing
 
-Announcement prose is highly formulaic, which makes rules the right first tool.
-A typical sentence names a reason, a time range, and then a list of villages.
+**One model reads every announcement. There is no rules stage.**
 
-Run in this order, stopping as soon as a stage produces a complete record:
+There was one, and it was written on a true observation: announcement prose is
+highly formulaic, and a typical sentence names a reason, a time range and a list
+of villages. Regexes handled those well. They handled nothing else, and the
+proportion of "nothing else" was never small — it was simply invisible, because
+what the rules could not read went to a review queue nobody was reading.
 
-**Stage 1 — rules.** Handles the large majority.
+The measurement that settled it: of the first 82 stored records, 78 were planned
+outages and 2 were faults. Not because faults are rare. Because planned work is
+announced in a form with a clock in it, and a fault is written as a sentence —
+"bir iş aracının orta gerilim hatlarına çarpması sonucu elektrik verilemiyor",
+which names four villages, gives no time, and describes a real outage in
+progress. No pattern list reaches that, and every attempt to extend one toward
+it made the rules more fragile on the announcements they already handled.
 
-- _Time range_: match written ranges in the common forms, including
-  `HH.MM ile HH.MM saatleri arasında` and `HH.MM – HH.MM`. Normalise the dot
-  separator to a colon. Absent an end time, set `endsAt: null`.
-- _Date_: resolve relative words (`bugün`, `yarın`, `dün`) and named weekdays
-  (`perşembe günü`) against the announcement's `publishedAt`, not against the
-  run time — a job that runs at 00:05 must not read yesterday's "tomorrow" as
-  today. A named weekday means its next occurrence at or after publication:
-  KIB-TEK publishes on the Wednesday that the work is "perşembe günü", and one
-  published on the day itself says it too.
-- **Where a story carries several date signals, the earliest one in the text
-  wins.** The parser reads `title. body`, and a news story states the operative
-  fact in its headline and lead. Outlets rewrite these announcements in place —
-  a lead moved from "yarın" to "bugün" on the morning of the work — and leave
-  the old wording standing in the paragraph below it. A fixed order of
-  precedence between the kinds of signal reads that leftover instead of the
-  correction, and puts a real outage on the wrong day.
-- **A fault in progress does not come with hours, and must not be thrown away
-  for it.** Planned work always states its window; a fault is reported while it
-  is still happening, because nobody knows when the power comes back. Requiring
-  a time range of both meant the first 82 stored records were 78 planned
-  outages and 2 faults — not because faults are rare, but because the parser
-  could only see the announcements that quoted a clock.
+**What the model is asked for.** One article per request, with Structured
+Outputs (`json_schema`, `strict: true`) so the shape is a constraint rather
+than a request. Per outage: kind, local date, start and end as wall clocks,
+areas as the announcement itself spells them, and two booleans — whether this
+retracts an earlier announcement, and whether the outage is described as still
+happening. Batching several articles into one prompt is not done: it lets one
+malformed article spoil the reading of the others, and the volume does not need
+it.
 
-  Where the kind is `fault` and no range is found, the announcement's own
-  publication time stands in for the start and `endsAt` is `null` — which is
-  what that field was always for (§4). It is the only time this parser invents,
-  and it errs late rather than early: a fault is reported once it is already
-  being felt, so the map never claims an outage before anyone had one.
+**What is deliberately not the model's job.** Everything downstream of the
+reading is ours, because these are the places where being wrong is expensive and
+being deterministic is cheap:
 
-  Planned work keeps the hard requirement. A missing range there means the
-  parse went wrong, and standing a time in would print an invented window on a
-  card.
+- _Places_: the model returns the announcement's own spellings; `matchPlaces`
+  resolves them against `data/places.json`. The district is therefore derived
+  from our table and never from something the model asserted, and `areas` always
+  holds canonical names — which is what lets a lamp on the map match a record at
+  all (§3.2). A name the model invents matches nothing and is left out rather
+  than reaching the database as a place that does not exist.
+- _Time zones_: the model returns a local date and a wall clock; the conversion
+  to UTC goes through the same function the site reads back with.
+- _Identity_: the fingerprint (§10.5), so a re-run is idempotent whatever the
+  model returns.
+- _Validation_: Structured Outputs guarantees the shape, not the contents. The
+  schema cannot say "HH:MM" or "a real day in the calendar", and this is the
+  boundary between somebody else's service and our database. A field that fails
+  validation drops its entry.
 
-  Guard this with the wording that says the fault is **over** — "giderildi",
-  "yeniden verildi", "sona erdi". An open-ended record is active until something
-  retires it, so writing one from a story about a fault that has already been
-  fixed leaves villages dark indefinitely over nothing. Match completed forms
-  only, never the bare stem: "arızanın **giderilmesi** için çalışmalar devam
-  ediyor" is an ongoing fault, and a `gideril` stem reads it as the opposite of
-  what it says.
-- _Places_: match against `data/places.json`, which holds every settlement with
-  its district and a list of aliases. Growing this file grows the map with it —
-  see §3.2 for the coordinate every new name needs. Normalise case with Turkish rules — `İ/ı`
-  do not fold the way English does, and a naive `toLowerCase()` will corrupt
-  them. Allow fuzzy matching for near-misses, but only above a high similarity
-  threshold, and log every fuzzy hit for review.
-- _Kind_: classify from keywords in the text — planned project or maintenance
-  work, an unplanned fault, or rotating cuts driven by supply shortfall.
-- _District_: derive from the matched settlements. If they span districts, split
-  into one record per district; a reader filtering by district must see it.
+**The one value not read off the page.** A fault already in progress has no
+announced start, so the announcement's own publication time stands in for one
+and `endsAt` is null. It errs late rather than early — a fault is reported once
+it is already being felt, so the map never claims an outage before anyone had
+one — and the record is marked `confidence: 'low'` to say so. Only a fault, and
+only one the model reports as ongoing. Planned work with no hours is a failed
+reading, not an open-ended outage.
 
-**Stage 2 — fallback.** Only for announcements Stage 1 could not fully parse.
+**Cost, and why this is affordable.** The expensive mistake here would be paying
+to read the same article repeatedly. Two things prevent it:
 
-Send the text to an LLM with a strict instruction to return JSON matching the
-record shape and nothing else. Validate the response against a schema before
-accepting it — never trust the shape. Mark the resulting record
-`confidence: 'low'`. Volume is a few hundred announcements a month, so cost is
-negligible, but the fallback exists to catch the tail, not to do the work.
+- `looksLikeOutage` still runs, in the **adapters**, on the article body before
+  an announcement is emitted (§10.1). It is a crawl filter, not a parser — the
+  outlets publish tenders, tariffs and football through the same listings, and
+  there is no reason to pay to be told so. Measured across all five outlets, a
+  run carries about 2 announcements rather than the 60 the caps allow.
+- A `seen_articles` table keyed by URL, with a hash of the text beside it. The
+  adapters look three days back and the ingest runs every ten minutes, so the
+  same article arrives hundreds of times; it is read once. The hash is over the
+  text rather than the URL because outlets rewrite announcements in place, and a
+  rewritten one is new information. A failed reading is retried a few times and
+  then left alone, so a transient API failure gets another go while an article
+  the model cannot make sense of is not re-sent forever.
 
-Anything both stages fail on is written to a review queue with the raw text and
-the reason, and is never silently dropped.
+**When the model cannot be reached at all**, the announcement fails and goes to
+the review queue with its raw text and the reason. Nothing is ever silently
+dropped — that property is what makes depending on a single parser safe, and it
+matters more now than it did when there was a second stage behind the first.
 
 ### 10.5 Identity and deduplication
 

@@ -109,7 +109,7 @@ export async function backfill(options: { perSource?: number; dryRun?: boolean; 
       }
 
       const fetchedAt = new Date().toISOString();
-      const outcome = parseAnnouncement({
+      const outcome = await parseAnnouncement({
         source: { name: source.name, url: entry.url, kind: source.kind },
         title,
         body,

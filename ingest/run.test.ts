@@ -4,9 +4,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { SourceAdapter } from './adapters/types';
 import { ingest } from './run';
 
-// An announcement that is plainly an outage but carries no time range, so
-// Stage 1 fails it, the fallback is off, and it lands in the review queue —
-// the one path that has to survive a database error without losing the run.
+// No key, so the parser cannot read anything and returns a failure without
+// touching the network. That is exactly the shape this file needs: an
+// announcement that lands in the review queue, which is the one path that has
+// to survive a database error without losing the run.
+delete process.env.OPENAI_API_KEY;
+
 const UNPARSEABLE: SourceAdapter = {
   id: 'stub',
   fetch: async () => [
@@ -21,13 +24,27 @@ const UNPARSEABLE: SourceAdapter = {
 };
 
 // Fails whichever table is named, records every ingest_runs row written.
+// Reads answer empty: nothing has been seen before and nothing is stored, which
+// is the state a first run meets.
 function clientFailing(table: string, error: { code: string; message: string }) {
   const logged: Record<string, unknown>[] = [];
+  const query = {
+    select: () => query,
+    in: () => query,
+    gte: () => query,
+    lte: () => query,
+    then: (resolve: (value: { data: unknown[]; error: null }) => unknown) =>
+      resolve({ data: [], error: null }),
+  };
   const client = {
     from(name: string) {
       return {
+        ...query,
         insert(payload: Record<string, unknown>) {
           if (name === 'ingest_runs') logged.push(payload);
+          return Promise.resolve({ error: name === table ? error : null });
+        },
+        upsert() {
           return Promise.resolve({ error: name === table ? error : null });
         },
       };
@@ -46,14 +63,14 @@ describe('a run that fails partway', () => {
   // every twenty minutes.
   test('is still recorded', async () => {
     const { client, logged } = clientFailing('review_queue', broken);
-    await assert.rejects(() => ingest({ adapters: [UNPARSEABLE], useFallback: false, client }));
+    await assert.rejects(() => ingest({ adapters: [UNPARSEABLE], client }));
     assert.equal(logged.length, 1, 'the run is logged even though a step threw');
   });
 
   test('still fails, so the job goes red', async () => {
     const { client } = clientFailing('review_queue', broken);
     await assert.rejects(
-      () => ingest({ adapters: [UNPARSEABLE], useFallback: false, client }),
+      () => ingest({ adapters: [UNPARSEABLE], client }),
       /column review_queue.reason does not exist/,
     );
   });
@@ -63,7 +80,41 @@ describe('a run that fails partway', () => {
   // data which is, in fact, current.
   test('is recorded ok when only the review queue failed', async () => {
     const { client, logged } = clientFailing('review_queue', broken);
-    await assert.rejects(() => ingest({ adapters: [UNPARSEABLE], useFallback: false, client }));
+    await assert.rejects(() => ingest({ adapters: [UNPARSEABLE], client }));
     assert.equal(logged[0].ok, true);
   });
+});
+
+// An article that could not be read is never marked as read: the next run has
+// to be able to try again, or a transient API failure loses the announcement
+// for good.
+test('an announcement that failed to parse reaches the review queue', async () => {
+  const queued: Record<string, unknown>[] = [];
+  const query = {
+    select: () => query,
+    in: () => query,
+    gte: () => query,
+    lte: () => query,
+    then: (resolve: (value: { data: unknown[]; error: null }) => unknown) =>
+      resolve({ data: [], error: null }),
+  };
+  const client = {
+    from(name: string) {
+      return {
+        ...query,
+        insert(payload: Record<string, unknown>) {
+          if (name === 'review_queue') queued.push(payload);
+          return Promise.resolve({ error: null });
+        },
+        upsert() {
+          return Promise.resolve({ error: null });
+        },
+      };
+    },
+  } as unknown as SupabaseClient;
+
+  await ingest({ adapters: [UNPARSEABLE], client });
+  assert.equal(queued.length, 1);
+  // The raw text is kept so a person can see what the parser could not.
+  assert.match(String(queued[0].raw_text), /Elektrik kesintisi/);
 });

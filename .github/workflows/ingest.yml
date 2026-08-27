@@ -21,11 +21,6 @@ on:
         required: false
         type: boolean
         default: false
-      no_fallback:
-        description: 'Skip the LLM stage, to see what the rules alone can parse'
-        required: false
-        type: boolean
-        default: false
 
 # One run at a time. The upserts are idempotent, so an overlap would not corrupt
 # anything, but queueing keeps the logs readable and the sources politely used.
@@ -54,19 +49,18 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           INGEST_CONTACT: ${{ secrets.INGEST_CONTACT }}
-          # Optional. Without it Stage 2 is skipped and unparsed announcements
-          # go to the review queue rather than being dropped (§10.4).
+          # Required: the parser reads every announcement with a model (§10.4).
+          # Without it the run stores nothing and everything goes to review.
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
           # Dispatch inputs travel through the environment instead of being
           # interpolated into the shell command, so a crafted input cannot
           # become part of it. On a scheduled run they are simply empty.
           ADAPTER: ${{ inputs.adapter }}
           DRY_RUN: ${{ inputs.dry_run }}
-          NO_FALLBACK: ${{ inputs.no_fallback }}
         run: |
           ARGS=""
           if [ -n "$ADAPTER" ]; then ARGS="$ARGS $ADAPTER"; fi
           if [ "$DRY_RUN" = "true" ]; then ARGS="$ARGS --dry-run"; fi
-          if [ "$NO_FALLBACK" = "true" ]; then ARGS="$ARGS --no-fallback"; fi
           echo "running: npm run ingest --$ARGS"
           npm run ingest -- $ARGS
