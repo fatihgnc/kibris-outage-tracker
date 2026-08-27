@@ -152,10 +152,24 @@ identifiers that reference them are English (`settlements`, `district`, `name`).
 
 ### 3.3 Point states
 
-| State   | Appearance                                           |
-| ------- | ---------------------------------------------------- |
-| Powered | `--color-lamp` core with its glow, radius by weight |
-| Outage  | the point goes out — no core, no glow                |
+| State   | Appearance                                            |
+| ------- | ----------------------------------------------------- |
+| Powered | `--color-lamp` core with its glow, radius by weight  |
+| Outage  | `--color-muted` dot at half opacity, no glow         |
+
+**An unlit place is dark, not absent.** The lamp's glow and its amber core fade
+away and a cold dot is left standing where they were — the village is still on
+the island, still findable, still hoverable, and the reader can see that this is
+the one that has gone out. Removing the point entirely was the first attempt and
+it read as the place having been deleted from the map at the exact moment it
+mattered most.
+
+The cold dot is *wider* than the lit core it replaces. The frame is a thousand
+units drawn into at most eight hundred pixels, so a core is about a pixel
+across; what makes a lit point legible is the glow around it, and an unlit point
+has none. It is also drawn outside the `screen` blend group the lamps live in —
+that blend can only add light, so anything darker than the ground is invisible
+inside it.
 
 An unlit point is unlit. It does **not** turn red — a light that has gone out
 does not burn red, and the earlier red-ring treatment broke the metaphor. The

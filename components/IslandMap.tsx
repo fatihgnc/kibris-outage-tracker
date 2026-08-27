@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { fill as fillTemplate } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
 import type { MapDistrict, MapSettlement } from '@/lib/geography';
-import { LABEL_PX, MAX_MAP_HEIGHT, coreRadius, glowRadius } from '@/lib/map-style';
+import { LABEL_PX, MAX_MAP_HEIGHT, coreRadius, glowRadius, unlitRadius } from '@/lib/map-style';
 
 /**
  * What the popover says about a lamp that is out. Already worded and already
@@ -246,6 +246,48 @@ export default function IslandMap({
                   <circle className="map-glow" r={glowRadius(s.weight)} fill="url(#map-lamp)" />
                   <circle r={coreRadius(s.weight)} fill="var(--color-lamp)" />
                 </g>
+              );
+            })}
+          </g>
+
+          {/* What is left where a lamp has gone out. A place under an outage is
+           * still a place: it has to stay findable, and hoverable, or the
+           * reader loses the village they were looking for at the moment it
+           * matters. The light goes; the point stays, cold.
+           *
+           * Outside the blend group above on purpose. Those lamps are composited
+           * with `screen`, which can only ever add light — a dark dot drawn
+           * inside it would be invisible by definition. This layer paints
+           * normally, so it can be darker than the ground it sits on.
+           *
+           * Every settlement is drawn, not only the dark ones, so that a lamp
+           * going out on a data refresh crossfades with the point taking its
+           * place instead of one popping in after the other. */}
+          <g clipPath="url(#map-island-clip)">
+            {settlements.map((s) => {
+              const out = Boolean(outages[s.name]);
+              return (
+                <circle
+                  key={s.name}
+                  className="map-anim"
+                  cx={s.x}
+                  cy={s.y}
+                  r={unlitRadius(s.weight)}
+                  fill="var(--color-muted)"
+                  // The tone is carried by fill-opacity rather than opacity so
+                  // that `ignite` — which runs 0 to 1 — can drive the fade
+                  // without having to overshoot it. The two multiply.
+                  fillOpacity={0.5}
+                  style={{
+                    opacity: out ? 1 : 0,
+                    ...(settled
+                      ? { transition: 'opacity 400ms ease' }
+                      : // Mirrors the lamp's own fade: it arrives exactly as the
+                        // light leaves, and `both` holds it hidden through the
+                        // ignition before that.
+                        { animation: out ? `ignite 400ms ease-in ${EXTINGUISH_AT}ms both` : 'none' }),
+                  }}
+                />
               );
             })}
           </g>

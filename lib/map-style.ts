@@ -44,6 +44,19 @@ export const CORE_RADIUS = { 3: 2.6, 2: 1.9, 1: 1.2 } as const;
 export const glowRadius = (weight: number) => GLOW_RADIUS[weight as 1 | 2 | 3] ?? GLOW_RADIUS[1];
 export const coreRadius = (weight: number) => CORE_RADIUS[weight as 1 | 2 | 3] ?? CORE_RADIUS[1];
 
+// What is left where a lamp has gone out (§3.3). A place under an outage is not
+// gone from the island — it is dark, and it still has to be findable and
+// hoverable. The glow and the amber core fade away and this cold dot takes
+// their place.
+//
+// It is wider than the core it replaces, and deliberately so. The frame is a
+// thousand units drawn into at most eight hundred pixels, so a lit core is
+// about one pixel across; what makes it legible is the glow around it, and an
+// unlit point has none. At the core's own radius the dot could not be seen at
+// all, which is the bug this replaced — the place simply vanished.
+export const UNLIT_RADIUS = { 3: 3.4, 2: 2.8, 1: 2.2 } as const;
+export const unlitRadius = (weight: number) => UNLIT_RADIUS[weight as 1 | 2 | 3] ?? UNLIT_RADIUS[1];
+
 // The gradient the map paints, as numbers: offset to opacity. Label placement
 // evaluates this rather than measuring to a lamp's centre — what buries a name
 // is how bright the light is under it, and a centre says nothing about that on
