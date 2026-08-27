@@ -1185,6 +1185,23 @@ with its own confirmation.
   the cron asks for. Two hours does that and still catches what matters: the
   worst real gap in that window was nine and a half hours.
 
+- **Do not let GitHub's scheduler be the trigger.** Everything above measures
+  the same thing: `schedule` is a request GitHub may decline, and it declines
+  most of them. Over one 28-hour window it placed 6 of the ~168 runs asked for,
+  and the site showed the stale banner for nine hours straight while every
+  adapter, the parser and the database were working. Nothing in the workflow
+  file fixes this; the offset-minute trick was tried and changed nothing.
+
+  Trigger the run from outside instead — a pinger calling the workflow's
+  `workflow_dispatch` endpoint on the interval you actually want. GitHub honours
+  an explicit API call. Keep the `schedule` line as a backstop for when the
+  pinger stops.
+
+  The credential this needs is a fine-grained token scoped to one repository
+  with Actions write and nothing else. It can start a workflow and do nothing
+  else — which is why the trigger lives here and not in a route handler holding
+  the service role key (§8).
+
 ### 10.8 Backfill
 
 Write a one-off script that walks each outlet's outage tag archive and ingests

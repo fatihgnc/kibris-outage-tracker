@@ -6,18 +6,24 @@ name: ingest
 # serves the public site.
 
 on:
+  # A backstop, not the trigger.
+  #
+  # GitHub reads `schedule` as a request it may drop, and drops most of these.
+  # Measured over 110 scheduled runs across 3.6 days: median gap 38 minutes, p90
+  # 64, p95 95, worst 569 — nine and a half hours. The offset minutes below were
+  # the one lever available from here: '*/10' fires on :00, :10, :20, the minutes
+  # every other repository asks for and the first a loaded queue sheds, so this
+  # asks for the gaps between them. It did not move the numbers. A later 28-hour
+  # window got 6 of the ~168 runs it asked for, with gaps of 50, 101, 123, 210
+  # and 569 minutes — and the site sat on the stale banner for nine hours while
+  # every adapter, the parser and the database were working perfectly.
+  #
+  # So the ingest is triggered from outside instead: a pinger calls the
+  # workflow_dispatch below every ten minutes, which GitHub does honour because
+  # an API call is not a favour it can decline. This line stays because a
+  # backstop that runs late is worth more than no backstop at all — if the
+  # pinger dies, the ingest still runs, and the stale banner covers the gap.
   schedule:
-    # Asks for every ten minutes. It does not get it, and the comment that used
-    # to sit here — that a delay "at this interval is fine" — was wrong. Measured
-    # over 110 scheduled runs across 3.6 days: the median gap is 38 minutes, p90
-    # is 64, p95 is 95, and the worst was 569 — nine and a half hours. GitHub
-    # drops scheduled runs it cannot place, and does not make them up.
-    #
-    # The offset minutes are the only lever available from here. '*/10' fires on
-    # :00, :10, :20 and so on, which are the minutes every other repository also
-    # asks for, and the ones a loaded queue sheds first. This asks for the gaps
-    # between them instead. Whether it helps takes days of runs to tell; if the
-    # numbers above have not moved after a week, this was not the problem.
     - cron: '3,13,23,33,43,53 * * * *'
   workflow_dispatch:
     inputs:
