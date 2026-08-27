@@ -4,7 +4,7 @@ import type { Dictionary } from '@/lib/i18n/dictionaries';
 import { fill } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
 import type { Freshness } from '@/lib/data';
-import { deriveStatus, formatClock, formatDateTimeShort } from '@/lib/time';
+import { deriveStatus, formatDateTimeShort, formatUpdateStamp } from '@/lib/time';
 import { DISTRICTS } from '@/lib/geography';
 import LocaleSwitcher from './LocaleSwitcher';
 
@@ -22,6 +22,7 @@ type Props = {
 // stale is worse than an honest gap (§10.7).
 export default function StatusBar({ locale, dict, outages, now, freshness }: Props) {
   const { lastCheckedAt, stale } = freshness;
+  const stamp = lastCheckedAt ? formatUpdateStamp(lastCheckedAt, now, locale, dict) : null;
   const active = outages.filter((o) => deriveStatus(o, now) === 'active');
   const activeDistricts = [...new Set(active.map((o) => o.district))];
   const faultActive = active.some((o) => o.kind === 'fault');
@@ -44,10 +45,19 @@ export default function StatusBar({ locale, dict, outages, now, freshness }: Pro
           <span>{text}</span>
         </p>
         <div className="flex flex-none items-center gap-3">
+          {/* The stamp now carries a day as well as a clock, and at 360px that
+            * extra word pushes the status text on the left into three lines.
+            * The label is dropped on a narrow screen; 'bugün 09:58' under a
+            * heading that already says what it is loses nothing. */}
           <span className="whitespace-nowrap font-mono text-meta text-muted">
-            {lastCheckedAt
-              ? fill(dict.statusBar.checked, { time: formatClock(lastCheckedAt, locale) })
-              : dict.statusBar.neverChecked}
+            {stamp ? (
+              <>
+                <span className="hidden sm:inline">{fill(dict.statusBar.checked, { time: stamp })}</span>
+                <span className="sm:hidden">{stamp}</span>
+              </>
+            ) : (
+              dict.statusBar.neverChecked
+            )}
           </span>
           {/* The same decorative middot the footer uses: it parts the update
             * stamp from the language switcher without being announced. */}

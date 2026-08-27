@@ -106,6 +106,25 @@ export function formatDateTimeShort(iso: string, locale: Locale): string {
   }).format(Date.parse(iso));
 }
 
+// The freshness stamp: 'bugün 09:58' and 'dün 09:58' inside the ±1 day
+// window, '19 Ağu 2026 09:58' outside it. A clock alone is only legible while
+// the check is today's; once it is not, the reader needs the day, and the year
+// keeps a stale deployment from reading as this morning.
+export function formatUpdateStamp(iso: string, now: number, locale: Locale, dict: Dictionary): string {
+  const ms = Date.parse(iso);
+  const clock = formatClock(ms, locale);
+  const diff = calendarDayDiff(ms, now);
+  if (diff === 0) return `${dict.time.today} ${clock}`;
+  if (diff === -1) return `${dict.time.yesterday} ${clock}`;
+  const date = new Intl.DateTimeFormat(locale, {
+    timeZone: TIME_ZONE,
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(ms);
+  return `${date} ${clock}`;
+}
+
 // The calendar year on the island, for the footer's copyright line.
 export function formatYear(ms: number, locale: Locale): string {
   return new Intl.DateTimeFormat(locale, { timeZone: TIME_ZONE, year: 'numeric' }).format(ms);
