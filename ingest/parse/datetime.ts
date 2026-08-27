@@ -19,10 +19,22 @@ export type ParsedSchedule = {
 //   '09.00 – 15.00'
 //   'saat 14.00'te'  (start only)
 // The dot separator is normalised to a colon.
+//
+// The far end of a range is often padded: '09.00 ile yaklaşık 12.00', and for
+// work running past midnight 'bugün saat 23.00 ile yarın saat 02.00'. Requiring
+// the second time to follow 'ile' directly sent those to the review queue
+// instead, and two outages nobody was ever told about sat there for days.
+//
+// The padding words are spelled out rather than allowing any word through: a
+// gap of arbitrary width would read '09.00'da başlayan çalışma ... 17.30'da
+// bitti' as a range the announcement never stated. Written out in both
+// patterns rather than built from a shared fragment, because a regex assembled
+// from strings needs its backslashes doubled and reads worse than the thing it
+// saves.
 const RANGE_PATTERNS: RegExp[] = [
-  /(\d{1,2})[.:](\d{2})\s*(?:ile|il[ae])\s*(\d{1,2})[.:](\d{2})\s*saatleri\s*aras[ıi]nda/i,
+  /(\d{1,2})[.:](\d{2})\s*(?:ile|il[ae])(?:\s*(?:yakla[şs][ıi]k|saat|bug[üu]n|yar[ıi]n))*\s*(\d{1,2})[.:](\d{2})\s*saatleri\s*aras[ıi]nda/i,
   /(\d{1,2})[.:](\d{2})\s*[-–—]\s*(\d{1,2})[.:](\d{2})/,
-  /(\d{1,2})[.:](\d{2})\s*(?:ile|il[ae])\s*(\d{1,2})[.:](\d{2})/i,
+  /(\d{1,2})[.:](\d{2})\s*(?:ile|il[ae])(?:\s*(?:yakla[şs][ıi]k|saat|bug[üu]n|yar[ıi]n))*\s*(\d{1,2})[.:](\d{2})/i,
   /saat\s*(\d{1,2})[.:](\d{2})\s*[-–—]\s*(\d{1,2})[.:](\d{2})/i,
 ];
 

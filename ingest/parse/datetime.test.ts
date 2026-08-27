@@ -193,3 +193,42 @@ test('an explicit date trailing the story does not beat the lead', () => {
     { year: 2026, month: 8, day: 27 },
   );
 });
+
+// detaykibris.com/degirmenlik-bolgesinde-elektrik-kesintisi and the Boğazköy
+// announcement two outlets carried: both said 'ile yaklaşık', both were told to
+// the review queue as having no time range in them, and neither outage reached
+// a reader.
+test('a range survives the word padding its far end', () => {
+  assert.deepEqual(parseTimeRange('09.00 ile yaklaşık 12.00 saatleri arasında'), {
+    startHour: 9,
+    startMinute: 0,
+    endHour: 12,
+    endMinute: 0,
+  });
+  assert.deepEqual(parseTimeRange('09.30 ile yaklaşık 12.30 saatleri arasında'), {
+    startHour: 9,
+    startMinute: 30,
+    endHour: 12,
+    endMinute: 30,
+  });
+});
+
+// Work that runs past midnight names the day on both ends. toSchedule already
+// carries the end into the next day; the range simply has to be read first.
+test('a range reads across midnight with a day named on each end', () => {
+  assert.deepEqual(parseTimeRange('bugün saat 23.00 ile yarın saat 02.00 arasında'), {
+    startHour: 23,
+    startMinute: 0,
+    endHour: 2,
+    endMinute: 0,
+  });
+  const schedule = parseSchedule('bugün saat 23.00 ile yarın saat 02.00 arasında', '2026-08-26T04:33:00.000Z');
+  assert.equal(schedule?.startsAt, '2026-08-26T20:00:00.000Z'); // 23:00 in Nicosia
+  assert.equal(schedule?.endsAt, '2026-08-26T23:00:00.000Z'); // 02:00 the next day
+});
+
+// The padding is a fixed list of words for this reason: anything wider would
+// reach across a sentence and report a range the announcement never gave.
+test('padding does not pair two times that were never a range', () => {
+  assert.equal(parseTimeRange("09.00'da başlayan çalışma akşam 17.30'da bitti"), null);
+});
