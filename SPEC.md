@@ -224,11 +224,37 @@ final state immediately.
   district names are permanent, and below `LABEL_BREAKPOINT` even those give way.
 - Focus ring in `--color-lamp`, clearly visible against `--color-night`.
 
-### 3.7 Mobile behaviour
+### 3.7 How big the map is
 
-Below 640px the map sits at the top with a **capped height**, so the outage list
-below begins to appear without scrolling. The map must never occupy a full
-mobile viewport — the list is the utility, the map is the identity.
+**The map runs the full width of the window**, breaking out of the page column
+that everything else on the page sits in. Its height is whatever the island's
+proportions make it; nothing caps it.
+
+This reverses an earlier rule, and the reason is worth keeping. The map used to
+be capped at 480px against `52vh` so that the outage list started above the
+fold. That put the island at 646 pixels on a 1280 pixel window — a village core
+three quarters of a pixel across, villages fused into their neighbours' glow,
+and the lamp-for-every-place the map is built on unreadable. A map that cannot
+be read is not worth the space it was being given. The list moved below the
+fold on desktop; the map became legible.
+
+On a phone nothing is really lost either way: at 375px the island is 375 by 218
+and the list heading still lands inside the viewport, so the old rule holds
+there by the aspect ratio alone rather than by a cap.
+
+Two things this costs, both paid in `app/globals.css` and
+`components/IslandMap.tsx`:
+
+- `100vw` counts the vertical scrollbar, so the map overshoots the document by
+  its width. `overflow-x: clip` is set on **both** `html` and `body` — overflow
+  on the root element is handed to the viewport, and clipping `body` alone lets
+  the overshoot escape. `clip` and not `hidden`: `hidden` would make the element
+  a scroll container and take `position: sticky` with it.
+- The district labels are HTML at a fixed pixel size, so they do not grow with
+  the frame. `LABEL_PX` went from 9 to 11 to keep them from reading as an
+  afterthought on a map twice the size — and no further, because the placement
+  search reserves room by that size: at 11 every label still lands inside
+  `LIGHT_LIMIT`, at 12 one of them cannot.
 
 ### 3.8 Map on the district page
 

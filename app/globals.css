@@ -31,6 +31,10 @@
 
 html {
   background: var(--color-night);
+  /* Pairs with the rule on body below. Overflow on the root element is handed
+   * to the viewport, and only this one actually stops the document scrolling
+   * sideways — clipping on body alone lets the overshoot escape to here. */
+  overflow-x: clip;
 }
 
 body {
@@ -40,6 +44,14 @@ body {
   font-size: var(--text-body);
   line-height: var(--text-body--line-height);
   -webkit-font-smoothing: antialiased;
+  /* The map breaks out of the page column to the full width of the window
+   * (§3.7), which it does with `100vw`. That unit counts the vertical
+   * scrollbar, so on a page long enough to have one — every page here — it
+   * overshoots by the scrollbar's width and hands the document a horizontal
+   * scroll it does not want. Clipping absorbs the overshoot. `clip` rather
+   * than `hidden`: hidden would make the body a scroll container, which takes
+   * position: sticky and scroll anchoring with it. */
+  overflow-x: clip;
 }
 
 /* Tailwind v4 no longer sets a pointer cursor on buttons; the site's controls

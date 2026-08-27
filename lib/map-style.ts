@@ -7,11 +7,23 @@
 /** The frame is one thousand units wide; its height comes from the island. */
 export const MAP_WIDTH = 1000;
 
-/** §3.7: the map is capped so the outage list starts before the fold. */
-export const MAX_MAP_HEIGHT = 480;
+// The map runs the full width of the window (§3.7), so its height is whatever
+// the island's aspect ratio makes it and there is no cap to state. It used to
+// be capped at 480px against 52vh, which kept the outage list above the fold —
+// but that put the island at 646 pixels on a 1280 pixel window, a village core
+// at three quarters of a pixel, and the whole point of a lamp for every place
+// out of reach. The list moved below the fold; the map became legible.
 
-/** Font size of the six permanent district labels, in CSS pixels. */
-export const LABEL_PX = 9;
+// Font size of the six permanent district labels, in CSS pixels. They are HTML
+// at a fixed size, so they do not grow with the frame — and once the frame grew
+// to the width of the window, nine pixels read as an afterthought on it.
+//
+// Eleven and not more. The label placement search reserves room by this size
+// measured against LABEL_REFERENCE_SCALE, so a larger label claims more ground
+// and finds more light under it: at eleven every one of the six still lands
+// inside LIGHT_LIMIT, with the brightest measuring 0.197. At twelve the search
+// has to give the constraint up and GAZİMAĞUSA settles at 0.393.
+export const LABEL_PX = 11;
 
 // All six labels appear from this width up, where the column is narrowest and
 // the frame therefore smallest. Sizing the placement maths for that worst case
@@ -49,11 +61,11 @@ export const coreRadius = (weight: number) => CORE_RADIUS[weight as 1 | 2 | 3] ?
 // hoverable. The glow and the amber core fade away and this cold dot takes
 // their place.
 //
-// It is wider than the core it replaces, and deliberately so. The frame is a
-// thousand units drawn into at most eight hundred pixels, so a lit core is
-// about one pixel across; what makes it legible is the glow around it, and an
-// unlit point has none. At the core's own radius the dot could not be seen at
-// all, which is the bug this replaced — the place simply vanished.
+// It is wider than the core it replaces, and deliberately so. What makes a lit
+// point legible is the glow around it, and an unlit point has none; at the
+// core's own radius — a pixel and a half on a 1280 pixel window — the dot could
+// not be seen at all, which is the bug this replaced: the place simply
+// vanished.
 export const UNLIT_RADIUS = { 3: 3.4, 2: 2.8, 1: 2.2 } as const;
 export const unlitRadius = (weight: number) => UNLIT_RADIUS[weight as 1 | 2 | 3] ?? UNLIT_RADIUS[1];
 

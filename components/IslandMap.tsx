@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { fill as fillTemplate } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
 import type { MapDistrict, MapSettlement } from '@/lib/geography';
-import { LABEL_PX, MAX_MAP_HEIGHT, coreRadius, glowRadius, unlitRadius } from '@/lib/map-style';
+import { LABEL_PX, coreRadius, glowRadius, unlitRadius } from '@/lib/map-style';
 
 /**
  * What the popover says about a lamp that is out. Already worded and already
@@ -135,17 +135,20 @@ export default function IslandMap({
   return (
     <div>
       {/* The frame carries the aspect ratio so the labels can be positioned in
-       * percentages of it. The cap is expressed as a max *width* derived from
-       * the height limit: capping the height directly would leave the <svg>
-       * letterboxed inside a full-width box, and the sea cannot reach a
-       * letterbox. The vh term pulls the map back on a short window so the
-       * outage list still starts in view. */}
+       * percentages of it.
+       *
+       * It breaks out of the page column to the full width of the window: the
+       * negative margins cancel whatever the column and its padding come to,
+       * and 100vw takes it the rest of the way. Nothing caps the height — the
+       * island's own proportions set it, and letting the width run is the
+       * entire point. globals.css clips the body's horizontal overflow, which
+       * is what makes 100vw safe next to a scrollbar.
+       *
+       * Only the frame breaks out. The line beneath it stays in the column
+       * with the rest of the page's text. */}
       <div
-        className="relative mx-auto w-full"
-        style={{
-          aspectRatio: `${width} / ${height}`,
-          maxWidth: `calc(min(${MAX_MAP_HEIGHT}px, 52vh) * ${(width / height).toFixed(4)})`,
-        }}
+        className="relative mx-[calc(50%-50vw)] w-[100vw]"
+        style={{ aspectRatio: `${width} / ${height}` }}
       >
         <svg
           ref={svgRef}
