@@ -7,7 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Outage, SourceRef } from '../lib/types';
 import { createServiceClient } from './supabase';
 import { dedupe } from './dedupe';
-import { queueForReview, retractOutages, storeOutages } from './store';
+import { queueForReview, resolveOpenOutages, retractOutages, storeOutages } from './store';
 
 // Round-trip against a local Supabase (`npx supabase start`). Skipped when one
 // is not reachable, so the suite still runs without Docker.
@@ -281,5 +281,89 @@ describe('queueForReview against a stubbed client', () => {
     const broken = { code: '42703', message: 'column review_queue.reason does not exist' };
     const { client } = clientReturning(broken);
     await assert.rejects(() => queueForReview(client, [item]), /queueForReview: column/);
+  });
+});
+
+describe('resolveOpenOutages', () => {
+  let live = false;
+  before(async () => {
+    live = await reachable();
+  });
+
+  // Inserted straight into the table rather than through storeOutages: that
+  // merges an incoming record into any stored event it matches, so the rows
+  // would land under ids this test does not know. What is under test here is
+  // which rows a repair report reaches, nothing else.
+  const insertOpenFault = async (id: string, startsAt: string, areas: string[]) => {
+    const { error } = await client!.from('outages').upsert(
+      {
+        id,
+        utility: 'electricity',
+        kind: 'fault',
+        starts_at: startsAt,
+        ends_at: null,
+        district: 'guzelyurt',
+        areas,
+        sources: [PRESS_A],
+        published_at: startsAt,
+        ingested_at: startsAt,
+        confidence: 'low',
+      },
+      { onConflict: 'id' },
+    );
+    if (error) throw new Error(error.message);
+  };
+
+  const endOf = async (id: string) => {
+    const { data } = await client!.from('outages').select('ends_at').eq('id', id).single();
+    return (data as { ends_at: string | null } | null)?.ends_at ?? null;
+  };
+
+  const retire = async (id: string) => {
+    await client!
+      .from('outages')
+      .update({ cancelled_at: new Date().toISOString(), cancelled_reason: 'bad_data' })
+      .eq('id', id);
+  };
+
+  // The window this checks was missing from the first version, and a run against
+  // real data found the hole at once: a repair report for Yeniboğaziçi closed a
+  // fault from six weeks earlier in the same village, writing an end that
+  // claimed those places had been dark for forty-two days.
+  test('closes the fault the repair is about, and not an older one', async (t) => {
+    if (!live || !client) return t.skip('no local Supabase');
+    const run = Math.random().toString(36).slice(2, 8);
+    const resolvedAt = '2026-08-26T14:36:00.000Z';
+    const recent = `res-recent-${run}`;
+    const ancient = `res-old-${run}`;
+    await insertOpenFault(recent, '2026-08-26T12:36:00.000Z', ['Zümrütköy']);
+    await insertOpenFault(ancient, '2026-07-15T15:30:00.000Z', ['Zümrütköy']);
+
+    const closed = await resolveOpenOutages(client, [
+      { district: 'guzelyurt', areas: ['Zümrütköy'], resolvedAt },
+    ]);
+    assert.equal(closed, 1);
+    assert.equal(await endOf(recent), resolvedAt.replace('.000Z', '+00:00'));
+    // Leaving it null is much better than filling it in wrongly: the display
+    // already bounds an unclosed fault.
+    assert.equal(await endOf(ancient), null, 'the six-week-old one is left alone');
+
+    await retire(recent);
+    await retire(ancient);
+  });
+
+  test('a repair naming a place the fault does not touch closes nothing', async (t) => {
+    if (!live || !client) return t.skip('no local Supabase');
+    const run = Math.random().toString(36).slice(2, 8);
+    const id = `res-elsewhere-${run}`;
+    await insertOpenFault(id, '2026-08-26T12:36:00.000Z', ['Zümrütköy']);
+
+    const closed = await resolveOpenOutages(client, [
+      { district: 'guzelyurt', areas: ['Kalkanlı'], resolvedAt: '2026-08-26T14:36:00.000Z' },
+    ]);
+    assert.equal(closed, 0);
+    assert.equal(await endOf(id), null);
+
+    await retire(id);
   });
 });

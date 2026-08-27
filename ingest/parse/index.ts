@@ -1,4 +1,4 @@
-import type { Outage, SourceRef } from '../../lib/types';
+import type { DistrictId, Outage, SourceRef } from '../../lib/types';
 import { nicosiaWallClock, zonedTimeToUtc } from '../../lib/time';
 import { fingerprint } from '../fingerprint';
 import { extractOutages, WEEKDAYS, type ExtractedOutage, type Weekday } from './llm';
@@ -13,8 +13,26 @@ export type RawAnnouncement = {
   fetchedAt: string; // ISO 8601
 };
 
+/**
+ * An article reporting that a fault has been repaired. It carries no new outage
+ * — it ends one that is already stored, and the stored record has no announced
+ * end because nobody knew it when the fault was reported (§10.6).
+ */
+export type Resolution = {
+  district: DistrictId;
+  areas: string[];
+  /** When the repair was reported. An upper bound on when the power came back. */
+  resolvedAt: string;
+};
+
 export type ParseOutcome =
-  | { status: 'parsed'; records: Outage[]; cancellation: boolean; fuzzyPlaces: PlaceMatch[] }
+  | {
+      status: 'parsed';
+      records: Outage[];
+      resolutions: Resolution[];
+      cancellation: boolean;
+      fuzzyPlaces: PlaceMatch[];
+    }
   | { status: 'skipped'; reason: string }
   | { status: 'failed'; reason: string; text: string };
 
@@ -51,11 +69,31 @@ export async function parseAnnouncement(
   }
 
   const records: Outage[] = [];
+  const resolutions: Resolution[] = [];
   const fuzzyPlaces: PlaceMatch[] = [];
   let cancellation = false;
   let unresolved = 0;
 
   for (const outage of extraction.outages) {
+    // A repair report closes a record rather than adding one, and it is read
+    // before the schedule: these articles rarely say when the fault began, and
+    // demanding a start would throw the repair away with it.
+    if (outage.resolved) {
+      const repaired = matchPlaces(outage.areas.join(', '));
+      if (repaired.length === 0) {
+        unresolved++;
+        continue;
+      }
+      for (const district of districtsOf(repaired)) {
+        resolutions.push({
+          district,
+          areas: repaired.filter((p) => p.district === district).map((p) => p.name),
+          resolvedAt: announcement.publishedAt,
+        });
+      }
+      continue;
+    }
+
     const schedule = toSchedule(outage, announcement.publishedAt);
     if (!schedule) {
       unresolved++;
@@ -93,14 +131,14 @@ export async function parseAnnouncement(
     }
   }
 
-  if (records.length === 0) {
+  if (records.length === 0 && resolutions.length === 0) {
     return {
       status: 'failed',
       reason: unresolved > 0 ? 'no known place names found' : 'nothing usable in the extraction',
       text,
     };
   }
-  return { status: 'parsed', records, cancellation, fuzzyPlaces };
+  return { status: 'parsed', records, resolutions, cancellation, fuzzyPlaces };
 }
 
 type Schedule = { startsAt: string; endsAt: string | null; inferredStart: boolean };

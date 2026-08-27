@@ -1,9 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createHash } from 'node:crypto';
 import type { Outage } from '../lib/types';
-import type { RawAnnouncement } from './parse';
+import type { RawAnnouncement, Resolution } from './parse';
 import { mapOutageRow, toOutageRow, type OutageRow } from '../lib/db';
 import { isSameEvent, mergeOutages } from './dedupe';
+import { foldKey } from './parse/text';
+import { NO_END_ASSUMED_OVER_MS } from '../lib/time';
 
 export type StoreResult = {
   created: number;
@@ -254,4 +256,73 @@ function articleHash(announcement: RawAnnouncement): string {
     .update(`${announcement.title}\u0000${announcement.body}`)
     .digest('hex')
     .slice(0, 32);
+}
+
+/**
+ * Closes stored outages that a follow-up article reports as repaired (§10.6).
+ *
+ * An open-ended fault is stored with `endsAt: null` because nobody knew when the
+ * power would come back. When an outlet later says it did, that is the only real
+ * end we will ever get, and writing it turns an assumption into a fact — the
+ * display bound in `NO_END_ASSUMED_OVER_MS` stops being what decides the record.
+ *
+ * The repair time is the article's publication, which is an upper bound: the
+ * power was back at or before it. That overstates the outage slightly and never
+ * understates it, which is the right direction for an archive of how long places
+ * were dark.
+ *
+ * Narrow on purpose, and narrower than it first was. Only rows that are
+ * open-ended, uncancelled, in the same district, that name a place the repair
+ * names, and that started inside the window below.
+ *
+ * The window is what the first version lacked, and a test against real data
+ * found it immediately: a repair report for Yeniboğaziçi closed a fault from six
+ * weeks earlier in the same village, writing an end that claimed those places
+ * had been dark for forty-two days. A repair report is about a fault that is
+ * still running or has just finished — an older one in the same place is a
+ * different event, and leaving its end null is much better than filling it in
+ * wrongly, because the display already bounds an unclosed fault.
+ *
+ * Twice NO_END_ASSUMED_OVER_MS: the display stops treating an unclosed fault as
+ * running after that long, and this allows the same again for a report to
+ * arrive late.
+ */
+const RESOLUTION_WINDOW_MS = 2 * NO_END_ASSUMED_OVER_MS;
+
+export async function resolveOpenOutages(
+  client: SupabaseClient,
+  resolutions: Resolution[],
+): Promise<number> {
+  if (resolutions.length === 0) return 0;
+
+  let closed = 0;
+  for (const resolution of resolutions) {
+    const { data, error } = await client
+      .from('outages')
+      .select('id, areas, starts_at')
+      .eq('district', resolution.district)
+      .is('ends_at', null)
+      .is('cancelled_at', null)
+      .lte('starts_at', resolution.resolvedAt)
+      .gte(
+        'starts_at',
+        new Date(Date.parse(resolution.resolvedAt) - RESOLUTION_WINDOW_MS).toISOString(),
+      );
+    if (error) throw new Error(`resolveOpenOutages: ${error.message}`);
+
+    const named = new Set(resolution.areas.map(foldKey));
+    const ids = (data as { id: string; areas: string[] }[])
+      .filter((row) => row.areas.some((area) => named.has(foldKey(area))))
+      .map((row) => row.id);
+    if (ids.length === 0) continue;
+
+    const { error: updateError } = await client
+      .from('outages')
+      .update({ ends_at: resolution.resolvedAt })
+      .in('id', ids)
+      .is('ends_at', null);
+    if (updateError) throw new Error(`resolveOpenOutages: ${updateError.message}`);
+    closed += ids.length;
+  }
+  return closed;
 }

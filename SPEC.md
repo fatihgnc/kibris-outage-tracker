@@ -1072,7 +1072,45 @@ The same outage arrives from several sources. Collapse rather than duplicate.
   the outlets have already run it. Letting it win also made the merge
   asymmetric, and the order records merge in is a hash, not a chronology.
 
-### 10.6 Corrections and cancellations
+### 10.6 Corrections, cancellations, and outages that end
+
+**An outage with no announced end must not be active forever.** `endsAt: null`
+means nobody said when the power comes back — the ordinary case for a fault in
+progress. Read literally it means *never*, and the live window is thirty days,
+so a fault repaired in two hours could hold villages dark on the map for weeks.
+That was survivable while open-ended records were 2 of 82; it stopped being
+survivable the moment the parser started catching faults on purpose (§10.4).
+
+Two mechanisms, and the difference between them matters.
+
+- **The assumption, in the reading only.** After `NO_END_ASSUMED_OVER_MS` —
+  twelve hours — an unclosed outage is read as past. This is *not* written to
+  `endsAt`: that field means "the announced end", and filling it with a guess
+  would make an assumption indistinguishable from something KIB-TEK said. The
+  record stays honest; only the reading of it is bounded.
+- **The repair report, which is a fact.** A follow-up article saying the fault is
+  fixed — "arıza giderildi", "elektrikler yeniden verildi" — closes the record
+  for real, with `endsAt` set to the article's publication time. That is an
+  upper bound: the power was back at or before it, which overstates the outage
+  slightly and never understates it, the right direction for an archive of how
+  long places were dark.
+
+  Do not let a repair report reach an old outage. Bound it to twice the
+  assumption window, and match on district, on overlapping places, and on the
+  fault having started inside that window. Without the bound a repair report for
+  Yeniboğaziçi closed a fault from six weeks earlier in the same village and
+  wrote an end claiming those places had been dark for forty-two days — found by
+  running it against real rows, not by reading the code.
+
+  A wrongly filled end is much worse than a null one, because the assumption
+  above already handles the null and nothing ever corrects the wrong value.
+
+The signal for a repair comes from the model, not from keywords, and the
+distinction it has to make is fine: "arızanın **giderilmesi için çalışmalar
+devam ediyor" is a fault still running, not a repair. Checked against the live
+model on all three wordings.
+
+
 
 Announcements get amended, and this is where naive scrapers mislead people.
 

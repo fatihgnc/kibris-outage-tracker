@@ -3,6 +3,7 @@ loadEnvConfig(process.cwd());
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Outage } from '../lib/types';
+import type { Resolution } from './parse';
 import { createServiceClient } from './supabase';
 import { errorMessage, type ConditionalCache } from './http';
 import { parseAnnouncement } from './parse';
@@ -11,6 +12,7 @@ import { dedupe } from './dedupe';
 import {
   markRead,
   queueForReview,
+  resolveOpenOutages,
   retractOutages,
   selectUnread,
   storeOutages,
@@ -66,6 +68,7 @@ export async function ingest(options: IngestOptions = {}) {
 
   const parsed: Outage[] = [];
   const retractions: Outage[] = [];
+  const resolutions: Resolution[] = [];
   const review: ReviewItem[] = [];
   const read: { announcement: RawAnnouncement; parsedOk: boolean }[] = [];
   const skipped: RawAnnouncement[] = [];
@@ -115,6 +118,7 @@ export async function ingest(options: IngestOptions = {}) {
       console.warn(`[fuzzy] "${place.matchedText}" matched ${place.name} (${announcement.source.url})`);
     }
     (outcome.cancellation ? retractions : parsed).push(...outcome.records);
+    resolutions.push(...outcome.resolutions);
   }
 
   for (const announcement of skipped) {
@@ -124,8 +128,8 @@ export async function ingest(options: IngestOptions = {}) {
   const collapsed = dedupe(parsed);
   console.log(
     `read ${unread.length} announcement(s): ${parsed.length} record(s) -> ${collapsed.length} ` +
-      `after dedupe; ${retractions.length} retraction(s); ${skipped.length} skipped; ` +
-      `${review.length} to review`,
+      `after dedupe; ${retractions.length} retraction(s); ${resolutions.length} repair report(s); ` +
+      `${skipped.length} skipped; ${review.length} to review`,
   );
 
   if (options.dryRun) {
@@ -139,13 +143,15 @@ export async function ingest(options: IngestOptions = {}) {
       );
       console.log(`           ${record.sources[0].url}`);
     }
+    for (const r of resolutions) console.log(`  REPAIRED  ${r.district}  ${r.areas.join(', ')}`);
     for (const item of review) console.log(`  REVIEW  ${item.reason}  ${item.source.url}`);
-    return { startedAt, records: collapsed, retractions, review, adaptersOk, adaptersFailed };
+    return { startedAt, records: collapsed, retractions, resolutions, review, adaptersOk, adaptersFailed };
   }
 
   const client = readClient ?? createServiceClient();
   let stored: StoreResult = { created: 0, updated: 0, cancelled: 0 };
   let retracted = 0;
+  let closed = 0;
   let reviewCount = 0;
   let refreshed = false;
   let failure: unknown = null;
@@ -160,6 +166,9 @@ export async function ingest(options: IngestOptions = {}) {
   try {
     stored = await storeOutages(client, collapsed);
     retracted = await retractOutages(client, retractions);
+    // After the upserts, so a fault reported and repaired inside one run is
+    // stored first and then closed, rather than closed before it exists.
+    closed = await resolveOpenOutages(client, resolutions);
     // Past here what a reader sees is current, whatever else goes wrong.
     refreshed = true;
     reviewCount = await queueForReview(client, review);
@@ -193,11 +202,12 @@ export async function ingest(options: IngestOptions = {}) {
 
   console.log(
     `stored: ${stored.created} created, ${stored.updated} updated, ` +
-      `${stored.cancelled + retracted} retracted, ${reviewCount} queued for review`,
+      `${stored.cancelled + retracted} retracted, ${closed} closed by a repair report, ` +
+      `${reviewCount} queued for review`,
   );
 
   if (failure) throw failure;
-  return { startedAt, records: collapsed, retractions, review, adaptersOk, adaptersFailed };
+  return { startedAt, records: collapsed, retractions, resolutions, review, adaptersOk, adaptersFailed };
 }
 
 const isEntryPoint = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop()!);

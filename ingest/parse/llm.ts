@@ -47,7 +47,7 @@ const SCHEMA = {
         items: {
           type: 'object',
           additionalProperties: false,
-          required: ['kind', 'date', 'weekday', 'start', 'end', 'areas', 'cancelled', 'ongoing'],
+          required: ['kind', 'date', 'weekday', 'start', 'end', 'areas', 'cancelled', 'ongoing', 'resolved'],
           properties: {
             kind: { type: 'string', enum: ['planned', 'fault', 'rotating'] },
             date: {
@@ -87,6 +87,11 @@ const SCHEMA = {
               description:
                 'true when the announcement describes the outage as happening now and not yet fixed; false when it reports one already over or repaired.',
             },
+            resolved: {
+              type: 'boolean',
+              description:
+                'true when this article reports that the fault has been REPAIRED and the power is back — "arıza giderildi", "elektrikler yeniden verildi", "normale döndü". Not the same as an article about works that are still going on: "arızanın giderilmesi için çalışmalar devam ediyor" is still an outage, not a repair.',
+            },
           },
         },
       },
@@ -99,7 +104,8 @@ const SYSTEM_PROMPT = [
   '',
   'You are given one news article. Return the outages it announces.',
   '',
-  '- Return an empty list when the article is not about an electricity outage, or when it only reports one that has already been repaired.',
+  '- Return an empty list when the article is not about an electricity outage at all.',
+  '- An article reporting that a fault has been FIXED is not nothing: return the outage it is about, with "resolved" true and the places it names, so the record can be closed. Leave "start" null unless the article says when it began.',
   '- One entry per distinct outage. An announcement listing many villages under one time window is ONE outage with many areas, not one per village.',
   '- Resolve "bugün" and "yarın" against the publication date you are given. "bugün" IS the publication date.',
   '- When the announcement names a WEEKDAY instead ("perşembe günü"), put it in "weekday" and do not try to work the date out — the date is computed from it afterwards. Still fill "date" with your best effort; it is ignored when "weekday" is set.',
@@ -111,6 +117,7 @@ const SYSTEM_PROMPT = [
 
 export type ExtractedOutage = {
   kind: OutageKind;
+  resolved: boolean;
   date: string;
   weekday: Weekday | null;
   start: string | null;
@@ -248,7 +255,7 @@ export function validate(raw: string): ExtractedOutage[] | null {
   const out: ExtractedOutage[] = [];
   for (const entry of list) {
     if (typeof entry !== 'object' || entry === null) continue;
-    const { kind, date, weekday, start, end, areas, cancelled, ongoing } = entry as Record<
+    const { kind, date, weekday, start, end, areas, cancelled, ongoing, resolved } = entry as Record<
       string,
       unknown
     >;
@@ -269,6 +276,7 @@ export function validate(raw: string): ExtractedOutage[] | null {
       areas: names,
       cancelled: cancelled === true,
       ongoing: ongoing === true,
+      resolved: resolved === true,
     });
   }
   return out;

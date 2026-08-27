@@ -22,6 +22,7 @@ function respondWith(outages: Partial<ExtractedOutage>[]): typeof fetch {
               areas: ['Gönyeli'],
               cancelled: false,
               ongoing: false,
+              resolved: false,
               ...o,
             })),
           }),
@@ -220,4 +221,33 @@ test('two runs of the same announcement produce the same id', async () => {
   assert.equal(twice.status, 'parsed');
   if (once.status !== 'parsed' || twice.status !== 'parsed') return;
   assert.equal(once.records[0].id, twice.records[0].id);
+});
+
+// A follow-up article saying the fault is fixed closes the record rather than
+// adding one. These articles rarely say when the fault began, so the repair is
+// read before the schedule — demanding a start would throw it away.
+test('a repair report becomes a resolution, not a record', async () => {
+  const outcome = await parseAnnouncement(
+    announcement({ publishedAt: '2026-08-26T15:00:00.000Z' }),
+    respondWith([{ kind: 'fault', resolved: true, start: null, ongoing: false, areas: ['Yeniboğaziçi'] }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.records.length, 0);
+  assert.deepEqual(outcome.resolutions, [
+    {
+      district: 'gazimagusa',
+      areas: ['Yeniboğaziçi'],
+      // An upper bound: the power was back at or before this.
+      resolvedAt: '2026-08-26T15:00:00.000Z',
+    },
+  ]);
+});
+
+test('a repair naming nowhere we know is not a resolution', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([{ resolved: true, start: null, areas: ['Bilinmeyen Mahalle'] }]),
+  );
+  assert.equal(outcome.status, 'failed');
 });

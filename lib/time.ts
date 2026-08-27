@@ -40,10 +40,35 @@ export function nicosiaWallClock(ms: number): WallClock {
   return wallClock(ms);
 }
 
+/**
+ * How long an outage with no announced end is taken to still be running.
+ *
+ * `endsAt: null` means nobody said when the power comes back — the ordinary case
+ * for a fault in progress (§10.4). Treated literally it means *forever*: the
+ * record stays active until something retires it, and the live window is thirty
+ * days, so a fault repaired in two hours could show villages dark for weeks.
+ * That was survivable while open-ended records were 2 of 82. It stopped being
+ * survivable the moment the parser started catching faults on purpose.
+ *
+ * Twelve hours. Planned work runs two to six; a fault still out after half a day
+ * is exceptional, and an evening one clears by morning rather than sitting there
+ * all of the next day. Both directions of error are real — assume too early and
+ * the map says the power is back when it is not; too late and it holds a village
+ * dark that is fine — and the second is the one that compounds, because nothing
+ * else ever corrects it.
+ *
+ * Deliberately not written to `endsAt`. That field means "the announced end",
+ * and filling it with a guess would make an assumption indistinguishable from
+ * something KIB-TEK actually said. The record stays honest; only the reading of
+ * it is bounded. A real end still arrives two ways: the utility announcing one,
+ * or a follow-up article reporting the fault fixed (§10.6).
+ */
+export const NO_END_ASSUMED_OVER_MS = 12 * 60 * 60 * 1000;
+
 export function deriveStatus(outage: Pick<Outage, 'startsAt' | 'endsAt'>, now: number): OutageStatus {
   const start = Date.parse(outage.startsAt);
-  const end = outage.endsAt ? Date.parse(outage.endsAt) : null;
-  if (start <= now && (end === null || end > now)) return 'active';
+  const end = outage.endsAt ? Date.parse(outage.endsAt) : start + NO_END_ASSUMED_OVER_MS;
+  if (start <= now && end > now) return 'active';
   return start > now ? 'upcoming' : 'past';
 }
 
