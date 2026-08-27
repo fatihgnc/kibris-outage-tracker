@@ -124,6 +124,15 @@ export async function ingest(options: IngestOptions = {}) {
   for (const announcement of skipped) {
     console.log(`[skipped] no outage found: ${announcement.source.url}`);
   }
+  // The reason, not just the count. A run where everything failed and a run
+  // where everything was read look identical in the summary line below, and the
+  // reason is the whole diagnosis — a bad key, a rate limit and an article the
+  // model could not use are three different problems with the same shape from
+  // the outside. It is written to the review queue either way; this puts it
+  // where whoever is watching the job can see it.
+  for (const item of review) {
+    console.warn(`[review] ${item.reason}: ${item.source.url}`);
+  }
 
   const collapsed = dedupe(parsed);
   console.log(
