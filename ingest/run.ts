@@ -1,13 +1,20 @@
 import { loadEnvConfig } from '@next/env';
 loadEnvConfig(process.cwd());
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Outage } from '../lib/types';
 import { createServiceClient } from './supabase';
 import { errorMessage, type ConditionalCache } from './http';
 import { parseAnnouncement } from './parse';
 import { runFallback } from './parse/fallback';
 import { dedupe } from './dedupe';
-import { queueForReview, retractOutages, storeOutages, type ReviewItem } from './store';
+import {
+  queueForReview,
+  retractOutages,
+  storeOutages,
+  type ReviewItem,
+  type StoreResult,
+} from './store';
 import { logRun } from './log';
 import { adapters as allAdapters } from './adapters';
 import type { RawAnnouncement, SourceAdapter } from './adapters/types';
@@ -19,6 +26,10 @@ export type IngestOptions = {
   adapters?: SourceAdapter[];
   dryRun?: boolean;
   useFallback?: boolean;
+  // A seam for the tests. The orchestration below decides what a run records
+  // and when it gives up, and none of that is reachable while the only client
+  // is the real one built from the environment.
+  client?: SupabaseClient;
 };
 
 export async function ingest(options: IngestOptions = {}) {
@@ -96,15 +107,39 @@ export async function ingest(options: IngestOptions = {}) {
     return { startedAt, records: collapsed, retractions, review, adaptersOk, adaptersFailed };
   }
 
-  const client = createServiceClient();
-  const stored = await storeOutages(client, collapsed);
-  const retracted = await retractOutages(client, retractions);
-  const reviewCount = await queueForReview(client, review);
+  const client = options.client ?? createServiceClient();
+  let stored: StoreResult = { created: 0, updated: 0, cancelled: 0 };
+  let retracted = 0;
+  let reviewCount = 0;
+  let refreshed = false;
+  let failure: unknown = null;
+
+  // The run row is the only evidence that the ingest ran at all, and the status
+  // bar reads the most recent ok one to decide whether to tell readers their
+  // data is stale. Logging it after the writes meant a failure in any of them
+  // lost the row entirely: a repeat in the review queue ended every run for two
+  // days while outages were being stored the whole time, and the site went on
+  // saying the sources could not be reached. Record the run whatever happened,
+  // and re-raise afterwards so the job still fails and someone is told.
+  try {
+    stored = await storeOutages(client, collapsed);
+    retracted = await retractOutages(client, retractions);
+    // Past here what a reader sees is current, whatever else goes wrong.
+    refreshed = true;
+    reviewCount = await queueForReview(client, review);
+  } catch (error) {
+    failure = error;
+    // Printed before logRun, so the cause survives even if logging the run
+    // fails too and that error is the one that propagates.
+    console.error(errorMessage(error));
+  }
 
   const finishedAt = new Date().toISOString();
-  // A run is ok when at least one adapter delivered; only a total failure is
-  // an outage of its own.
-  const ok = adaptersOk.length > 0;
+  // A run is ok when at least one adapter delivered and the outages reached the
+  // database — only then is what a reader sees actually current. A failure in
+  // the review queue leaves it true: that queue is the maintainer's work list,
+  // and marking the data stale over it would tell readers something untrue.
+  const ok = adaptersOk.length > 0 && refreshed;
   await logRun(client, {
     startedAt,
     finishedAt,
@@ -120,6 +155,8 @@ export async function ingest(options: IngestOptions = {}) {
     `stored: ${stored.created} created, ${stored.updated} updated, ` +
       `${stored.cancelled + retracted} retracted, ${reviewCount} queued for review`,
   );
+
+  if (failure) throw failure;
   return { startedAt, records: collapsed, retractions, review, adaptersOk, adaptersFailed };
 }
 
