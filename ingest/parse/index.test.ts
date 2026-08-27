@@ -16,6 +16,7 @@ function respondWith(outages: Partial<ExtractedOutage>[]): typeof fetch {
             outages: outages.map((o) => ({
               kind: 'planned',
               date: '2026-08-26',
+              weekday: null,
               start: '09:00',
               end: '13:00',
               areas: ['Gönyeli'],
@@ -145,6 +146,47 @@ test('names that match nothing we know are not stored', async () => {
   assert.equal(outcome.status, 'failed');
   if (outcome.status !== 'failed') return;
   assert.equal(outcome.reason, 'no known place names found');
+});
+
+// Announcements say "perşembe günü" constantly, and the model cannot resolve
+// one: asked against a Sunday it answered Tuesday five times out of five, and
+// went on doing so after being told the publication date's weekday outright. It
+// reports the day it read; the counting is done here, where it is a subtraction.
+test('a named weekday is counted from the publication date, not by the model', async () => {
+  // 2026-08-23 is a Sunday; the Thursday after it is the 27th.
+  const outcome = await parseAnnouncement(
+    announcement({ publishedAt: '2026-08-23T14:00:00.000Z' }),
+    // The model's own date is deliberately wrong here — it must be ignored.
+    respondWith([{ weekday: 'thursday', date: '2026-08-25' }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.records[0].startsAt, '2026-08-27T06:00:00.000Z');
+});
+
+// On or after, not after: KIB-TEK publishes on the Wednesday that the work is
+// "perşembe günü", and one published on the day itself says it too.
+test('a weekday that is today means today', async () => {
+  const outcome = await parseAnnouncement(
+    announcement({ publishedAt: '2026-08-23T14:00:00.000Z' }),
+    respondWith([{ weekday: 'sunday' }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.records[0].startsAt, '2026-08-23T06:00:00.000Z');
+});
+
+// Published at 01:00 Nicosia, which is still the previous day in UTC. The
+// counting has to start from the day the reader is living in.
+test('the weekday counts from the Nicosia day, not the UTC one', async () => {
+  const outcome = await parseAnnouncement(
+    // 2026-08-23T22:00Z is 01:00 on the 24th in Nicosia — a Monday.
+    announcement({ publishedAt: '2026-08-23T22:00:00.000Z' }),
+    respondWith([{ weekday: 'monday' }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.records[0].startsAt, '2026-08-24T06:00:00.000Z');
 });
 
 test('an article the model finds no outage in is skipped, not failed', async () => {

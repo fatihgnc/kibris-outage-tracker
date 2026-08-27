@@ -973,12 +973,39 @@ being deterministic is cheap:
   than reaching the database as a place that does not exist.
 - _Time zones_: the model returns a local date and a wall clock; the conversion
   to UTC goes through the same function the site reads back with.
+- _Named weekdays_: announcements say "perşembe günü" constantly, and the model
+  cannot resolve one. Asked against a Sunday it answered Tuesday, five times out
+  of five, and went on doing so after being told the publication date's weekday
+  outright — calendar arithmetic is not what it is good at. So it reports the
+  weekday it **read**, and the date is counted here, from the publication date's
+  Nicosia day. On or after, never strictly after: KIB-TEK publishes on the
+  Wednesday that the work is "perşembe günü", and one published on the day itself
+  says it too.
+
+  This is the shape to reach for whenever the model is unreliable at something:
+  narrow what it is asked for to what it can read off the page, and do the
+  derivation in code. Do not settle for prompting harder — that was tried here
+  first, twice, and measured as not working.
 - _Identity_: the fingerprint (§10.5), so a re-run is idempotent whatever the
   model returns.
 - _Validation_: Structured Outputs guarantees the shape, not the contents. The
   schema cannot say "HH:MM" or "a real day in the calendar", and this is the
   boundary between somebody else's service and our database. A field that fails
   validation drops its entry.
+
+**A landmark is not a place, and the model must not be asked where one is.**
+KIB-TEK published an outage whose only location was "Erülkü Süpermarket
+çevresi". Asked for its district the model answered Güzelyurt six times out of
+six; told to extract rather than recall, and to return null when the
+announcement does not say, it answered Lefke six out of six. Both confidently,
+both wrong — it is in Lefkoşa. A wrong district files an outage under a district
+that is not having one and hides it from the district that is, so this is not a
+fallback worth having.
+
+The fix for a landmark that keeps appearing is `data/places.json`: add it, with
+its district checked by a person once, and it gains a coordinate and a lamp as
+well. `scripts/harvest-places.ts` exists to surface exactly these recurring
+unknown names.
 
 **The one value not read off the page.** A fault already in progress has no
 announced start, so the announcement's own publication time stands in for one

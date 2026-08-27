@@ -1,7 +1,7 @@
 import type { Outage, SourceRef } from '../../lib/types';
-import { zonedTimeToUtc } from '../../lib/time';
+import { nicosiaWallClock, zonedTimeToUtc } from '../../lib/time';
 import { fingerprint } from '../fingerprint';
-import { extractOutages, type ExtractedOutage } from './llm';
+import { extractOutages, WEEKDAYS, type ExtractedOutage, type Weekday } from './llm';
 import { districtsOf, matchPlaces, type PlaceMatch } from './places';
 import { collapseWhitespace } from './text';
 
@@ -119,12 +119,38 @@ function toSchedule(outage: ExtractedOutage, publishedAt: string): Schedule | nu
     return { startsAt: publishedAt, endsAt: null, inferredStart: true };
   }
 
-  const startsAt = toIso(outage.date, outage.start);
+  const date = outage.weekday ? dateOfNext(outage.weekday, publishedAt) : outage.date;
+  const startsAt = toIso(date, outage.start);
   if (!startsAt) return null;
-  let endsAt = outage.end ? toIso(outage.date, outage.end) : null;
+  let endsAt = outage.end ? toIso(date, outage.end) : null;
   // An outage announced as 22:00–02:00 ends the next day.
   if (endsAt && endsAt <= startsAt) endsAt = new Date(Date.parse(endsAt) + 86400000).toISOString();
   return { startsAt, endsAt, inferredStart: false };
+}
+
+/**
+ * The date of the next given weekday, on or after the announcement's publication
+ * date, as a local YYYY-MM-DD.
+ *
+ * Announcements say "perşembe günü" constantly and this arithmetic is ours, not
+ * the model's. Asked to resolve one against a Sunday it answered Tuesday, five
+ * times out of five — and it still did after being told the publication date's
+ * weekday outright. It reads the day off the page; the counting happens here,
+ * where it is a subtraction and cannot be wrong.
+ *
+ * "On or after", not "after": KIB-TEK publishes on the Wednesday that the work
+ * is "perşembe günü", and one published on the day itself says it too (§10.4).
+ */
+function dateOfNext(weekday: Weekday, publishedAt: string): string {
+  // Nicosia's calendar day, not UTC's — an announcement published at 01:00 local
+  // is on the day the reader thinks it is.
+  const local = nicosiaWallClock(Date.parse(publishedAt));
+  const from = Date.UTC(local.year, local.month - 1, local.day);
+  const target = WEEKDAYS.indexOf(weekday);
+  // getUTCDay is Sunday-first; WEEKDAYS is Monday-first.
+  const current = (new Date(from).getUTCDay() + 6) % 7;
+  const ahead = (target - current + 7) % 7;
+  return new Date(from + ahead * 86400000).toISOString().slice(0, 10);
 }
 
 function toIso(date: string, clock: string): string | null {

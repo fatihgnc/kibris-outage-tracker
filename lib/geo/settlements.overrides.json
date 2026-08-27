@@ -8,16 +8,22 @@
       "note": "OSM tags it place=locality rather than a settlement, so the harvest's place filter never sees it."
     },
     {
+      "name": "Boğaz",
+      "lat": 35.2927,
+      "lng": 33.2813,
+      "note": "The Beşparmak pass — places.json files this under Girne and spells the alias 'Boğaz Girne'. OSM's only place=village named Boğaz is İskele's, 27km east, which the harvest would otherwise pick."
+    },
+    {
       "name": "Bostancı",
       "lat": 35.1659,
       "lng": 33.0106,
       "note": "OSM carries the village as a landuse=residential area, with no place node on it."
     },
     {
-      "name": "Boğaz",
-      "lat": 35.2927,
-      "lng": 33.2813,
-      "note": "The Beşparmak pass — places.json files this under Girne and spells the alias 'Boğaz Girne'. OSM's only place=village named Boğaz is İskele's, 27km east, which the harvest would otherwise pick."
+      "name": "Değirmenlik Yolu",
+      "lat": 35.2112,
+      "lng": 33.4223,
+      "note": "A road, not a settlement, but announcements name it on its own. The point is the midpoint of the two ends the road is named for, Lefkoşa and Değirmenlik."
     },
     {
       "name": "Ercan",
@@ -26,16 +32,16 @@
       "note": "The airport. OSM: aeroway=aerodrome 'Ercan Uluslararası Havalimanı'. Announcements mean the airport and the works around it, not a village."
     },
     {
+      "name": "Erülkü Süpermarket",
+      "lat": 35.2207,
+      "lng": 33.4684,
+      "note": "Not a settlement, but announcements locate outages by it — KIB-TEK published one whose only location was 'Erülkü Süpermarket çevresi', which three outlets carried and the ingest dropped. OSM has the building as shop=supermarket, which the harvest's place query cannot see. District confirmed by the maintainer; asking a model for it produced a confident wrong answer twice over."
+    },
+    {
       "name": "Kombos",
       "lat": 35.1105,
       "lng": 33.9341,
       "note": "A quarter of Gazimağusa. OSM has it only as the square, 'Kombos Meydanı'."
-    },
-    {
-      "name": "Değirmenlik Yolu",
-      "lat": 35.2112,
-      "lng": 33.4223,
-      "note": "A road, not a settlement, but announcements name it on its own. The point is the midpoint of the two ends the road is named for, Lefkoşa and Değirmenlik."
     },
     {
       "name": "Lapta Yolu",

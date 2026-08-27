@@ -47,13 +47,19 @@ const SCHEMA = {
         items: {
           type: 'object',
           additionalProperties: false,
-          required: ['kind', 'date', 'start', 'end', 'areas', 'cancelled', 'ongoing'],
+          required: ['kind', 'date', 'weekday', 'start', 'end', 'areas', 'cancelled', 'ongoing'],
           properties: {
             kind: { type: 'string', enum: ['planned', 'fault', 'rotating'] },
             date: {
               type: 'string',
               description:
-                'YYYY-MM-DD local date the outage starts, with relative words resolved against the publication date given to you.',
+                'YYYY-MM-DD, the local date the outage STARTS, resolved against the publication date given to you. For a window running past midnight — "bugun saat 23.00 ile yarin saat 02.00 arasinda" — this is the EARLIER day, the one "start" falls on, not the day it ends.',
+            },
+            weekday: {
+              type: ['string', 'null'],
+              enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', null],
+              description:
+                'The weekday the announcement names for the outage, in English, if it names one — "perşembe günü" is thursday. null when it gives a date or a relative word instead. Report what it says; the date is worked out from this.',
             },
             start: {
               type: ['string', 'null'],
@@ -95,7 +101,9 @@ const SYSTEM_PROMPT = [
   '',
   '- Return an empty list when the article is not about an electricity outage, or when it only reports one that has already been repaired.',
   '- One entry per distinct outage. An announcement listing many villages under one time window is ONE outage with many areas, not one per village.',
-  '- Resolve "bugün", "yarın", "perşembe günü" and the like against the publication date you are given. A named weekday means its next occurrence on or after that date.',
+  '- Resolve "bugün" and "yarın" against the publication date you are given. "bugün" IS the publication date.',
+  '- When the announcement names a WEEKDAY instead ("perşembe günü"), put it in "weekday" and do not try to work the date out — the date is computed from it afterwards. Still fill "date" with your best effort; it is ignored when "weekday" is set.',
+  '- "date" is the day the outage STARTS. An announcement reading "bugün saat 23.00 ile yarın saat 02.00 arasında" starts today at 23:00 and ends tomorrow at 02:00: date is the publication date, start is 23:00, end is 02:00. Do not move the date forward because the window crosses midnight.',
   '- Never invent a time. When a fault is already in progress and no start is stated, set "start" to null and "ongoing" to true.',
   '- Planned work states its hours almost without exception. If a clearly scheduled outage gives no hours, return what you can find and leave the rest null rather than estimating.',
   '- "areas" must be the place names the announcement itself uses. Include villages, towns and neighbourhoods; leave out businesses and buildings used only as landmarks.',
@@ -104,12 +112,16 @@ const SYSTEM_PROMPT = [
 export type ExtractedOutage = {
   kind: OutageKind;
   date: string;
+  weekday: Weekday | null;
   start: string | null;
   end: string | null;
   areas: string[];
   cancelled: boolean;
   ongoing: boolean;
 };
+
+export const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
+export type Weekday = (typeof WEEKDAYS)[number];
 
 export type ExtractionResult =
   | { status: 'ok'; outages: ExtractedOutage[] }
@@ -133,8 +145,18 @@ export async function extractOutages(
   const key = process.env.OPENAI_API_KEY;
   if (!key) return { status: 'error', reason: 'no OPENAI_API_KEY configured' };
 
+  // The weekday is given rather than left to be worked out. Announcements say
+  // "perşembe günü" constantly, and asked to resolve one against a bare date the
+  // model answered Tuesday for a Thursday, five times out of five. Calendar
+  // arithmetic is not what it is good at and not what it is here for; naming the
+  // day turns the question into counting forward from a known one.
+  const published = announcement.publishedAt.slice(0, 10);
+  const weekday = new Date(`${published}T12:00:00Z`).toLocaleDateString('en-GB', {
+    weekday: 'long',
+    timeZone: 'UTC',
+  });
   const user = [
-    `Publication date: ${announcement.publishedAt.slice(0, 10)}`,
+    `Publication date: ${published} (a ${weekday})`,
     '',
     `Title: ${announcement.title}`,
     '',
@@ -226,9 +248,13 @@ export function validate(raw: string): ExtractedOutage[] | null {
   const out: ExtractedOutage[] = [];
   for (const entry of list) {
     if (typeof entry !== 'object' || entry === null) continue;
-    const { kind, date, start, end, areas, cancelled, ongoing } = entry as Record<string, unknown>;
+    const { kind, date, weekday, start, end, areas, cancelled, ongoing } = entry as Record<
+      string,
+      unknown
+    >;
     if (kind !== 'planned' && kind !== 'fault' && kind !== 'rotating') continue;
     if (typeof date !== 'string' || !isCalendarDate(date)) continue;
+    if (weekday !== null && !WEEKDAYS.includes(weekday as Weekday)) continue;
     if (start !== null && !(typeof start === 'string' && isClock(start))) continue;
     if (end !== null && !(typeof end === 'string' && isClock(end))) continue;
     if (!Array.isArray(areas)) continue;
@@ -237,6 +263,7 @@ export function validate(raw: string): ExtractedOutage[] | null {
     out.push({
       kind,
       date,
+      weekday: (weekday as Weekday | null) ?? null,
       start: (start as string | null) ?? null,
       end: (end as string | null) ?? null,
       areas: names,
