@@ -33,3 +33,8 @@ alter table seen_articles enable row level security;
 
 revoke all on seen_articles from anon, authenticated;
 grant select, insert, update on seen_articles to service_role;
+
+-- PostgREST answers from a cached copy of the schema and does not pick up a new
+-- table on its own. Without this the first runs after the push read every
+-- article again, warned, and paid for it — which is exactly what happened.
+notify pgrst, 'reload schema';
