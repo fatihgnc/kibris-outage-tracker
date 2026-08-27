@@ -46,14 +46,21 @@ export default function IslandMapMini({
           />
         ))}
         {districts.map((d) => (
-          <path key={d.id} d={d.path} fill="none" stroke="var(--color-dark)" strokeWidth={0.6} />
+          <path
+            key={d.id}
+            d={d.path}
+            fill="none"
+            stroke="var(--color-text)"
+            strokeOpacity={0.5}
+            strokeWidth={0.6}
+          />
         ))}
         <path
           d={islandPath}
           fill="none"
-          stroke="var(--color-muted)"
+          stroke="var(--color-text)"
           strokeWidth={1.2}
-          strokeOpacity={0.7}
+          strokeOpacity={0.85}
           strokeLinejoin="round"
         />
         {settlements

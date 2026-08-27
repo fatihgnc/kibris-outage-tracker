@@ -142,6 +142,22 @@ coordinate came from; names with no defensible point at all are declared
 `unplaceable` there. `lib/geography.test.ts` fails if the two files drift, so a
 place list that has grown past the map is caught in CI rather than on the page.
 
+**A coordinate can be wrong in two ways, and only one of them matters.** OSM
+place nodes are surveyed, so a lamp is not going to be off by a street. What it
+can be is the *wrong village* — and that is only possible where a name is held
+by more than one place in the north. 178 of the 194 names match exactly one, so
+there is nothing there to get wrong; the harvest prints the handful that needed
+a choice, with what it took and what it passed over, and those are the lines to
+read after a run.
+
+Where it has to choose, the claim on the name decides: a settlement in its own
+right over a quarter of a larger one, and a node OSM has given a Turkish name to
+over one it has not. The district polygon is **not** the authority — it is the
+shape the map is drawn with, and its Girne reaches east over Değirmenlik while
+stopping short of the Koruçam peninsula. Letting it decide handed Tepebaşı to a
+neighbourhood outside Değirmenlik instead of the village west of Girne that OSM
+tags `name:tr=Tepebaşı`. It now only breaks what is still a tie.
+
 **Every lamp is the same size.** Radius used to scale with a `weight` taken
 from what OSM called the place. The map says one thing — whether the power is on
 here — and how large a place is says nothing about that; drawing it anyway made
@@ -195,6 +211,12 @@ where it is read.
 The outline must read as a silhouette. Draw it in `--color-muted` at hairline
 weight, with a very faint interior fill just above `--color-night`. In the first
 pass the outline was drawn in `--color-dark` and effectively vanished.
+
+The district borders inside it are drawn in the same tone at half the width and
+half the opacity — the island reads as one shape first and a set of districts
+second. They were `--color-dark` too, four shades off the land they sat on and
+invisible in practice; now that no district is named on the map (§3.6) they are
+the only thing saying where one ends, so they have to read.
 
 ### 3.5 The one animation
 

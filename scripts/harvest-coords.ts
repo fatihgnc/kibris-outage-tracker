@@ -107,10 +107,23 @@ const OVERPASS = [
   'https://overpass.kumi.systems/api/interpreter',
 ];
 
-// Not drawn — every lamp is the same size (§3.2). This only breaks a tie: where
-// one name is held by more than one node in the right place, the more
-// significant of them is the one meant.
-const SIGNIFICANCE: Record<string, number> = { city: 3, town: 2 };
+// How good a claim a node has to a name it shares with another node. Only 7 of
+// the 194 names need this at all; the rest match exactly one place in the north.
+//
+// The district polygon used to decide, and it is the wrong authority:
+// cyprus.geo.json is the shape the map is drawn with, and its Girne reaches
+// east over Değirmenlik while stopping short of the Koruçam peninsula. That
+// handed Tepebaşı to a neighbourhood outside Değirmenlik instead of the village
+// west of Girne that OSM tags "name:tr=Tepebaşı".
+//
+// The data answers it better than the geometry does. A settlement in its own
+// right outranks a quarter of a larger one, and a node OSM has bothered to give
+// a Turkish name to is a node someone has identified as this place — which is
+// exactly the claim being weighed. Checked by hand against all 7: this picks
+// what a person would, and the polygon only breaks what is still a tie.
+const SETTLEMENT_KINDS = new Set(['city', 'town', 'village']);
+const claim = (tags: Record<string, string>) =>
+  (tags['name:tr'] ? 2 : 0) + (SETTLEMENT_KINDS.has(tags.place) ? 1 : 0);
 
 type OsmNode = { lat: number; lon: number; tags: Record<string, string> };
 
@@ -160,6 +173,7 @@ async function main() {
   const settlements: Settlement[] = [];
   const missing: string[] = [];
   const offDistrict: string[] = [];
+  const contested: string[] = [];
   const rejected: string[] = [];
 
   const overrideByName = new Map(overrides.placed.map((o) => [o.name, o]));
@@ -211,17 +225,38 @@ async function main() {
       continue;
     }
 
-    // Where a name is held by more than one node in the north, the district
-    // places.json assigns it decides: nearest to that polygon first, and a town
-    // over a hamlet only to break a tie.
+    // Where a name is held by more than one node in the north, the stronger
+    // claim to it wins; only where two nodes claim it equally does the district
+    // places.json assigns break the tie, by proximity to that polygon.
     const scored = served.map((n) => ({
       node: n,
       away: distanceKm(home, [n.lon, n.lat]),
-      rank: SIGNIFICANCE[n.tags.place] ?? 1,
+      rank: claim(n.tags),
     }));
     const best = scored.reduce((a, b) =>
-      b.away < a.away || (b.away === a.away && b.rank > a.rank) ? b : a,
+      b.rank > a.rank || (b.rank === a.rank && b.away < a.away) ? b : a,
     );
+    // Every name a judgement had to be made about is reported, win or lose.
+    // These are the only entries in the file that could be the wrong village
+    // rather than a slightly wrong position, so they are the ones worth a
+    // person's eyes. Nodes within a kilometre of each other are one place
+    // tagged twice, not a choice between two places.
+    const rivals = scored.filter(
+      (o) =>
+        Math.hypot((o.node.lon - best.node.lon) * LON_SCALE, o.node.lat - best.node.lat) * KM_PER_DEG >
+        1,
+    );
+    if (rivals.length > 0) {
+      const runnerUp = rivals.reduce((a, b) =>
+        b.rank > a.rank || (b.rank === a.rank && b.away < a.away) ? b : a,
+      );
+      contested.push(
+        `${place.name} (${place.district}): took ${best.node.tags.place}` +
+          `${best.node.tags['name:tr'] ? ' with name:tr' : ''} @ ${best.node.lat.toFixed(4)},${best.node.lon.toFixed(4)}` +
+          ` over ${runnerUp.node.tags.place}${runnerUp.node.tags['name:tr'] ? ' with name:tr' : ''}` +
+          ` @ ${runnerUp.node.lat.toFixed(4)},${runnerUp.node.lon.toFixed(4)}`,
+      );
+    }
     if (best.away > DISTRICT_REPORT_KM) {
       offDistrict.push(
         `${place.name} — filed under ${place.district}, but ${best.away.toFixed(1)}km outside it @ ${best.node.lat},${best.node.lon}`,
@@ -247,6 +282,14 @@ async function main() {
   );
   for (const [id, n] of [...byDistrict].sort((a, b) => a[0].localeCompare(b[0]))) {
     console.log(`  ${DISTRICTS[id].name.padEnd(12)} ${n}`);
+  }
+  if (contested.length > 0) {
+    console.log(
+      String.fromCharCode(10) +
+        `${contested.length} name(s) are held by more than one place — these are the only` +
+        ` entries that could be the wrong village, so read them:`,
+    );
+    for (const line of contested) console.log(`  ${line}`);
   }
   if (offDistrict.length > 0) {
     console.log(`\n${offDistrict.length} lamp(s) sit well outside their own district — eyeball these:`);

@@ -248,6 +248,12 @@
       "y": 282.6
     },
     {
+      "name": "Tepebaşı",
+      "district": "girne",
+      "x": 343.5,
+      "y": 216
+    },
+    {
       "name": "Mevlevi",
       "district": "guzelyurt",
       "x": 345.7,
@@ -564,12 +570,6 @@
       "district": "lefkosa",
       "x": 520.1,
       "y": 245.7
-    },
-    {
-      "name": "Tepebaşı",
-      "district": "girne",
-      "x": 521.9,
-      "y": 239.7
     },
     {
       "name": "Başpınar",

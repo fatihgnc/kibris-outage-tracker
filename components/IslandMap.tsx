@@ -302,22 +302,32 @@ export default function IslandMap({
             />
           )}
 
-          {/* 6 — district hairlines, thinner than the coast */}
+          {/* 6 — district hairlines. Drawn in the palette's lightest tone
+           * rather than its darkest: at --color-dark they were four shades off
+           * the land they were drawn on and simply could not be seen. Now that
+           * no district is named on the map (§3.6) these lines are the only
+           * thing saying where one ends, so they have to read.
+           *
+           * Half the opacity and half the width of the coast, so the island
+           * still reads as one shape first and a set of districts second. */}
           {districts.map((d) => (
             <path
               key={d.id}
               d={d.path}
               fill="none"
-              stroke={hovered === d.id ? 'var(--color-lamp)' : 'var(--color-dark)'}
+              stroke={hovered === d.id ? 'var(--color-lamp)' : 'var(--color-text)'}
+              strokeOpacity={hovered === d.id ? 1 : 0.5}
               strokeWidth={hovered === d.id ? 1 : 0.6}
             />
           ))}
 
-          {/* 7 — the coastline: thin, but it has to be readable */}
+          {/* 7 — the coastline: thin, but it has to be readable, and it has to
+           * stay the strongest line on the map now that the borders inside it
+           * are lit in the same tone. */}
           <path
             d={islandPath}
             fill="none"
-            stroke="var(--color-muted)"
+            stroke="var(--color-text)"
             strokeWidth={1.2}
             strokeLinejoin="round"
           />
