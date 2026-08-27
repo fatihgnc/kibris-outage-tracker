@@ -68,6 +68,7 @@ export async function ingest(options: IngestOptions = {}) {
   const retractions: Outage[] = [];
   const review: ReviewItem[] = [];
   const read: { announcement: RawAnnouncement; parsedOk: boolean }[] = [];
+  const skipped: RawAnnouncement[] = [];
 
   // Reading is now a paid request, so an article is read once. The adapters
   // look three days back and this runs every ten minutes, which means the same
@@ -89,7 +90,14 @@ export async function ingest(options: IngestOptions = {}) {
     // so it counts as read. Only a failure is worth another attempt.
     read.push({ announcement, parsedOk: outcome.status !== 'failed' });
 
-    if (outcome.status === 'skipped') continue;
+    // A skip used to mean a keyword check said no. It now means the model read
+    // the article and judged there was no outage in it, which is a decision
+    // worth being able to see — a wrong one is invisible otherwise, and looks
+    // exactly like a quiet day.
+    if (outcome.status === 'skipped') {
+      skipped.push(announcement);
+      continue;
+    }
 
     if (outcome.status === 'failed') {
       // Never dropped. The review queue is what makes one parser safe to depend
@@ -109,10 +117,15 @@ export async function ingest(options: IngestOptions = {}) {
     (outcome.cancellation ? retractions : parsed).push(...outcome.records);
   }
 
+  for (const announcement of skipped) {
+    console.log(`[skipped] no outage found: ${announcement.source.url}`);
+  }
+
   const collapsed = dedupe(parsed);
   console.log(
-    `parsed ${parsed.length} record(s) -> ${collapsed.length} after dedupe; ` +
-      `${retractions.length} retraction(s); ${review.length} to review`,
+    `read ${unread.length} announcement(s): ${parsed.length} record(s) -> ${collapsed.length} ` +
+      `after dedupe; ${retractions.length} retraction(s); ${skipped.length} skipped; ` +
+      `${review.length} to review`,
   );
 
   if (options.dryRun) {

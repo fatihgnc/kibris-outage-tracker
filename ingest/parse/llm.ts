@@ -21,6 +21,13 @@ import type { RawAnnouncement } from './index';
 const MODEL = process.env.LLM_MODEL ?? 'gpt-4o-mini';
 const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 const TIMEOUT_MS = 30000;
+// A dry run against live sources hit one "fetch failed" in the middle of an
+// otherwise stable sequence — the network, not the API. Left alone that costs
+// the article an attempt and puts it in the review queue over a blip, so the
+// transient cases get another go. A 4xx is not one of them: a bad key or a
+// malformed request will fail identically however many times it is sent.
+const RETRIES = 2;
+const RETRY_DELAY_MS = 1500;
 const MAX_BODY_CHARS = 6000;
 
 // Structured Outputs: the model is constrained to this shape rather than asked
@@ -136,6 +143,37 @@ export async function extractOutages(
   ].join('\n');
 
   let payload: unknown;
+  let lastError = '';
+  for (let attempt = 0; attempt <= RETRIES; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+    const outcome = await request(fetchImpl, key, user);
+    if (outcome.ok) {
+      payload = outcome.payload;
+      break;
+    }
+    lastError = outcome.reason;
+    if (!outcome.retryable) return { status: 'error', reason: outcome.reason };
+  }
+  if (payload === undefined) return { status: 'error', reason: lastError };
+
+  const message = (
+    payload as { choices?: { message?: { content?: string; refusal?: string | null } }[] }
+  ).choices?.[0]?.message;
+  // A structured-output refusal arrives in its own field, not as malformed JSON
+  // in `content`.
+  if (message?.refusal) return { status: 'error', reason: `model refused: ${message.refusal}` };
+  if (!message?.content) return { status: 'error', reason: 'empty response' };
+
+  const outages = validate(message.content);
+  if (!outages) return { status: 'error', reason: 'response did not match the schema' };
+  return { status: 'ok', outages };
+}
+
+type RequestOutcome =
+  | { ok: true; payload: unknown }
+  | { ok: false; reason: string; retryable: boolean };
+
+async function request(fetchImpl: typeof fetch, key: string, user: string): Promise<RequestOutcome> {
   try {
     const response = await fetchImpl(ENDPOINT, {
       method: 'POST',
@@ -155,24 +193,18 @@ export async function extractOutages(
     });
     if (!response.ok) {
       const detail = (await response.text()).slice(0, 200);
-      return { status: 'error', reason: `openai ${response.status}: ${detail}` };
+      return {
+        ok: false,
+        reason: `openai ${response.status}: ${detail}`,
+        // Rate limiting and the server's own faults pass; a rejected request
+        // will be rejected the same way every time.
+        retryable: response.status === 429 || response.status >= 500,
+      };
     }
-    payload = await response.json();
+    return { ok: true, payload: await response.json() };
   } catch (error) {
-    return { status: 'error', reason: `openai request failed: ${(error as Error).message}` };
+    return { ok: false, reason: `openai request failed: ${(error as Error).message}`, retryable: true };
   }
-
-  const message = (
-    payload as { choices?: { message?: { content?: string; refusal?: string | null } }[] }
-  ).choices?.[0]?.message;
-  // A structured-output refusal arrives in its own field, not as malformed JSON
-  // in `content`.
-  if (message?.refusal) return { status: 'error', reason: `model refused: ${message.refusal}` };
-  if (!message?.content) return { status: 'error', reason: 'empty response' };
-
-  const outages = validate(message.content);
-  if (!outages) return { status: 'error', reason: 'response did not match the schema' };
-  return { status: 'ok', outages };
 }
 
 /**
