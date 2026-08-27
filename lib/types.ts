@@ -40,8 +40,6 @@ export type Settlement = {
   lat: number;
   lng: number;
   district: DistrictId;
-  /** Lamp size: 3 = major city, 2 = district seat, 1 = village. */
-  weight: number;
 };
 
 export type MonthlyTotal = {

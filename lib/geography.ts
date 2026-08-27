@@ -11,26 +11,14 @@ export { DISTRICTS, DISTRICT_IDS, isDistrictId } from './districts';
 export type MapDistrict = {
   id: DistrictId;
   name: string;
-  /** Uppercased for the map label. Turkish casing: i becomes İ, never I. */
-  label: string;
   path: string;
-  /** Fraction of the frame, so the label can be positioned outside the SVG. */
-  labelX: number;
-  labelY: number;
   /** Projected area in frame units, used to stack the smallest hit area on top. */
   area: number;
-  /**
-   * Brightest lamp light under the label, 0–1. The map is lit everywhere the
-   * districts are, so this is never zero; the labels carry a soft shadow, and
-   * this says how hard that shadow has to work.
-   */
-  lightUnder: number;
 };
 
 export type MapSettlement = {
   name: string;
   district: DistrictId;
-  weight: number;
   x: number;
   y: number;
 };
@@ -48,10 +36,10 @@ export type MapGeometry = {
 
 /**
  * The projected map, read from the file `npm run build:map` writes. The
- * geometry only changes when the GeoJSON does, and the label search behind it
- * costs a second, so it is computed once at build time and never at request
- * time. lib/geo/build-layout.ts does that work; lib/geography.test.ts fails if
- * the committed file has fallen behind its inputs.
+ * geometry only changes when the GeoJSON or the settlement list does, so it is
+ * computed once at build time and never at request time. lib/geo/build-layout.ts
+ * does that work; lib/geography.test.ts fails if the committed file has fallen
+ * behind its inputs.
  */
 export function getMapGeometry(): MapGeometry {
   return mapLayout as MapGeometry;

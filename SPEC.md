@@ -142,20 +142,26 @@ coordinate came from; names with no defensible point at all are declared
 `unplaceable` there. `lib/geography.test.ts` fails if the two files drift, so a
 place list that has grown past the map is caught in CI rather than on the page.
 
-A lamp's radius follows its `weight`, taken from what OSM calls the place —
-city, town, or anything smaller. The light of a hundred and ninety lamps adds
-up: the radii in `lib/map-style.ts` are set for that density, and the ones that
-suited twenty-six lamps turn the middle of the island into one sheet of amber.
+**Every lamp is the same size.** Radius used to scale with a `weight` taken
+from what OSM called the place. The map says one thing — whether the power is on
+here — and how large a place is says nothing about that; drawing it anyway made
+a city's outage look like the bigger event when the map has no way of knowing
+that it is, and dressed a tag up as data the map does not hold. 179 of the 192
+places fell into the same bucket in any case.
+
+The light of a hundred and ninety lamps adds up: the radii in
+`lib/map-style.ts` are set for that density, and the ones that suited
+twenty-six lamps turn the middle of the island into one sheet of amber.
 
 Place names are data, not code — they stay in their real Turkish spelling. The
 identifiers that reference them are English (`settlements`, `district`, `name`).
 
 ### 3.3 Point states
 
-| State   | Appearance                                            |
-| ------- | ----------------------------------------------------- |
-| Powered | `--color-lamp` core with its glow, radius by weight  |
-| Outage  | `--color-muted` dot at half opacity, no glow         |
+| State   | Appearance                                     |
+| ------- | ---------------------------------------------- |
+| Powered | `--color-lamp` core with its glow             |
+| Outage  | `--color-muted` dot at half opacity, no glow  |
 
 **An unlit place is dark, not absent.** The lamp's glow and its amber core fade
 away and a cold dot is left standing where they were — the village is still on
@@ -220,8 +226,14 @@ final state immediately.
   plain text and the list under the map carries the link.
 - The same sentence goes to an `aria-live` line under the map, which is also
   where the hint sits when nothing is hovered.
-- Do **not** print settlement labels permanently on the map. Only the six
-  district names are permanent, and below `LABEL_BREAKPOINT` even those give way.
+- **No names are written on the map at all** — not the settlements', and not the
+  districts'. The six district names used to be, and carrying them was expensive
+  out of all proportion to what they gave: `lib/geo/build-layout.ts` ran a grid
+  sweep per district looking for somewhere each name could sit that was on land,
+  clear of the coast, clear of the other five, and out of the lamp light, and
+  that search was 99% of the map build — 5.9 seconds of it, against 8 milliseconds
+  for everything else. The island's shape orients a reader on its own, and the
+  popover names the place under the pointer.
 - Focus ring in `--color-lamp`, clearly visible against `--color-night`.
 
 ### 3.7 How big the map is
@@ -250,11 +262,9 @@ Two things this costs, both paid in `app/globals.css` and
   on the root element is handed to the viewport, and clipping `body` alone lets
   the overshoot escape. `clip` and not `hidden`: `hidden` would make the element
   a scroll container and take `position: sticky` with it.
-- The district labels are HTML at a fixed pixel size, so they do not grow with
-  the frame. `LABEL_PX` went from 9 to 11 to keep them from reading as an
-  afterthought on a map twice the size — and no further, because the placement
-  search reserves room by that size: at 11 every label still lands inside
-  `LIGHT_LIMIT`, at 12 one of them cannot.
+- The district labels were HTML at a fixed pixel size and did not grow with the
+  frame, so they read as an afterthought on a map twice the size. They are gone
+  entirely (§3.6).
 
 ### 3.8 Map on the district page
 

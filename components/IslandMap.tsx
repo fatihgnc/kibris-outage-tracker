@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { fill as fillTemplate } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
 import type { MapDistrict, MapSettlement } from '@/lib/geography';
-import { LABEL_PX, coreRadius, glowRadius, unlitRadius } from '@/lib/map-style';
+import { LAMP_CORE, LAMP_GLOW, UNLIT_DOT } from '@/lib/map-style';
 
 /**
  * What the popover says about a lamp that is out. Already worded and already
@@ -35,15 +35,6 @@ export type Props = {
     pointAria: string; // {name} {status} {district}
     districtAria: string; // {district}
   };
-};
-
-// The island is lit place by place, so a name written on it always has light
-// under it somewhere. Where placement cannot get out of the way, the name gets
-// a soft plate of night behind it: blurred, no edge, no box, and invisible
-// where there is nothing bright to sit on. Strength follows the measured light.
-const readabilityPlate = (light: number) => {
-  const layers = light > 0.45 ? 5 : light > 0.25 ? 3 : 2;
-  return Array.from({ length: layers }, (_, i) => `0 0 ${3 + i * 3}px var(--color-night)`).join(', ');
 };
 
 // §3.5, the one orchestrated moment on the site: the lamps come up west to
@@ -246,8 +237,8 @@ export default function IslandMap({
                         }),
                   }}
                 >
-                  <circle className="map-glow" r={glowRadius(s.weight)} fill="url(#map-lamp)" />
-                  <circle r={coreRadius(s.weight)} fill="var(--color-lamp)" />
+                  <circle className="map-glow" r={LAMP_GLOW} fill="url(#map-lamp)" />
+                  <circle r={LAMP_CORE} fill="var(--color-lamp)" />
                 </g>
               );
             })}
@@ -275,7 +266,7 @@ export default function IslandMap({
                   className="map-anim"
                   cx={s.x}
                   cy={s.y}
-                  r={unlitRadius(s.weight)}
+                  r={UNLIT_DOT}
                   fill="var(--color-muted)"
                   // The tone is carried by fill-opacity rather than opacity so
                   // that `ignite` — which runs 0 to 1 — can drive the fade
@@ -302,7 +293,7 @@ export default function IslandMap({
             <circle
               cx={active.x}
               cy={active.y}
-              r={coreRadius(active.weight) + 4}
+              r={LAMP_CORE + 4}
               fill="none"
               stroke={activeOutage ? 'var(--color-muted)' : 'var(--color-lamp)'}
               strokeWidth={0.8}
@@ -370,27 +361,6 @@ export default function IslandMap({
             </a>
           ))}
         </svg>
-
-        {/* 8 — the six district names, drawn as HTML over the map. In the SVG
-         * they would scale with the frame and fall to five pixels on a phone;
-         * here they keep their size. Settlement names stay off the map — there
-         * are a hundred and ninety of them, and only these six are what orients
-         * a reader. On a narrow screen even these give way; the breakpoint is
-         * LABEL_BREAKPOINT, the width the placement maths is sized for. */}
-        {districts.map((d) => (
-          <span
-            key={d.id}
-            style={{
-              left: `${d.labelX * 100}%`,
-              top: `${d.labelY * 100}%`,
-              fontSize: LABEL_PX,
-              textShadow: readabilityPlate(d.lightUnder),
-            }}
-            className="pointer-events-none absolute hidden -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-mono leading-none tracking-[0.14em] text-muted md:block"
-          >
-            {d.label}
-          </span>
-        ))}
 
         {/* The popover. It is the only place a settlement name appears on the
          * map, so it has to answer the whole question at once: where this is,

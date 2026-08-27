@@ -3,1344 +3,1152 @@
     "name": "Adaçay",
     "lat": 35.5143,
     "lng": 34.199,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Ağıllar",
     "lat": 35.3467,
     "lng": 33.7993,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Akçay",
     "lat": 35.18,
     "lng": 33.0353,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Akdeniz",
     "lat": 35.2987,
     "lng": 32.9636,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Akdoğan",
     "lat": 35.1062,
     "lng": 33.6823,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Akıncılar",
     "lat": 35.0115,
     "lng": 33.4643,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Akova",
     "lat": 35.2602,
     "lng": 33.7862,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Alaniçi",
     "lat": 35.2202,
     "lng": 33.7599,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Alayköy",
     "lat": 35.1807,
     "lng": 33.2533,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Alevkayası",
     "lat": 35.2852,
     "lng": 33.5333,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Alsancak",
     "lat": 35.3394,
     "lng": 33.1961,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Altınova",
     "lat": 35.3268,
     "lng": 33.8143,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Arapköy",
     "lat": 35.3067,
     "lng": 33.4335,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Ardahan",
     "lat": 35.3568,
     "lng": 33.886,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Arıdamı",
     "lat": 35.3204,
     "lng": 33.7104,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Aslanköy",
     "lat": 35.2044,
     "lng": 33.5892,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Aşağı Bostancı",
     "lat": 35.1686,
     "lng": 33.0066,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Atlılar",
     "lat": 35.2101,
     "lng": 33.8265,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Avtepe",
     "lat": 35.4912,
     "lng": 34.2185,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Aydınköy",
     "lat": 35.1754,
     "lng": 32.9397,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Bademliköy",
     "lat": 35.1588,
     "lng": 32.7632,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Bafra",
     "lat": 35.3795,
     "lng": 34.0713,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Bağlıköy",
     "lat": 35.1203,
     "lng": 32.8041,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Bahçeler",
     "lat": 35.2864,
     "lng": 33.9126,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Bahçeli",
     "lat": 35.3383,
     "lng": 33.6303,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Balalan",
     "lat": 35.4784,
     "lng": 34.107,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Balıkesir",
     "lat": 35.2085,
     "lng": 33.4934,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Başpınar",
     "lat": 35.2645,
     "lng": 33.4853,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Baykal",
     "lat": 35.1209,
     "lng": 33.9291,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Beyarmudu",
     "lat": 35.0432,
     "lng": 33.7083,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Boğaz",
     "lat": 35.2927,
     "lng": 33.2813,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Boğaziçi",
     "lat": 35.2694,
     "lng": 33.8257,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Boğazköy",
     "lat": 35.2895,
     "lng": 33.2794,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Boğaztepe",
     "lat": 35.3205,
     "lng": 33.9455,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Boltaşlı",
     "lat": 35.4781,
     "lng": 34.1674,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Bostancı",
     "lat": 35.1659,
     "lng": 33.0106,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Büyükkonuk",
     "lat": 35.4104,
     "lng": 33.9936,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Cengizköy",
     "lat": 35.1318,
     "lng": 32.8651,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Çağlayan",
     "lat": 35.1827,
     "lng": 33.3675,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Çamlıbel",
     "lat": 35.3072,
     "lng": 33.0751,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Çamlıca",
     "lat": 35.2826,
     "lng": 33.6879,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Çamlıköy",
     "lat": 35.1157,
     "lng": 32.877,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Çatalköy",
     "lat": 35.3213,
     "lng": 33.3907,
-    "district": "girne",
-    "weight": 2
+    "district": "girne"
   },
   {
     "name": "Çayırova",
     "lat": 35.366,
     "lng": 34.0298,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Çınarlı",
     "lat": 35.3334,
     "lng": 33.7515,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Değirmenlik",
     "lat": 35.2476,
     "lng": 33.4807,
-    "district": "lefkosa",
-    "weight": 2
+    "district": "lefkosa"
   },
   {
     "name": "Değirmenlik Yolu",
     "lat": 35.2112,
     "lng": 33.4223,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Demirhan",
     "lat": 35.2234,
     "lng": 33.4793,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Denizli",
     "lat": 35.143,
     "lng": 32.8088,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Derince",
     "lat": 35.4838,
     "lng": 34.1876,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Dikmen",
     "lat": 35.2687,
     "lng": 33.3236,
-    "district": "lefkosa",
-    "weight": 2
+    "district": "lefkosa"
   },
   {
     "name": "Dipkarpaz",
     "lat": 35.5977,
     "lng": 34.3807,
-    "district": "iskele",
-    "weight": 2
+    "district": "iskele"
   },
   {
     "name": "Doğancı",
     "lat": 35.1331,
     "lng": 32.9134,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Doğanköy",
     "lat": 35.3257,
     "lng": 33.3344,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Dörtyol",
     "lat": 35.1756,
     "lng": 33.7569,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Düzce",
     "lat": 35.0553,
     "lng": 33.7836,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Düzova",
     "lat": 35.2149,
     "lng": 33.5266,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Edremit",
     "lat": 35.3307,
     "lng": 33.2606,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Ercan",
     "lat": 35.1517,
     "lng": 33.5106,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Ergazi",
     "lat": 35.3657,
     "lng": 33.9379,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Ergenekon",
     "lat": 35.3051,
     "lng": 33.6041,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Esenköy",
     "lat": 35.4929,
     "lng": 34.1434,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Esentepe",
     "lat": 35.3394,
     "lng": 33.5832,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Gayretköy",
     "lat": 35.1617,
     "lng": 33.106,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Gaziköy",
     "lat": 35.1581,
     "lng": 33.5864,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Gazimağusa",
     "lat": 35.1205,
     "lng": 33.9388,
-    "district": "gazimagusa",
-    "weight": 3
+    "district": "gazimagusa"
   },
   {
     "name": "Gaziveren",
     "lat": 35.1725,
     "lng": 32.9164,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Geçitkale",
     "lat": 35.2605,
     "lng": 33.7322,
-    "district": "gazimagusa",
-    "weight": 2
+    "district": "gazimagusa"
   },
   {
     "name": "Geçitköy",
     "lat": 35.3363,
     "lng": 33.0682,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Gelincik",
     "lat": 35.473,
     "lng": 34.1503,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Gemikonağı",
     "lat": 35.1407,
     "lng": 32.8339,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Girne",
     "lat": 35.3396,
     "lng": 33.3205,
-    "district": "girne",
-    "weight": 3
+    "district": "girne"
   },
   {
     "name": "Göçmenköy",
     "lat": 35.2096,
     "lng": 33.3371,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Gökhan",
     "lat": 35.2314,
     "lng": 33.4956,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Gönendere",
     "lat": 35.2641,
     "lng": 33.6615,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Gönyeli",
     "lat": 35.2164,
     "lng": 33.3058,
-    "district": "lefkosa",
-    "weight": 2
+    "district": "lefkosa"
   },
   {
     "name": "Görneç",
     "lat": 35.2827,
     "lng": 33.5731,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Günebakan",
     "lat": 35.1679,
     "lng": 32.7135,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Güneşköy",
     "lat": 35.1765,
     "lng": 32.9567,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Güvercinlik",
     "lat": 35.1006,
     "lng": 33.8614,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Güzelyurt",
     "lat": 35.1993,
     "lng": 32.9929,
-    "district": "guzelyurt",
-    "weight": 2
+    "district": "guzelyurt"
   },
   {
     "name": "Hamitköy",
     "lat": 35.2143,
     "lng": 33.3784,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Haspolat",
     "lat": 35.2064,
     "lng": 33.42,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Ilgaz",
     "lat": 35.3233,
     "lng": 33.221,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "İncirli",
     "lat": 35.0739,
     "lng": 33.7624,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "İnönü",
     "lat": 35.1576,
     "lng": 33.7005,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "İskele",
     "lat": 35.2857,
     "lng": 33.8931,
-    "district": "iskele",
-    "weight": 2
+    "district": "iskele"
   },
   {
     "name": "Kalavaç",
     "lat": 35.2578,
     "lng": 33.5487,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Kaleburnu",
     "lat": 35.5224,
     "lng": 34.3027,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Kalecik",
     "lat": 35.3425,
     "lng": 33.9998,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Kalkanlı",
     "lat": 35.2464,
     "lng": 33.0371,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Kanlıköy",
     "lat": 35.2222,
     "lng": 33.2615,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Kantara",
     "lat": 35.3873,
     "lng": 33.8985,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Kaplıca",
     "lat": 35.4214,
     "lng": 33.9048,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Karaağaç",
     "lat": 35.3193,
     "lng": 33.5559,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Karakum",
     "lat": 35.3327,
     "lng": 33.3421,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Karaman",
     "lat": 35.3177,
     "lng": 33.2568,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Karaoğlanoğlu",
     "lat": 35.3424,
     "lng": 33.2717,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Karpaşa",
     "lat": 35.2978,
     "lng": 33.0704,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Karşıyaka",
     "lat": 35.3533,
     "lng": 33.1185,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Kayalar",
     "lat": 35.3597,
     "lng": 33.0337,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Kaymaklı",
     "lat": 35.1851,
     "lng": 33.3793,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Kermiya",
     "lat": 35.1937,
     "lng": 33.3215,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Kızılbaş",
     "lat": 35.1984,
     "lng": 33.3542,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Kilitkaya",
     "lat": 35.3945,
     "lng": 33.9734,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Kombos",
     "lat": 35.1105,
     "lng": 33.9341,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Köprülü",
     "lat": 35.1086,
     "lng": 33.7505,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Köşklüçiftlik",
     "lat": 35.1831,
     "lng": 33.3513,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Kumsal",
     "lat": 35.1897,
     "lng": 33.3497,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Kumyalı",
     "lat": 35.4277,
     "lng": 34.1316,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Kurtuluş",
     "lat": 35.3553,
     "lng": 33.9624,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Kurudere",
     "lat": 35.1928,
     "lng": 33.6408,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Kuruova",
     "lat": 35.5109,
     "lng": 34.2741,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Kuzucuk",
     "lat": 35.2373,
     "lng": 33.861,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Küçük Kaymaklı",
     "lat": 35.1968,
     "lng": 33.3679,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Lapta",
     "lat": 35.3387,
     "lng": 33.1723,
-    "district": "girne",
-    "weight": 2
+    "district": "girne"
   },
   {
     "name": "Lapta Yolu",
     "lat": 35.339,
     "lng": 33.2464,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Lefke",
     "lat": 35.1138,
     "lng": 32.8496,
-    "district": "lefke",
-    "weight": 2
+    "district": "lefke"
   },
   {
     "name": "Lefkoşa",
     "lat": 35.1747,
     "lng": 33.3639,
-    "district": "lefkosa",
-    "weight": 3
+    "district": "lefkosa"
   },
   {
     "name": "Madenliköy",
     "lat": 35.1071,
     "lng": 32.8878,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Malatya",
     "lat": 35.3271,
     "lng": 33.207,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Mallıdağ",
     "lat": 35.3327,
     "lng": 33.6891,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Maraş",
     "lat": 35.1128,
     "lng": 33.952,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Marmara",
     "lat": 35.2019,
     "lng": 33.3474,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Mehmetçik",
     "lat": 35.4221,
     "lng": 34.0693,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Meriç",
     "lat": 35.173,
     "lng": 33.5442,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Mersinlik",
     "lat": 35.3965,
     "lng": 33.8571,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Metehan",
     "lat": 35.1937,
     "lng": 33.3215,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Mevlevi",
     "lat": 35.2031,
     "lng": 33.0591,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Minareliköy",
     "lat": 35.2346,
     "lng": 33.4766,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Mormenekşe",
     "lat": 35.2018,
     "lng": 33.8597,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Muratağa",
     "lat": 35.2105,
     "lng": 33.7764,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Mutluyaka",
     "lat": 35.1724,
     "lng": 33.8349,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Nergisli",
     "lat": 35.218,
     "lng": 33.6985,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Ortaköy",
     "lat": 35.2003,
     "lng": 33.3402,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Ozanköy",
     "lat": 35.3196,
     "lng": 33.3534,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Ömerli",
     "lat": 35.1357,
     "lng": 32.7664,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Ötüken",
     "lat": 35.2346,
     "lng": 33.8724,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Pamuklu",
     "lat": 35.3978,
     "lng": 34.0766,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Paşaköy",
     "lat": 35.1581,
     "lng": 33.609,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Pınarlı",
     "lat": 35.2443,
     "lng": 33.6465,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Pirhan",
     "lat": 35.1841,
     "lng": 33.7259,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Sadrazamköy",
     "lat": 35.3833,
     "lng": 32.953,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Sandallar",
     "lat": 35.2121,
     "lng": 33.7992,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Sazlıköy",
     "lat": 35.3993,
     "lng": 34.0259,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Serdarlı",
     "lat": 35.2546,
     "lng": 33.6022,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Serhatköy",
     "lat": 35.1883,
     "lng": 33.0922,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Sınırüstü",
     "lat": 35.2724,
     "lng": 33.852,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Sipahi",
     "lat": 35.5426,
     "lng": 34.2246,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Suriçi",
     "lat": 35.1248,
     "lng": 33.9417,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Süleymaniye",
     "lat": 35.1496,
     "lng": 32.7061,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Sütlüce",
     "lat": 35.2538,
     "lng": 33.687,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Şahinler",
     "lat": 35.1856,
     "lng": 33.0754,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Şirinköy",
     "lat": 35.1308,
     "lng": 32.7495,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Taşkınköy",
     "lat": 35.207,
     "lng": 33.3458,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Taşköy",
     "lat": 35.1097,
     "lng": 32.9076,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Taşlıca",
     "lat": 35.4698,
     "lng": 34.214,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Taşpınar",
     "lat": 35.1181,
     "lng": 32.9482,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Tatlısu",
     "lat": 35.3726,
     "lng": 33.7534,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Tepebaşı",
     "lat": 35.2594,
     "lng": 33.4852,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Tirmen",
     "lat": 35.3101,
     "lng": 33.6341,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Topçuköy",
     "lat": 35.3398,
     "lng": 33.8734,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Turnalar",
     "lat": 35.3599,
     "lng": 33.9219,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Turunçlu",
     "lat": 35.1667,
     "lng": 33.6391,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Tuzla",
     "lat": 35.1611,
     "lng": 33.8831,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Tuzluca",
     "lat": 35.363,
     "lng": 33.9971,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Türkmenköy",
     "lat": 35.1051,
     "lng": 33.7167,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Ulukışla",
     "lat": 35.2228,
     "lng": 33.6168,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Vadili",
     "lat": 35.1338,
     "lng": 33.6557,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Yamaçköy",
     "lat": 35.3288,
     "lng": 33.678,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Yarköy",
     "lat": 35.3285,
     "lng": 33.9289,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Yayla",
     "lat": 35.2251,
     "lng": 32.9402,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Yedidalga",
     "lat": 35.1449,
     "lng": 32.8013,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Yedikonuk",
     "lat": 35.4459,
     "lng": 34.0313,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Yeni Erenköy",
     "lat": 35.5343,
     "lng": 34.1886,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Yeniboğaziçi",
     "lat": 35.1962,
     "lng": 33.878,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Yenikent",
     "lat": 35.2045,
     "lng": 33.3181,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Yenişehir",
     "lat": 35.19,
     "lng": 33.3578,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Yeşilırmak",
     "lat": 35.1675,
     "lng": 32.7395,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Yeşilköy",
     "lat": 35.505,
     "lng": 34.1625,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Yeşiltepe",
     "lat": 35.3339,
     "lng": 33.217,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Yeşilyurt",
     "lat": 35.1531,
     "lng": 32.8844,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Yıldırım",
     "lat": 35.2395,
     "lng": 33.7809,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Yılmazköy",
     "lat": 35.2305,
     "lng": 33.1652,
-    "district": "lefkosa",
-    "weight": 1
+    "district": "lefkosa"
   },
   {
     "name": "Yiğitler",
     "lat": 35.0899,
     "lng": 33.6279,
-    "district": "gazimagusa",
-    "weight": 1
+    "district": "gazimagusa"
   },
   {
     "name": "Yukarı Bostancı",
     "lat": 35.1621,
     "lng": 33.0159,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Yukarı Yeşilırmak",
     "lat": 35.1475,
     "lng": 32.7333,
-    "district": "lefke",
-    "weight": 1
+    "district": "lefke"
   },
   {
     "name": "Yuvacık",
     "lat": 35.2147,
     "lng": 33.0189,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   },
   {
     "name": "Zeybekköy",
     "lat": 35.3894,
     "lng": 34.0144,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Zeytinlik",
     "lat": 35.3332,
     "lng": 33.2915,
-    "district": "girne",
-    "weight": 1
+    "district": "girne"
   },
   {
     "name": "Ziyamet",
     "lat": 35.4685,
     "lng": 34.1383,
-    "district": "iskele",
-    "weight": 1
+    "district": "iskele"
   },
   {
     "name": "Zümrütköy",
     "lat": 35.1747,
     "lng": 33.0518,
-    "district": "guzelyurt",
-    "weight": 1
+    "district": "guzelyurt"
   }
 ]

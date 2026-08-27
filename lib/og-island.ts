@@ -1,5 +1,5 @@
 import { getMapGeometry } from './geography';
-import { coreRadius, glowRadius, GLOW_STOPS } from './map-style';
+import { LAMP_CORE, LAMP_GLOW, GLOW_STOPS } from './map-style';
 
 // The map's palette, repeated as literals. Everywhere else the colours come
 // from the custom properties in globals.css (§8), but a social card is
@@ -29,8 +29,8 @@ export function islandSvg(): string {
   const lamps = settlements
     .map(
       (s) =>
-        `<circle cx="${s.x}" cy="${s.y}" r="${glowRadius(s.weight)}" fill="url(#lamp)"/>` +
-        `<circle cx="${s.x}" cy="${s.y}" r="${coreRadius(s.weight)}" fill="${LAMP}" fill-opacity="0.9"/>`,
+        `<circle cx="${s.x}" cy="${s.y}" r="${LAMP_GLOW}" fill="url(#lamp)"/>` +
+        `<circle cx="${s.x}" cy="${s.y}" r="${LAMP_CORE}" fill="${LAMP}" fill-opacity="0.9"/>`,
     )
     .join('');
 

@@ -1,6 +1,6 @@
 import type { DistrictId } from '@/lib/types';
 import type { MapDistrict, MapSettlement } from '@/lib/geography';
-import { coreRadius, glowRadius } from '@/lib/map-style';
+import { LAMP_CORE, LAMP_GLOW } from '@/lib/map-style';
 
 type Props = {
   viewBox: string;
@@ -63,11 +63,11 @@ export default function IslandMapMini({
               <circle
                 cx={s.x}
                 cy={s.y}
-                r={glowRadius(s.weight) * MINI_HALO}
+                r={LAMP_GLOW * MINI_HALO}
                 fill="var(--color-lamp)"
                 fillOpacity={0.1}
               />
-              <circle cx={s.x} cy={s.y} r={coreRadius(s.weight)} fill="var(--color-lamp)" />
+              <circle cx={s.x} cy={s.y} r={LAMP_CORE} fill="var(--color-lamp)" />
             </g>
           ))}
       </svg>

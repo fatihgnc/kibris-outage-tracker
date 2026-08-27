@@ -30,7 +30,7 @@ const places = (JSON.parse(readFileSync(root('data/places.json'), 'utf8')) as { 
 // Names OpenStreetMap cannot place, sourced by hand and merged over the query
 // result so a re-run never loses them. See the file's own $comment.
 type Overrides = {
-  placed: { name: string; lat: number; lng: number; weight: number; note: string }[];
+  placed: { name: string; lat: number; lng: number; note: string }[];
   unplaceable: { name: string; note: string }[];
 };
 const overrides = JSON.parse(
@@ -107,9 +107,10 @@ const OVERPASS = [
   'https://overpass.kumi.systems/api/interpreter',
 ];
 
-// Lamp size: 3 = major city, 2 = district seat, 1 = village. Taken from what
-// OSM calls the place rather than from a judgement of our own.
-const WEIGHTS: Record<string, number> = { city: 3, town: 2 };
+// Not drawn — every lamp is the same size (§3.2). This only breaks a tie: where
+// one name is held by more than one node in the right place, the more
+// significant of them is the one meant.
+const SIGNIFICANCE: Record<string, number> = { city: 3, town: 2 };
 
 type OsmNode = { lat: number; lon: number; tags: Record<string, string> };
 
@@ -175,7 +176,6 @@ async function main() {
         lat: override.lat,
         lng: override.lng,
         district: place.district,
-        weight: override.weight,
       });
       continue;
     }
@@ -217,10 +217,10 @@ async function main() {
     const scored = served.map((n) => ({
       node: n,
       away: distanceKm(home, [n.lon, n.lat]),
-      weight: WEIGHTS[n.tags.place] ?? 1,
+      rank: SIGNIFICANCE[n.tags.place] ?? 1,
     }));
     const best = scored.reduce((a, b) =>
-      b.away < a.away || (b.away === a.away && b.weight > a.weight) ? b : a,
+      b.away < a.away || (b.away === a.away && b.rank > a.rank) ? b : a,
     );
     if (best.away > DISTRICT_REPORT_KM) {
       offDistrict.push(
@@ -232,7 +232,6 @@ async function main() {
       lat: Math.round(best.node.lat * 1e4) / 1e4,
       lng: Math.round(best.node.lon * 1e4) / 1e4,
       district: place.district,
-      weight: best.weight,
     });
   }
 
@@ -249,12 +248,6 @@ async function main() {
   for (const [id, n] of [...byDistrict].sort((a, b) => a[0].localeCompare(b[0]))) {
     console.log(`  ${DISTRICTS[id].name.padEnd(12)} ${n}`);
   }
-  const weights = settlements.reduce<Record<number, number>>((acc, s) => {
-    acc[s.weight] = (acc[s.weight] ?? 0) + 1;
-    return acc;
-  }, {});
-  console.log(`\n  weights: ${JSON.stringify(weights)}`);
-
   if (offDistrict.length > 0) {
     console.log(`\n${offDistrict.length} lamp(s) sit well outside their own district — eyeball these:`);
     for (const line of offDistrict) console.log(`  ${line}`);

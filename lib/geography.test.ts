@@ -24,7 +24,7 @@ test('map-layout.json is in step with the data it came from', () => {
   assert.deepEqual(getMapGeometry(), computeMapGeometry());
 });
 
-test('every district is present, with a label on the frame', () => {
+test('every district is present, with a path and an area', () => {
   const { districts, width, height } = getMapGeometry();
   assert.deepEqual(
     districts.map((d) => d.id).sort(),
@@ -32,9 +32,7 @@ test('every district is present, with a label on the frame', () => {
   );
   for (const d of districts) {
     assert.ok(d.path.startsWith('M'), `${d.id} has no path`);
-    assert.ok(d.labelX > 0 && d.labelX < 1, `${d.id} label off the frame horizontally`);
-    assert.ok(d.labelY > 0 && d.labelY < 1, `${d.id} label off the frame vertically`);
-    assert.ok(d.label === d.label.toLocaleUpperCase('tr'), `${d.id} label is not Turkish uppercase`);
+    assert.ok(d.area > 0, `${d.id} has no area to stack its hit target by`);
   }
   assert.equal(getMapGeometry().viewBox, `0 0 ${width} ${height}`);
 });

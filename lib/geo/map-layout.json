@@ -8,1406 +8,1190 @@
     {
       "id": "lefkosa",
       "name": "Lefkoşa",
-      "label": "LEFKOŞA",
       "path": "M587.407,297.736L597.348,320.175L587.317,366.743L577.514,362.417L570.673,364.819L565.928,361.635L561.396,360.851L557.805,363.644L554.599,370.325L547.117,373.456L541.987,371.134L539.421,364.427L539.421,352.211L536.173,348.634L526.831,357.745L525.228,372.282L522.364,380.188L515.566,382.145L511.034,382.145L507.144,377.005L505.861,370.325L511.034,349.861L511.675,331.711L510.393,319.851L496.841,305.27L495.558,291.441L493.292,289.872L475.55,292.225L468.753,291.441L465.204,292.617L456.804,301.715L451.652,305.662L450.989,309.608L449.087,312.352L445.838,313.528L436.475,311.176L429.678,307.204L419.973,295.389L399.623,288.696L393.167,288.696L383.163,295.781L380.598,300.121L377.969,302.133L372.155,304.878L368.144,304.878L394.877,254.33L401.254,251.597L422.59,217.625L481.652,231.37L501.772,250.766L535.843,248.159Z",
-      "labelX": 0.5057,
-      "labelY": 0.5414,
-      "area": 16407,
-      "lightUnder": 0.053
+      "area": 16407
     },
     {
       "id": "girne",
       "name": "Girne",
-      "label": "GİRNE",
       "path": "M587.407,297.736L535.843,248.159L501.772,250.766L481.652,231.37L422.59,217.625L401.254,251.597L394.877,254.33L346.608,188.619L350.117,189.371L379.19,187.629L429.813,194.125L437.32,197.612L498.081,204.483L594.231,189.095Z",
-      "labelX": 0.527,
-      "labelY": 0.3845,
-      "area": 11240,
-      "lightUnder": 0.197
+      "area": 11240
     },
     {
       "id": "gazimagusa",
       "name": "Gazimağusa",
-      "label": "GAZİMAĞUSA",
       "path": "M706.261,345.109L692.751,339.965L702.413,330.145L699.164,324.999L695.958,324.999L695.958,322.229L693.051,315.932L690.144,315.096L689.16,310.784L683.688,310.784L681.764,320.269L681.764,327.741L683.987,332.104L679.84,337.196L674.325,341.532L669.836,342.315L666.588,338.79L662.098,337.196L651.453,344.326L649.828,350.618L646.579,351.454L642.048,350.618L638.157,354.952L627.213,347.067L618.449,354.56L613.938,356.127L618.812,339.208L616.888,337.196L612.998,337.196L608.509,341.532L602.053,342.733L600.087,347.459L600.728,352.211L604.597,356.127L611.715,359.677L612.998,363.227L609.407,366.385L610.689,369.542L617.187,372.282L615.541,378.205L611.031,376.64L604.597,372.282L594.914,370.743L587.317,366.743L597.348,320.175L652.899,278.825L660.17,280.088L694.968,268.898L693.495,287.788L699.217,291.946L715.712,308.948L719.146,314.01L721.165,320.346L726.08,326.723L743.98,342.119L739.821,346.258L735.717,347.067L726.654,341.923L719.215,341.923L712.118,345.109Z",
-      "labelX": 0.65,
-      "labelY": 0.5752999999999999,
-      "area": 6907,
-      "lightUnder": 0.192
+      "area": 6907
     },
     {
       "id": "guzelyurt",
       "name": "Güzelyurt",
-      "label": "GÜZELYURT",
       "path": "M315.102,315.932L308.693,322.016L279.554,310.143L268.732,288.968L276.815,282.434L285.971,269.377L292.03,253.101L294.252,234.057L294.791,200.584L293.175,185.54L288.327,169.561L298.224,171.213L315.19,181.329L346.608,188.619L394.877,254.33L368.144,304.878L361.873,304.878L340.582,301.297L336.692,302.133L332.16,306.42Z",
-      "labelX": 0.366,
-      "labelY": 0.4125,
-      "area": 11114,
-      "lightUnder": 0.064
+      "area": 11114
     },
     {
       "id": "iskele",
       "name": "İskele",
-      "label": "İSKELE",
       "path": "M587.407,297.736L594.231,189.095L645.344,159.946L666.497,163.366L688.541,156.297L749.631,132.19L766.453,120.537L789.162,111.887L810.036,90.112L845.667,80.923L867.128,73.847L884.422,62.584L960.004,26.922L974.176,21.119L980,20L977.744,21.658L974.345,26.922L972.931,41.299L971.82,44.654L959.23,47.844L917.488,75.13L880.627,107.135L791.858,160.764L780.008,171.337L770.246,183.723L759.272,206.918L753.011,211.414L743.08,211.868L723.051,208.361L714.904,213.312L703.291,230.016L698.544,239.416L696.592,248.073L694.968,268.898L660.17,280.088L652.899,278.825L597.348,320.175Z",
-      "labelX": 0.6295,
-      "labelY": 0.4818,
-      "area": 26743,
-      "lightUnder": 0.194
+      "area": 26743
     },
     {
       "id": "lefke",
       "name": "Lefke",
-      "label": "LEFKE",
       "path": "M308.693,322.016L299.904,330.928L294.453,334.402L288.96,334.402L282.525,330.145L279.96,326.566L276.07,324.606L272.821,326.566L268.909,334.402L263.757,338.032L249.264,341.14L245.075,339.208L242.766,335.185L241.206,323.013L236.695,319.068L219.851,310.392L208.864,306.838L202.408,303.309L198.86,298.186L196.337,291.441L193.655,278.046L215.918,280.91L228.744,284.555L239.112,291.494L250.255,295.817L265.504,291.576L268.732,288.968L279.554,310.143Z",
-      "labelX": 0.2536,
-      "labelY": 0.5858,
-      "area": 3198,
-      "lightUnder": 0.028
+      "area": 3198
     }
   ],
   "settlements": [
     {
       "name": "Süleymaniye",
       "district": "lefke",
-      "weight": 1,
       "x": 199.7,
       "y": 295.3
     },
     {
       "name": "Günebakan",
       "district": "lefke",
-      "weight": 1,
       "x": 202.7,
       "y": 286
     },
     {
       "name": "Yukarı Yeşilırmak",
       "district": "lefke",
-      "weight": 1,
       "x": 210.9,
       "y": 296.4
     },
     {
       "name": "Yeşilırmak",
       "district": "lefke",
-      "weight": 1,
       "x": 213.5,
       "y": 286.2
     },
     {
       "name": "Şirinköy",
       "district": "lefke",
-      "weight": 1,
       "x": 217.6,
       "y": 304.8
     },
     {
       "name": "Bademliköy",
       "district": "lefke",
-      "weight": 1,
       "x": 223.3,
       "y": 290.6
     },
     {
       "name": "Ömerli",
       "district": "lefke",
-      "weight": 1,
       "x": 224.6,
       "y": 302.3
     },
     {
       "name": "Yedidalga",
       "district": "lefke",
-      "weight": 1,
       "x": 239.1,
       "y": 297.7
     },
     {
       "name": "Bağlıköy",
       "district": "lefke",
-      "weight": 1,
       "x": 240.2,
       "y": 310.1
     },
     {
       "name": "Denizli",
       "district": "lefke",
-      "weight": 1,
       "x": 242.2,
       "y": 298.6
     },
     {
       "name": "Gemikonağı",
       "district": "lefke",
-      "weight": 1,
       "x": 252.5,
       "y": 299.8
     },
     {
       "name": "Lefke",
       "district": "lefke",
-      "weight": 2,
       "x": 259,
       "y": 313.4
     },
     {
       "name": "Cengizköy",
       "district": "lefke",
-      "weight": 1,
       "x": 265.4,
       "y": 304.3
     },
     {
       "name": "Çamlıköy",
       "district": "lefke",
-      "weight": 1,
       "x": 270.4,
       "y": 312.5
     },
     {
       "name": "Yeşilyurt",
       "district": "lefke",
-      "weight": 1,
       "x": 273.4,
       "y": 293.5
     },
     {
       "name": "Madenliköy",
       "district": "lefke",
-      "weight": 1,
       "x": 274.8,
       "y": 316.8
     },
     {
       "name": "Taşköy",
       "district": "lefke",
-      "weight": 1,
       "x": 283,
       "y": 315.5
     },
     {
       "name": "Doğancı",
       "district": "lefke",
-      "weight": 1,
       "x": 285.4,
       "y": 303.7
     },
     {
       "name": "Gaziveren",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 286.7,
       "y": 283.7
     },
     {
       "name": "Aydınköy",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 296.3,
       "y": 282.2
     },
     {
       "name": "Yayla",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 296.5,
       "y": 257.1
     },
     {
       "name": "Taşpınar",
       "district": "lefke",
-      "weight": 1,
       "x": 299.8,
       "y": 311.2
     },
     {
       "name": "Sadrazamköy",
       "district": "girne",
-      "weight": 1,
       "x": 301.8,
       "y": 176.9
     },
     {
       "name": "Güneşköy",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 303.3,
       "y": 281.7
     },
     {
       "name": "Akdeniz",
       "district": "girne",
-      "weight": 1,
       "x": 306.2,
       "y": 219.8
     },
     {
       "name": "Güzelyurt",
       "district": "guzelyurt",
-      "weight": 2,
       "x": 318.3,
       "y": 270.2
     },
     {
       "name": "Aşağı Bostancı",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 324,
       "y": 285.7
     },
     {
       "name": "Bostancı",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 325.6,
       "y": 287.1
     },
     {
       "name": "Yukarı Bostancı",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 327.8,
       "y": 289
     },
     {
       "name": "Yuvacık",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 329.1,
       "y": 262.4
     },
     {
       "name": "Kayalar",
       "district": "girne",
-      "weight": 1,
       "x": 335.2,
       "y": 188.9
     },
     {
       "name": "Akçay",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 335.8,
       "y": 279.9
     },
     {
       "name": "Kalkanlı",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 336.6,
       "y": 246.3
     },
     {
       "name": "Zümrütköy",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 342.7,
       "y": 282.6
     },
     {
       "name": "Mevlevi",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 345.7,
       "y": 268.2
     },
     {
       "name": "Geçitköy",
       "district": "girne",
-      "weight": 1,
       "x": 349.5,
       "y": 200.7
     },
     {
       "name": "Karpaşa",
       "district": "girne",
-      "weight": 1,
       "x": 350.4,
       "y": 220.3
     },
     {
       "name": "Çamlıbel",
       "district": "girne",
-      "weight": 1,
       "x": 352.3,
       "y": 215.5
     },
     {
       "name": "Şahinler",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 352.4,
       "y": 277.1
     },
     {
       "name": "Serhatköy",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 359.4,
       "y": 275.7
     },
     {
       "name": "Gayretköy",
       "district": "guzelyurt",
-      "weight": 1,
       "x": 365.1,
       "y": 289.2
     },
     {
       "name": "Karşıyaka",
       "district": "girne",
-      "weight": 1,
       "x": 370.3,
       "y": 192.1
     },
     {
       "name": "Yılmazköy",
       "district": "lefkosa",
-      "weight": 1,
       "x": 389.6,
       "y": 254.4
     },
     {
       "name": "Lapta",
       "district": "girne",
-      "weight": 2,
       "x": 392.5,
       "y": 199.5
     },
     {
       "name": "Alsancak",
       "district": "girne",
-      "weight": 1,
       "x": 402.4,
       "y": 199.2
     },
     {
       "name": "Malatya",
       "district": "girne",
-      "weight": 1,
       "x": 406.9,
       "y": 205.4
     },
     {
       "name": "Yeşiltepe",
       "district": "girne",
-      "weight": 1,
       "x": 411,
       "y": 202
     },
     {
       "name": "Ilgaz",
       "district": "girne",
-      "weight": 1,
       "x": 412.7,
       "y": 207.3
     },
     {
       "name": "Lapta Yolu",
       "district": "girne",
-      "weight": 1,
       "x": 423.2,
       "y": 199.4
     },
     {
       "name": "Alayköy",
       "district": "lefkosa",
-      "weight": 1,
       "x": 426,
       "y": 279.6
     },
     {
       "name": "Karaman",
       "district": "girne",
-      "weight": 1,
       "x": 427.5,
       "y": 210.2
     },
     {
       "name": "Edremit",
       "district": "girne",
-      "weight": 1,
       "x": 429,
       "y": 203.6
     },
     {
       "name": "Kanlıköy",
       "district": "lefkosa",
-      "weight": 1,
       "x": 429.4,
       "y": 258.6
     },
     {
       "name": "Karaoğlanoğlu",
       "district": "girne",
-      "weight": 1,
       "x": 433.6,
       "y": 197.7
     },
     {
       "name": "Boğazköy",
       "district": "lefkosa",
-      "weight": 1,
       "x": 436.8,
       "y": 224.5
     },
     {
       "name": "Boğaz",
       "district": "girne",
-      "weight": 1,
       "x": 437.6,
       "y": 222.8
     },
     {
       "name": "Zeytinlik",
       "district": "girne",
-      "weight": 1,
       "x": 441.8,
       "y": 202.3
     },
     {
       "name": "Gönyeli",
       "district": "lefkosa",
-      "weight": 2,
       "x": 447.7,
       "y": 261.5
     },
     {
       "name": "Yenikent",
       "district": "lefkosa",
-      "weight": 1,
       "x": 452.8,
       "y": 267.5
     },
     {
       "name": "Girne",
       "district": "girne",
-      "weight": 3,
       "x": 453.8,
       "y": 199.1
     },
     {
       "name": "Kermiya",
       "district": "lefkosa",
-      "weight": 1,
       "x": 454.2,
       "y": 273
     },
     {
       "name": "Metehan",
       "district": "lefkosa",
-      "weight": 1,
       "x": 454.2,
       "y": 273
     },
     {
       "name": "Dikmen",
       "district": "lefkosa",
-      "weight": 2,
       "x": 455.1,
       "y": 235
     },
     {
       "name": "Doğanköy",
       "district": "girne",
-      "weight": 1,
       "x": 459.6,
       "y": 206.1
     },
     {
       "name": "Göçmenköy",
       "district": "lefkosa",
-      "weight": 1,
       "x": 460.7,
       "y": 264.9
     },
     {
       "name": "Ortaköy",
       "district": "lefkosa",
-      "weight": 1,
       "x": 462,
       "y": 269.6
     },
     {
       "name": "Karakum",
       "district": "girne",
-      "weight": 1,
       "x": 462.8,
       "y": 202.6
     },
     {
       "name": "Taşkınköy",
       "district": "lefkosa",
-      "weight": 1,
       "x": 464.3,
       "y": 266.3
     },
     {
       "name": "Marmara",
       "district": "lefkosa",
-      "weight": 1,
       "x": 464.9,
       "y": 268.8
     },
     {
       "name": "Kumsal",
       "district": "lefkosa",
-      "weight": 1,
       "x": 465.9,
       "y": 275
     },
     {
       "name": "Köşklüçiftlik",
       "district": "lefkosa",
-      "weight": 1,
       "x": 466.6,
       "y": 278.4
     },
     {
       "name": "Ozanköy",
       "district": "girne",
-      "weight": 1,
       "x": 467.4,
       "y": 209.2
     },
     {
       "name": "Kızılbaş",
       "district": "lefkosa",
-      "weight": 1,
       "x": 467.8,
       "y": 270.6
     },
     {
       "name": "Yenişehir",
       "district": "lefkosa",
-      "weight": 1,
       "x": 469.2,
       "y": 274.9
     },
     {
       "name": "Lefkoşa",
       "district": "lefkosa",
-      "weight": 3,
       "x": 471.8,
       "y": 282.6
     },
     {
       "name": "Çağlayan",
       "district": "lefkosa",
-      "weight": 1,
       "x": 473.3,
       "y": 278.6
     },
     {
       "name": "Küçük Kaymaklı",
       "district": "lefkosa",
-      "weight": 1,
       "x": 473.4,
       "y": 271.4
     },
     {
       "name": "Hamitköy",
       "district": "lefkosa",
-      "weight": 1,
       "x": 477.8,
       "y": 262.6
     },
     {
       "name": "Kaymaklı",
       "district": "lefkosa",
-      "weight": 1,
       "x": 478.1,
       "y": 277.3
     },
     {
       "name": "Çatalköy",
       "district": "girne",
-      "weight": 2,
       "x": 482.9,
       "y": 208.3
     },
     {
       "name": "Haspolat",
       "district": "lefkosa",
-      "weight": 1,
       "x": 495,
       "y": 266.6
     },
     {
       "name": "Değirmenlik Yolu",
       "district": "lefkosa",
-      "weight": 1,
       "x": 495.9,
       "y": 264.1
     },
     {
       "name": "Arapköy",
       "district": "girne",
-      "weight": 1,
       "x": 500.6,
       "y": 215.7
     },
     {
       "name": "Akıncılar",
       "district": "lefkosa",
-      "weight": 1,
       "x": 513.3,
       "y": 365.1
     },
     {
       "name": "Minareliköy",
       "district": "lefkosa",
-      "weight": 1,
       "x": 518.4,
       "y": 252.3
     },
     {
       "name": "Demirhan",
       "district": "lefkosa",
-      "weight": 1,
       "x": 519.5,
       "y": 258
     },
     {
       "name": "Değirmenlik",
       "district": "lefkosa",
-      "weight": 2,
       "x": 520.1,
       "y": 245.7
     },
     {
       "name": "Tepebaşı",
       "district": "girne",
-      "weight": 1,
       "x": 521.9,
       "y": 239.7
     },
     {
       "name": "Başpınar",
       "district": "lefkosa",
-      "weight": 1,
       "x": 522,
       "y": 237.1
     },
     {
       "name": "Balıkesir",
       "district": "lefkosa",
-      "weight": 1,
       "x": 525.3,
       "y": 265.5
     },
     {
       "name": "Gökhan",
       "district": "lefkosa",
-      "weight": 1,
       "x": 526.3,
       "y": 253.9
     },
     {
       "name": "Ercan",
       "district": "lefkosa",
-      "weight": 1,
       "x": 532.5,
       "y": 294.2
     },
     {
       "name": "Düzova",
       "district": "lefkosa",
-      "weight": 1,
       "x": 539.1,
       "y": 262.3
     },
     {
       "name": "Alevkayası",
       "district": "girne",
-      "weight": 1,
       "x": 541.8,
       "y": 226.6
     },
     {
       "name": "Meriç",
       "district": "lefkosa",
-      "weight": 1,
       "x": 546.4,
       "y": 283.5
     },
     {
       "name": "Kalavaç",
       "district": "lefkosa",
-      "weight": 1,
       "x": 548.2,
       "y": 240.5
     },
     {
       "name": "Karaağaç",
       "district": "girne",
-      "weight": 1,
       "x": 551.2,
       "y": 209.4
     },
     {
       "name": "Görneç",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 558.3,
       "y": 227.9
     },
     {
       "name": "Esentepe",
       "district": "girne",
-      "weight": 1,
       "x": 562.5,
       "y": 199.2
     },
     {
       "name": "Gaziköy",
       "district": "lefkosa",
-      "weight": 1,
       "x": 563.8,
       "y": 291
     },
     {
       "name": "Aslanköy",
       "district": "iskele",
-      "weight": 1,
       "x": 565,
       "y": 267.6
     },
     {
       "name": "Serdarlı",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 570.3,
       "y": 242.1
     },
     {
       "name": "Ergenekon",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 571.1,
       "y": 216.6
     },
     {
       "name": "Paşaköy",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 573.2,
       "y": 291
     },
     {
       "name": "Ulukışla",
       "district": "lefkosa",
-      "weight": 1,
       "x": 576.4,
       "y": 258.3
     },
     {
       "name": "Yiğitler",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 581,
       "y": 325.5
     },
     {
       "name": "Bahçeli",
       "district": "girne",
-      "weight": 1,
       "x": 582,
       "y": 199.7
     },
     {
       "name": "Tirmen",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 583.5,
       "y": 214
     },
     {
       "name": "Turunçlu",
       "district": "iskele",
-      "weight": 1,
       "x": 585.6,
       "y": 286.7
     },
     {
       "name": "Kurudere",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 586.3,
       "y": 273.4
     },
     {
       "name": "Pınarlı",
       "district": "iskele",
-      "weight": 1,
       "x": 588.7,
       "y": 247.4
     },
     {
       "name": "Vadili",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 592.5,
       "y": 303.3
     },
     {
       "name": "Gönendere",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 594.9,
       "y": 237.3
     },
     {
       "name": "Yamaçköy",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 601.7,
       "y": 204.5
     },
     {
       "name": "Akdoğan",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 603.5,
       "y": 317.3
     },
     {
       "name": "Sütlüce",
       "district": "girne",
-      "weight": 1,
       "x": 605.4,
       "y": 242.6
     },
     {
       "name": "Çamlıca",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 605.8,
       "y": 228
     },
     {
       "name": "Mallıdağ",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 606.3,
       "y": 202.6
     },
     {
       "name": "Nergisli",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 610.2,
       "y": 260.7
     },
     {
       "name": "İnönü",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 611,
       "y": 291.3
     },
     {
       "name": "Beyarmudu",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 614.2,
       "y": 349.1
     },
     {
       "name": "Arıdamı",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 615.1,
       "y": 208.8
     },
     {
       "name": "Türkmenköy",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 617.7,
       "y": 317.8
     },
     {
       "name": "Pirhan",
       "district": "iskele",
-      "weight": 1,
       "x": 621.5,
       "y": 277.8
     },
     {
       "name": "Geçitkale",
       "district": "gazimagusa",
-      "weight": 2,
       "x": 624.1,
       "y": 239.2
     },
     {
       "name": "Köprülü",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 631.7,
       "y": 316
     },
     {
       "name": "Çınarlı",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 632.1,
       "y": 202.2
     },
     {
       "name": "Tatlısu",
       "district": "iskele",
-      "weight": 1,
       "x": 632.9,
       "y": 182.3
     },
     {
       "name": "Dörtyol",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 634.3,
       "y": 282.1
     },
     {
       "name": "Alaniçi",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 635.6,
       "y": 259.6
     },
     {
       "name": "İncirli",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 636.6,
       "y": 333.6
     },
     {
       "name": "Muratağa",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 642.4,
       "y": 264.5
     },
     {
       "name": "Yıldırım",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 644.3,
       "y": 249.8
     },
     {
       "name": "Düzce",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 645.4,
       "y": 343
     },
     {
       "name": "Akova",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 646.5,
       "y": 239.3
     },
     {
       "name": "Sandallar",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 651.8,
       "y": 263.7
     },
     {
       "name": "Ağıllar",
       "district": "iskele",
-      "weight": 1,
       "x": 651.9,
       "y": 195.5
     },
     {
       "name": "Altınova",
       "district": "iskele",
-      "weight": 1,
       "x": 658.1,
       "y": 205.6
     },
     {
       "name": "Boğaziçi",
       "district": "iskele",
-      "weight": 1,
       "x": 662.8,
       "y": 234.7
     },
     {
       "name": "Atlılar",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 663.1,
       "y": 264.7
     },
     {
       "name": "Mutluyaka",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 666.6,
       "y": 283.8
     },
     {
       "name": "Sınırüstü",
       "district": "iskele",
-      "weight": 1,
       "x": 673.7,
       "y": 233.1
     },
     {
       "name": "Mersinlik",
       "district": "iskele",
-      "weight": 1,
       "x": 675.8,
       "y": 170.2
     },
     {
       "name": "Mormenekşe",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 676.9,
       "y": 268.9
     },
     {
       "name": "Kuzucuk",
       "district": "iskele",
-      "weight": 1,
       "x": 677.4,
       "y": 250.9
     },
     {
       "name": "Güvercinlik",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 677.6,
       "y": 320.1
     },
     {
       "name": "Ötüken",
       "district": "iskele",
-      "weight": 1,
       "x": 682.1,
       "y": 252.3
     },
     {
       "name": "Topçuköy",
       "district": "iskele",
-      "weight": 1,
       "x": 682.5,
       "y": 199
     },
     {
       "name": "Yeniboğaziçi",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 684.4,
       "y": 271.7
     },
     {
       "name": "Tuzla",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 686.5,
       "y": 289.5
     },
     {
       "name": "Ardahan",
       "district": "iskele",
-      "weight": 1,
       "x": 687.7,
       "y": 190.3
     },
     {
       "name": "İskele",
       "district": "iskele",
-      "weight": 2,
       "x": 690.7,
       "y": 226.4
     },
     {
       "name": "Kantara",
       "district": "iskele",
-      "weight": 1,
       "x": 692.9,
       "y": 174.9
     },
     {
       "name": "Kaplıca",
       "district": "iskele",
-      "weight": 1,
       "x": 695.5,
       "y": 157.6
     },
     {
       "name": "Bahçeler",
       "district": "iskele",
-      "weight": 1,
       "x": 698.7,
       "y": 226
     },
     {
       "name": "Turnalar",
       "district": "iskele",
-      "weight": 1,
       "x": 702.6,
       "y": 188.8
     },
     {
       "name": "Yarköy",
       "district": "iskele",
-      "weight": 1,
       "x": 705.5,
       "y": 204.7
     },
     {
       "name": "Baykal",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 705.6,
       "y": 309.8
     },
     {
       "name": "Kombos",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 707.6,
       "y": 315.1
     },
     {
       "name": "Ergazi",
       "district": "iskele",
-      "weight": 1,
       "x": 709.2,
       "y": 185.8
     },
     {
       "name": "Gazimağusa",
       "district": "gazimagusa",
-      "weight": 3,
       "x": 709.6,
       "y": 310
     },
     {
       "name": "Suriçi",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 710.8,
       "y": 307.8
     },
     {
       "name": "Boğaztepe",
       "district": "iskele",
-      "weight": 1,
       "x": 712.4,
       "y": 208.8
     },
     {
       "name": "Maraş",
       "district": "gazimagusa",
-      "weight": 1,
       "x": 715,
       "y": 313.9
     },
     {
       "name": "Kurtuluş",
       "district": "iskele",
-      "weight": 1,
       "x": 719.3,
       "y": 191.1
     },
     {
       "name": "Kilitkaya",
       "district": "iskele",
-      "weight": 1,
       "x": 723.9,
       "y": 171.2
     },
     {
       "name": "Büyükkonuk",
       "district": "iskele",
-      "weight": 1,
       "x": 732.2,
       "y": 163.2
     },
     {
       "name": "Tuzluca",
       "district": "iskele",
-      "weight": 1,
       "x": 733.7,
       "y": 187.2
     },
     {
       "name": "Kalecik",
       "district": "iskele",
-      "weight": 1,
       "x": 734.8,
       "y": 197.6
     },
     {
       "name": "Zeybekköy",
       "district": "iskele",
-      "weight": 1,
       "x": 740.9,
       "y": 173.8
     },
     {
       "name": "Sazlıköy",
       "district": "iskele",
-      "weight": 1,
       "x": 745.6,
       "y": 168.8
     },
     {
       "name": "Çayırova",
       "district": "iskele",
-      "weight": 1,
       "x": 747.2,
       "y": 185.7
     },
     {
       "name": "Yedikonuk",
       "district": "iskele",
-      "weight": 1,
       "x": 747.8,
       "y": 145.1
     },
     {
       "name": "Mehmetçik",
       "district": "iskele",
-      "weight": 1,
       "x": 763.6,
       "y": 157.2
     },
     {
       "name": "Bafra",
       "district": "iskele",
-      "weight": 1,
       "x": 764.4,
       "y": 178.8
     },
     {
       "name": "Pamuklu",
       "district": "iskele",
-      "weight": 1,
       "x": 766.6,
       "y": 169.5
     },
     {
       "name": "Balalan",
       "district": "iskele",
-      "weight": 1,
       "x": 779.2,
       "y": 128.6
     },
     {
       "name": "Kumyalı",
       "district": "iskele",
-      "weight": 1,
       "x": 789.3,
       "y": 154.4
     },
     {
       "name": "Ziyamet",
       "district": "iskele",
-      "weight": 1,
       "x": 792.1,
       "y": 133.7
     },
     {
       "name": "Esenköy",
       "district": "iskele",
-      "weight": 1,
       "x": 794.2,
       "y": 121.3
     },
     {
       "name": "Gelincik",
       "district": "iskele",
-      "weight": 1,
       "x": 797.1,
       "y": 131.4
     },
     {
       "name": "Yeşilköy",
       "district": "iskele",
-      "weight": 1,
       "x": 802.1,
       "y": 115.1
     },
     {
       "name": "Boltaşlı",
       "district": "iskele",
-      "weight": 1,
       "x": 804.1,
       "y": 128.8
     },
     {
       "name": "Derince",
       "district": "iskele",
-      "weight": 1,
       "x": 812.5,
       "y": 125.9
     },
     {
       "name": "Yeni Erenköy",
       "district": "iskele",
-      "weight": 1,
       "x": 812.9,
       "y": 100.2
     },
     {
       "name": "Adaçay",
       "district": "iskele",
-      "weight": 1,
       "x": 817.2,
       "y": 110.4
     },
     {
       "name": "Taşlıca",
       "district": "iskele",
-      "weight": 1,
       "x": 823.4,
       "y": 133
     },
     {
       "name": "Avtepe",
       "district": "iskele",
-      "weight": 1,
       "x": 825.3,
       "y": 122.1
     },
     {
       "name": "Sipahi",
       "district": "iskele",
-      "weight": 1,
       "x": 827.8,
       "y": 96
     },
     {
       "name": "Kuruova",
       "district": "iskele",
-      "weight": 1,
       "x": 848.3,
       "y": 112.1
     },
     {
       "name": "Kaleburnu",
       "district": "iskele",
-      "weight": 1,
       "x": 860.1,
       "y": 106.3
     },
     {
       "name": "Dipkarpaz",
       "district": "iskele",
-      "weight": 2,
       "x": 892.4,
       "y": 68
     }
