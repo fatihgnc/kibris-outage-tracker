@@ -825,9 +825,19 @@ Run in this order, stopping as soon as a stage produces a complete record:
 - _Time range_: match written ranges in the common forms, including
   `HH.MM ile HH.MM saatleri arasında` and `HH.MM – HH.MM`. Normalise the dot
   separator to a colon. Absent an end time, set `endsAt: null`.
-- _Date_: resolve relative words (`bugün`, `yarın`) against the announcement's
-  `publishedAt`, not against the run time — a job that runs at 00:05 must not
-  read yesterday's "tomorrow" as today.
+- _Date_: resolve relative words (`bugün`, `yarın`, `dün`) and named weekdays
+  (`perşembe günü`) against the announcement's `publishedAt`, not against the
+  run time — a job that runs at 00:05 must not read yesterday's "tomorrow" as
+  today. A named weekday means its next occurrence at or after publication:
+  KIB-TEK publishes on the Wednesday that the work is "perşembe günü", and one
+  published on the day itself says it too.
+- **Where a story carries several date signals, the earliest one in the text
+  wins.** The parser reads `title. body`, and a news story states the operative
+  fact in its headline and lead. Outlets rewrite these announcements in place —
+  a lead moved from "yarın" to "bugün" on the morning of the work — and leave
+  the old wording standing in the paragraph below it. A fixed order of
+  precedence between the kinds of signal reads that leftover instead of the
+  correction, and puts a real outage on the wrong day.
 - _Places_: match against `data/places.json`, which holds every settlement with
   its district and a list of aliases. Normalise case with Turkish rules — `İ/ı`
   do not fold the way English does, and a naive `toLowerCase()` will corrupt
@@ -881,7 +891,31 @@ Announcements get amended, and this is where naive scrapers mislead people.
 - If a later announcement changes the times for a matching fingerprint, update
   the record and refresh `ingestedAt`.
 - Never delete rows. Corrections are updates; history stays intact, because the
-  archive's value depends on it.
+  archive's value depends on it. The schema grants the service role no delete,
+  so this holds even when a script asks for one.
+- A record the ingest **invented** is retired by cancelling it with a reason
+  that says so (`bad_data`), never with the one meant for work the utility
+  called off (`retracted`). Both drop out of the live views, but they say
+  different things: telling a reader an outage was announced and cancelled when
+  neither happened is its own wrong fact.
+
+**Auditing the archive.** A parser fix does not reach records already stored. A
+record keeps whatever the parser said on the day it was ingested, and the date
+is part of the fingerprint, so a wrong date is a whole extra row rather than a
+field to correct. After any change to the parser, and before trusting what the
+archive says, re-check it against its own sources: refetch each record's
+sources, re-derive them through today's parser, and report every record the
+sources no longer support. The check is read-only; retiring is a separate step
+with its own confirmation.
+
+- **A wrong record and an overtaken one are not the same finding.** Where a
+  source now claims a publication time later than the record's `ingestedAt`,
+  the page has been rewritten since that record was parsed from it, and today's
+  text is no evidence at all about the record. Report those apart from the rest
+  and **never offer their ids for retirement** — deciding between two readings
+  of a rewritten announcement is a judgement about what the utility actually
+  announced, and it belongs to a person. Conflating the two once retired a
+  correct record and left the wrong one it duplicated live on the homepage.
 
 ### 10.7 Observability
 
