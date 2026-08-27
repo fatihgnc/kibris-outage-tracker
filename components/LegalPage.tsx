@@ -6,6 +6,7 @@ import { getPage } from '@/lib/content';
 import { pageMetadata } from '@/lib/seo';
 import { breadcrumbJsonLd } from '@/lib/jsonld';
 import JsonLd from '@/components/JsonLd';
+import { routeHref } from '@/lib/routes';
 
 // about, privacy and terms differ only by which content file they render, so
 // they share this. No ad units on these pages.
@@ -18,7 +19,7 @@ export async function legalMetadata(slug: LegalSlug, rawLocale: string): Promise
   return pageMetadata({
     locale: rawLocale,
     dict: await getDictionary(rawLocale),
-    path: `/${slug}`,
+    href: (l) => routeHref(l, slug),
     title: page.title,
     description: page.summary,
   });
@@ -42,7 +43,7 @@ export default async function LegalPage({ slug, rawLocale }: { slug: LegalSlug; 
       <JsonLd
         data={breadcrumbJsonLd([
           { name: dict.nav.home, path: `/${locale}` },
-          { name: page.title, path: `/${locale}/${slug}` },
+          { name: page.title, path: routeHref(locale, slug) },
         ])}
       />
 

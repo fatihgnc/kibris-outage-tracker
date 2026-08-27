@@ -385,8 +385,25 @@ design decisions made against information the product will never actually show.
 
 ## 5. Routes
 
-Route segments and query parameters are English. Every route is nested under a
-locale segment: `/[locale]/...` where locale is `tr` or `en`.
+Every route is nested under a locale segment: `/[locale]/...` where locale is
+`tr` or `en`.
+
+**Route segments are translated; query parameters are not.** A Turkish reader's
+address is Turkish — `/tr/arsiv`, `/tr/rehberler/kesinti-turleri` — because a
+URL is read, typed and pasted by people, and most of this site's readers read
+Turkish. Slugs are ASCII, without Turkish diacritics: a percent-encoded `ş`
+survives a round trip but not a paste into a message.
+
+The folder names under `app/[locale]` stay English and are the *keys*, not the
+addresses. `lib/routes.ts` holds the one map from key to per-locale segment;
+`proxy.ts` rewrites the address onto the folder that renders it, and answers a
+request spelled in the wrong locale's words (`/tr/archive`, `/en/arsiv`) with a
+308 to the right one, so each page is indexable at exactly one URL. Every link,
+canonical, hreflang and sitemap entry is built through that map — nothing
+composes a path by hand.
+
+Query parameters stay English (`?district=`, `?month=`), as do district ids and
+guide content filenames.
 
 `/` redirects to the resolved locale (§7.2). Both `/tr` and `/en` are real,
 indexable URLs — a shared link must open in the language it was shared in.

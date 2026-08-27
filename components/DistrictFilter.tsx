@@ -1,14 +1,13 @@
 import Link from 'next/link';
 import type { DistrictId } from '@/lib/types';
 import type { Dictionary } from '@/lib/i18n/dictionaries';
-import type { Locale } from '@/lib/i18n/config';
 import { DISTRICT_IDS, DISTRICTS } from '@/lib/geography';
 
 type Props = {
-  locale: Locale;
   dict: Dictionary;
   selected: DistrictId | null;
-  // '' for the home page, '/archive' for the archive.
+  // The page the chips filter, locale segment included: routeHref(locale) for
+  // the home page, routeHref(locale, 'archive') for the archive.
   basePath: string;
   // Query parameters to preserve when switching district (e.g. archive month).
   extraQuery?: Record<string, string>;
@@ -16,7 +15,7 @@ type Props = {
 
 // Selection lives in the URL query so the view is shareable — never in
 // localStorage. Chips are real links and work without JavaScript.
-export default function DistrictFilter({ locale, dict, selected, basePath, extraQuery = {} }: Props) {
+export default function DistrictFilter({ dict, selected, basePath, extraQuery = {} }: Props) {
   const chips: { id: DistrictId | null; name: string }[] = [
     { id: null, name: dict.filter.all },
     ...DISTRICT_IDS.map((id) => ({ id: id as DistrictId | null, name: DISTRICTS[id].name })),
@@ -25,7 +24,7 @@ export default function DistrictFilter({ locale, dict, selected, basePath, extra
     const query = new URLSearchParams(extraQuery);
     if (id) query.set('district', id);
     const qs = query.toString();
-    return `/${locale}${basePath}${qs ? `?${qs}` : ''}`;
+    return `${basePath}${qs ? `?${qs}` : ''}`;
   };
 
   return (

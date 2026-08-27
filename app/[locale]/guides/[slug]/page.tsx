@@ -4,7 +4,8 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
-import { getGuide, GUIDE_SLUGS, isGuideSlug } from '@/lib/content';
+import { getGuide } from '@/lib/content';
+import { GUIDE_SLUGS, guideHref, isGuideSlug, routeHref } from '@/lib/routes';
 import { readConsent, CONSENT_COOKIE } from '@/lib/consent';
 import AdSlot from '@/components/AdSlot';
 import JsonLd from '@/components/JsonLd';
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return pageMetadata({
     locale,
     dict: await getDictionary(locale),
-    path: `/guides/${slug}`,
+    href: (l) => guideHref(l, slug),
     title: guide.title,
     description: guide.summary,
     type: 'article',
@@ -57,7 +58,7 @@ export default async function GuidePage({ params }: Props) {
         data={articleJsonLd({
           locale,
           dict,
-          path: `/${locale}/guides/${slug}`,
+          path: guideHref(locale, slug),
           title: guide.title,
           description: guide.summary,
           updated: guide.updated,
@@ -66,13 +67,13 @@ export default async function GuidePage({ params }: Props) {
       <JsonLd
         data={breadcrumbJsonLd([
           { name: dict.nav.home, path: `/${locale}` },
-          { name: dict.guides.title, path: `/${locale}/guides` },
-          { name: guide.title, path: `/${locale}/guides/${slug}` },
+          { name: dict.guides.title, path: routeHref(locale, 'guides') },
+          { name: guide.title, path: guideHref(locale, slug) },
         ])}
       />
 
       <header className="pt-5">
-        <Link href={`/${locale}/guides`} className="font-mono text-meta text-muted no-underline hover:text-text">
+        <Link href={routeHref(locale, 'guides')} className="font-mono text-meta text-muted no-underline hover:text-text">
           ← {dict.guides.backToIndex}
         </Link>
         <h1 className="opsz-120 m-0 mt-2 max-w-[24ch] text-pretty font-display text-display font-semibold tracking-[-0.02em] text-text">

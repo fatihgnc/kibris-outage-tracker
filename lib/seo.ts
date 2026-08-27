@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { defaultLocale, locales, type Locale } from './i18n/config';
 import type { Dictionary } from './i18n/dictionaries';
+import { routeHref } from './routes';
 
 // Open Graph wants a full locale, not a language tag.
 const ogLocale = (locale: Locale) => (locale === 'tr' ? 'tr_TR' : 'en_US');
@@ -8,8 +9,13 @@ const ogLocale = (locale: Locale) => (locale === 'tr' ? 'tr_TR' : 'en_US');
 type Args = {
   locale: Locale;
   dict: Dictionary;
-  /** Path below the locale segment. '' is the home page. */
-  path?: string;
+  /**
+   * This page's address in a given locale, locale segment included. A function
+   * rather than a string because the path itself is translated: the canonical
+   * is /tr/arsiv where the hreflang alternate is /en/archive. Defaults to the
+   * home page.
+   */
+  href?: (locale: Locale) => string;
   title?: string;
   description?: string;
   type?: 'website' | 'article';
@@ -32,7 +38,7 @@ type Args = {
 export function pageMetadata({
   locale,
   dict,
-  path = '',
+  href = routeHref,
   title,
   description,
   type = 'website',
@@ -42,15 +48,15 @@ export function pageMetadata({
     ...(title !== undefined && { title }),
     ...(description !== undefined && { description }),
     alternates: {
-      canonical: `/${locale}${path}`,
+      canonical: href(locale),
       languages: {
-        ...Object.fromEntries(locales.map((l) => [l, `/${l}${path}`])),
-        'x-default': `/${defaultLocale}${path}`,
+        ...Object.fromEntries(locales.map((l) => [l, href(l)])),
+        'x-default': href(defaultLocale),
       },
     },
     openGraph: {
       type,
-      url: `/${locale}${path}`,
+      url: href(locale),
       siteName: dict.brand,
       locale: ogLocale(locale),
       alternateLocale: ogLocale(other),

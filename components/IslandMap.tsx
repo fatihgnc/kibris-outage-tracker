@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { fill as fillTemplate } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
+import { routeHref } from '@/lib/routes';
 import type { MapDistrict, MapSettlement } from '@/lib/geography';
 import { LAMP_CORE, LAMP_GLOW, UNLIT_DOT } from '@/lib/map-style';
 
@@ -85,7 +86,7 @@ export default function IslandMap({
   // arrive from lib/geography already sorted west to east.
   const step = IGNITE_SPAN / Math.max(settlements.length - 1, 1);
 
-  const open = (district: string) => router.push(`/${locale}/district/${district}`);
+  const open = (district: string) => router.push(routeHref(locale, 'district', district));
   const statusOf = (name: string) => (outages[name] ? strings.powerOut : strings.powerOn);
 
   // Settlement names are never written on the map; they surface in the popover
@@ -342,7 +343,7 @@ export default function IslandMap({
           {byHitOrder.map((d) => (
             <a
               key={d.id}
-              href={`/${locale}/district/${d.id}`}
+              href={routeHref(locale, 'district', d.id)}
               tabIndex={0}
               aria-label={fillTemplate(strings.districtAria, { district: d.name })}
               onClick={(e) => {

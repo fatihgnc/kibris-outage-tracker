@@ -14,6 +14,7 @@ import AdSlot from '@/components/AdSlot';
 import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 import { pageMetadata } from '@/lib/seo';
 import { breadcrumbJsonLd } from '@/lib/jsonld';
+import { routeHref } from '@/lib/routes';
 import JsonLd from '@/components/JsonLd';
 
 type Props = {
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return pageMetadata({
     locale,
     dict,
-    path: '/archive',
+    href: (l) => routeHref(l, 'archive'),
     title: dict.meta.archiveTitle,
     description: dict.meta.archiveDescription,
   });
@@ -83,7 +84,7 @@ export default async function ArchivePage({ params, searchParams }: Props) {
       <JsonLd
         data={breadcrumbJsonLd([
           { name: dict.nav.home, path: `/${locale}` },
-          { name: dict.archive.title, path: `/${locale}/archive` },
+          { name: dict.archive.title, path: routeHref(locale, 'archive') },
         ])}
       />
 
@@ -96,17 +97,16 @@ export default async function ArchivePage({ params, searchParams }: Props) {
 
       <section className="flex flex-col gap-4 pt-4">
         <DistrictFilter
-          locale={locale}
           dict={dict}
           selected={selectedDistrict}
-          basePath="/archive"
+          basePath={routeHref(locale, 'archive')}
           extraQuery={selectedMonth ? { month: selectedMonth } : {}}
         />
         <ArchiveMonthSelect
           value={selectedMonth ?? 'all'}
           options={monthOptions}
           label={dict.archive.monthLabel}
-          basePath={`/${locale}/archive`}
+          basePath={routeHref(locale, 'archive')}
           preserve={selectedDistrict ? { district: selectedDistrict } : {}}
         />
       </section>

@@ -15,6 +15,7 @@ import AdSlot from '@/components/AdSlot';
 import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 import { pageMetadata } from '@/lib/seo';
 import { siteJsonLd } from '@/lib/jsonld';
+import { routeHref } from '@/lib/routes';
 import JsonLd from '@/components/JsonLd';
 
 // One full row on a desktop grid, so the ad can never appear before a reader
@@ -129,7 +130,7 @@ export default async function HomePage({ params, searchParams }: Props) {
       </section>
 
       <section className="pt-5">
-        <DistrictFilter locale={locale} dict={dict} selected={selectedDistrict} basePath="" />
+        <DistrictFilter dict={dict} selected={selectedDistrict} basePath={routeHref(locale)} />
       </section>
 
       <section className="pt-3">

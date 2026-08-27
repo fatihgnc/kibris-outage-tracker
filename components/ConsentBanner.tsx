@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { CONSENT_COOKIE, CONSENT_MAX_AGE_SECONDS, type ConsentChoice } from '@/lib/consent';
 import type { Locale } from '@/lib/i18n/config';
+import { routeHref } from '@/lib/routes';
 
 type Props = {
   locale: Locale;
@@ -37,7 +38,7 @@ export default function ConsentBanner({ locale, strings }: Props) {
       <div className="mx-auto flex w-full max-w-[1060px] flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="m-0 max-w-[62ch] text-pretty text-meta text-muted">
           <span className="text-text">{strings.title}.</span> {strings.body}{' '}
-          <Link href={`/${locale}/privacy`} className="text-text underline decoration-muted underline-offset-[3px] hover:text-lamp">
+          <Link href={routeHref(locale, 'privacy')} className="text-text underline decoration-muted underline-offset-[3px] hover:text-lamp">
             {strings.more}
           </Link>
         </p>

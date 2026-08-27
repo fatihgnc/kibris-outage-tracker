@@ -2,6 +2,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { marked } from 'marked';
 import type { Locale } from './i18n/config';
+import { GUIDE_SLUGS, type GuideSlug } from './routes';
 
 // Long-form content lives as markdown, one file per document per locale, so no
 // prose is ever written inline in a component (§0). Guides are in
@@ -65,24 +66,22 @@ export function getPage(slug: string, locale: Locale): Promise<ContentDocument |
 // The launch set (§5.4), in the order the index lists them. Declared rather
 // than inferred from the directory so the order is deliberate and a missing
 // translation fails loudly instead of silently shortening the list.
-export const GUIDE_SLUGS = [
-  'report-a-fault',
-  'outage-types',
-  'long-outage',
-  'surge-protection',
-  'billing-and-tariffs',
-  'how-we-collect-data',
-] as const;
+//
+// It lives in lib/routes.ts, next to the per-locale slug each one is published
+// under, and is re-exported here because this is where a guide is read from
+// disk. One list, two readers: proxy.ts cannot import this module.
+export { GUIDE_SLUGS, isGuideSlug, type GuideSlug } from './routes';
 
-export type GuideSlug = (typeof GUIDE_SLUGS)[number];
-
-export function isGuideSlug(value: string): value is GuideSlug {
-  return (GUIDE_SLUGS as readonly string[]).includes(value);
-}
-
-export async function getGuideIndex(locale: Locale): Promise<ContentMeta[]> {
-  const documents = await Promise.all(GUIDE_SLUGS.map((slug) => getGuide(slug, locale)));
-  return documents.filter((document): document is ContentDocument => document !== null);
+// The slug is narrowed on the way out: the index links to each guide, and a
+// link needs the per-locale slug, which is only defined for a known guide.
+export async function getGuideIndex(locale: Locale): Promise<(ContentDocument & { slug: GuideSlug })[]> {
+  const documents = await Promise.all(
+    GUIDE_SLUGS.map(async (slug) => {
+      const document = await getGuide(slug, locale);
+      return document && { ...document, slug };
+    }),
+  );
+  return documents.filter((document) => document !== null);
 }
 
 // Used by the build-time check that every guide exists in both locales.

@@ -15,6 +15,7 @@ import AdSlot from '@/components/AdSlot';
 import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 import { pageMetadata } from '@/lib/seo';
 import { breadcrumbJsonLd } from '@/lib/jsonld';
+import { routeHref } from '@/lib/routes';
 import JsonLd from '@/components/JsonLd';
 
 type Props = { params: Promise<{ locale: string; id: string }> };
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return pageMetadata({
     locale,
     dict,
-    path: `/district/${id}`,
+    href: (l) => routeHref(l, 'district', id),
     title: dict.meta.districtTitle(name),
     description: dict.meta.districtDescription(name),
   });
@@ -69,7 +70,7 @@ export default async function DistrictPage({ params }: Props) {
       <JsonLd
         data={breadcrumbJsonLd([
           { name: dict.nav.home, path: `/${locale}` },
-          { name: district.name, path: `/${locale}/district/${id}` },
+          { name: district.name, path: routeHref(locale, 'district', id) },
         ])}
       />
 

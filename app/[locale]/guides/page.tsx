@@ -6,6 +6,7 @@ import { getDictionary } from '@/lib/i18n/dictionaries';
 import { getGuideIndex } from '@/lib/content';
 import { pageMetadata } from '@/lib/seo';
 import { breadcrumbJsonLd } from '@/lib/jsonld';
+import { guideHref, routeHref } from '@/lib/routes';
 import JsonLd from '@/components/JsonLd';
 
 type Props = { params: Promise<{ locale: string }> };
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return pageMetadata({
     locale,
     dict,
-    path: '/guides',
+    href: (l) => routeHref(l, 'guides'),
     title: dict.guides.title,
     description: dict.guides.lead,
   });
@@ -36,7 +37,7 @@ export default async function GuidesPage({ params }: Props) {
       <JsonLd
         data={breadcrumbJsonLd([
           { name: dict.nav.home, path: `/${locale}` },
-          { name: dict.guides.title, path: `/${locale}/guides` },
+          { name: dict.guides.title, path: routeHref(locale, 'guides') },
         ])}
       />
 
@@ -52,7 +53,7 @@ export default async function GuidesPage({ params }: Props) {
           {guides.map((guide) => (
             <li key={guide.slug} className="border-b border-dark">
               <Link
-                href={`/${locale}/guides/${guide.slug}`}
+                href={guideHref(locale, guide.slug)}
                 className="group flex flex-col gap-1 py-4 no-underline"
               >
                 <span className="opsz-24 font-display text-body font-semibold text-text group-hover:text-lamp">

@@ -14,6 +14,7 @@ import StatusBar from '@/components/StatusBar';
 import NavLinks from '@/components/NavLinks';
 import ConsentBanner from '@/components/ConsentBanner';
 import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
+import { routeHref } from '@/lib/routes';
 
 // Latin Extended so Turkish characters (ı, İ, ş, ğ, ü, ö, ç) render correctly.
 const fraunces = Fraunces({
@@ -132,15 +133,15 @@ export default async function LocaleLayout({
                 aria-label={dict.footer.legalAriaLabel}
                 className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:justify-center"
               >
-                <Link href={`/${locale}/about`} className="text-muted no-underline hover:text-text">
+                <Link href={routeHref(locale, 'about')} className="text-muted no-underline hover:text-text">
                   {dict.legal.about}
                 </Link>
                 <span aria-hidden="true">·</span>
-                <Link href={`/${locale}/privacy`} className="text-muted no-underline hover:text-text">
+                <Link href={routeHref(locale, 'privacy')} className="text-muted no-underline hover:text-text">
                   {dict.legal.privacy}
                 </Link>
                 <span aria-hidden="true">·</span>
-                <Link href={`/${locale}/terms`} className="text-muted no-underline hover:text-text">
+                <Link href={routeHref(locale, 'terms')} className="text-muted no-underline hover:text-text">
                   {dict.legal.terms}
                 </Link>
               </nav>
