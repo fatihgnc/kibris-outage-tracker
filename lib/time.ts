@@ -106,6 +106,11 @@ export function formatDateTimeShort(iso: string, locale: Locale): string {
   }).format(Date.parse(iso));
 }
 
+// The calendar year on the island, for the footer's copyright line.
+export function formatYear(ms: number, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale, { timeZone: TIME_ZONE, year: 'numeric' }).format(ms);
+}
+
 // 'YYYY-MM' in the island's zone, for archive grouping and chart keys.
 export function monthKey(iso: string): string {
   const w = wallClock(Date.parse(iso));

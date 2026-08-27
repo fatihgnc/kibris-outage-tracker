@@ -9,7 +9,7 @@ import { isLocale, locales, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getFreshness, getNow, getOutages } from '@/lib/data';
 import { resolveSiteUrl } from '@/lib/site';
-import { formatClock } from '@/lib/time';
+import { formatYear } from '@/lib/time';
 import StatusBar from '@/components/StatusBar';
 import NavLinks from '@/components/NavLinks';
 import ConsentBanner from '@/components/ConsentBanner';
@@ -119,18 +119,19 @@ export default async function LocaleLayout({
           <div className="mx-auto flex w-full max-w-[1060px] flex-col gap-2 px-5 pb-9 pt-4">
             {/* The persistent disclaimer (§1.4): every duration is an estimate. */}
             <p className="m-0 max-w-[68ch] text-meta text-muted">{dict.footer.disclaimer}</p>
-            {/* Two ranks of separator: an em dash parts the imprint from the legal
-              * links, a middot parts the links from each other. Both are marked
-              * decorative so a screen reader announces the links back to back. */}
-            <p className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-meta text-muted">
-              <span>
-                {dict.brand} ·{' '}
-                {freshness.lastCheckedAt
-                  ? fill(dict.footer.lastChecked, { time: formatClock(freshness.lastCheckedAt, locale) })
-                  : dict.statusBar.neverChecked}
-              </span>
-              <span aria-hidden="true">—</span>
-              <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            {/* Three parts: the domain, the legal links, the imprint. The
+              * update stamp is not repeated here — the status bar carries it,
+              * at the top, where the reader is already looking for it. The
+              * side columns share a width so the links sit on the page's
+              * centre line rather than on the midpoint of what is left over.
+              * The middot between the links is decorative, so a screen reader
+              * announces them back to back. */}
+            <div className="flex flex-col gap-2 font-mono text-meta text-muted sm:flex-row sm:items-center sm:gap-4">
+              <p className="m-0 sm:flex-1">{dict.brand}</p>
+              <nav
+                aria-label={dict.footer.legalAriaLabel}
+                className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:justify-center"
+              >
                 <Link href={`/${locale}/about`} className="text-muted no-underline hover:text-text">
                   {dict.legal.about}
                 </Link>
@@ -142,8 +143,11 @@ export default async function LocaleLayout({
                 <Link href={`/${locale}/terms`} className="text-muted no-underline hover:text-text">
                   {dict.legal.terms}
                 </Link>
-              </span>
-            </p>
+              </nav>
+              <p className="m-0 sm:flex-1 sm:text-right">
+                {fill(dict.footer.copyright, { year: formatYear(now, locale) })}
+              </p>
+            </div>
           </div>
         </footer>
 

@@ -91,7 +91,7 @@ export const tr = {
   },
   map: {
     ariaLabel: 'Kıbrıs haritası, kuzeydeki yerleşim yerlerinin elektrik durumu',
-    hint: 'bir ilçeye dokun, bölge sayfasına gider',
+    hint: 'Herhangi bir ilçenin detaylı kesinti verisini incelemek istiyorsanız, harita üstünden o bölgeye tıklayabilirsiniz.',
     powerOn: 'elektrik var',
     powerOut: 'elektrik kesik',
     pointAria: '{name} — {status}, {district} sayfasına git',
@@ -170,8 +170,9 @@ export const tr = {
   },
   footer: {
     disclaimer:
-      'Buradaki bilgiler resmi duyurulardan otomatik derlenir. Çalışmalar erken bitebilir, uzayabilir veya iptal olabilir. Her saati tahmin olarak okuyun; kesin bilgi için KIB-TEK duyurularına bakın.',
-    lastChecked: 'son güncelleme {time}',
+      'Buradaki bilgiler resmi duyurulardan otomatik derlenir. Çalışmalar erken bitebilir, uzayabilir veya iptal olabilir. Her saati tahmin olarak değerlendirin; kesin bilgi için KIB-TEK duyurularına bakın.',
+    copyright: '© {year} Fatih Genç',
+    legalAriaLabel: 'Yasal bilgiler',
   },
   switcher: {
     ariaLabel: 'Dil seçimi',

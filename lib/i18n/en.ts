@@ -65,7 +65,7 @@ export const en: Dictionary = {
   },
   map: {
     ariaLabel: 'Map of Cyprus showing the power status of northern settlements',
-    hint: 'tap a district to open it',
+    hint: 'To look at a district in detail, tap it on the map.',
     powerOn: 'power on',
     powerOut: 'power out',
     pointAria: '{name} — {status}, open {district}',
@@ -145,7 +145,8 @@ export const en: Dictionary = {
   footer: {
     disclaimer:
       'The information here is compiled automatically from official announcements. Work can finish early, run long, or be cancelled — read every time as an estimate. For definitive information, check the KIB-TEK announcements.',
-    lastChecked: 'last updated {time}',
+    copyright: '© {year} Fatih Genç',
+    legalAriaLabel: 'Legal',
   },
   switcher: {
     ariaLabel: 'Language',
