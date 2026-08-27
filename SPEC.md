@@ -1202,6 +1202,15 @@ with its own confirmation.
   else — which is why the trigger lives here and not in a route handler holding
   the service role key (§8).
 
+  Both halves of that trigger expire, and both fail silently. The token has an
+  expiry date — the current one runs to 2027-08-26 — after which the pinger gets
+  401s and the ingest simply stops; the only symptom on the site is the stale
+  banner, which looks exactly like a bad night at GitHub. The pinned API version
+  `2022-11-28` sunsets 2028-03-10. So turn on the pinger's own failure
+  notification: it is the only thing that distinguishes a dead trigger from a
+  slow one, and this pipeline had already run silently broken for nine hours
+  once because nothing was watching it.
+
 ### 10.8 Backfill
 
 Write a one-off script that walks each outlet's outage tag archive and ingests
