@@ -1,0 +1,64 @@
+{
+  "$comment": "Hand-sourced coordinates for names `npm run harvest:coords` cannot place on its own, merged over its OpenStreetMap result so a re-run never loses them. Every entry carries where its coordinate came from — nothing here is a guess at a location. `unplaceable` names the entries that have no defensible point at all; they get no lamp, and lib/geography.test.ts checks this file against data/places.json so the gap stays declared instead of silent.",
+  "placed": [
+    {
+      "name": "Alevkayası",
+      "lat": 35.2852,
+      "lng": 33.5333,
+      "weight": 1,
+      "note": "OSM tags it place=locality rather than a settlement, so the harvest's place filter never sees it."
+    },
+    {
+      "name": "Bostancı",
+      "lat": 35.1659,
+      "lng": 33.0106,
+      "weight": 1,
+      "note": "OSM carries the village as a landuse=residential area, with no place node on it."
+    },
+    {
+      "name": "Boğaz",
+      "lat": 35.2927,
+      "lng": 33.2813,
+      "weight": 1,
+      "note": "The Beşparmak pass — places.json files this under Girne and spells the alias 'Boğaz Girne'. OSM's only place=village named Boğaz is İskele's, 27km east, which the harvest would otherwise pick."
+    },
+    {
+      "name": "Ercan",
+      "lat": 35.1517,
+      "lng": 33.5106,
+      "weight": 1,
+      "note": "The airport. OSM: aeroway=aerodrome 'Ercan Uluslararası Havalimanı'. Announcements mean the airport and the works around it, not a village."
+    },
+    {
+      "name": "Kombos",
+      "lat": 35.1105,
+      "lng": 33.9341,
+      "weight": 1,
+      "note": "A quarter of Gazimağusa. OSM has it only as the square, 'Kombos Meydanı'."
+    },
+    {
+      "name": "Değirmenlik Yolu",
+      "lat": 35.2112,
+      "lng": 33.4223,
+      "weight": 1,
+      "note": "A road, not a settlement, but announcements name it on its own. The point is the midpoint of the two ends the road is named for, Lefkoşa and Değirmenlik."
+    },
+    {
+      "name": "Lapta Yolu",
+      "lat": 35.339,
+      "lng": 33.2464,
+      "weight": 1,
+      "note": "A road, not a settlement. The point is the midpoint of the coast road's two ends, Girne and Lapta."
+    }
+  ],
+  "unplaceable": [
+    {
+      "name": "Ayluga",
+      "note": "A Gazimağusa quarter. Neither OSM nor Nominatim knows the name under any spelling; an outage naming only Ayluga lights nothing on the map, and is read from the list instead."
+    },
+    {
+      "name": "Karakeşliler",
+      "note": "Same: no OSM or Nominatim record under any of the spellings places.json carries."
+    }
+  ]
+}

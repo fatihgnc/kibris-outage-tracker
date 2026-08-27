@@ -1,5 +1,6 @@
 import type { DistrictId } from '@/lib/types';
 import type { MapDistrict, MapSettlement } from '@/lib/geography';
+import { coreRadius, glowRadius } from '@/lib/map-style';
 
 type Props = {
   viewBox: string;
@@ -16,6 +17,12 @@ type Props = {
 // so this only has to say where that is on the island. No animation, no
 // interaction, and the light is a flat fill rather than the radial source: at
 // this size a gradient reads as a smudge.
+//
+// The halo is pulled well in from the radius the big map uses. There is a lamp
+// for every name the ingest can match, and İskele alone holds fifty of them: at
+// full size, and with the flat fill not falling off the way the gradient does,
+// a district came out as one solid patch instead of a scatter of villages.
+const MINI_HALO = 0.45;
 export default function IslandMapMini({
   viewBox,
   islandPath,
@@ -53,8 +60,14 @@ export default function IslandMapMini({
           .filter((s) => s.district === district)
           .map((s) => (
             <g key={s.name}>
-              <circle cx={s.x} cy={s.y} r={s.weight * 8} fill="var(--color-lamp)" fillOpacity={0.14} />
-              <circle cx={s.x} cy={s.y} r={s.weight * 1.6} fill="var(--color-lamp)" />
+              <circle
+                cx={s.x}
+                cy={s.y}
+                r={glowRadius(s.weight) * MINI_HALO}
+                fill="var(--color-lamp)"
+                fillOpacity={0.1}
+              />
+              <circle cx={s.x} cy={s.y} r={coreRadius(s.weight)} fill="var(--color-lamp)" />
             </g>
           ))}
       </svg>

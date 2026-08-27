@@ -16,7 +16,8 @@
     "build:map": "node --import tsx scripts/build-map-geometry.ts",
     "build:icons": "node --import tsx scripts/build-icons.ts",
     "prebuild": "node scripts/check-secrets.mjs && npm run build:map",
-    "harvest:places": "node --import tsx scripts/harvest-places.ts"
+    "harvest:places": "node --import tsx scripts/harvest-places.ts",
+    "harvest:coords": "node --import tsx scripts/harvest-coords.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

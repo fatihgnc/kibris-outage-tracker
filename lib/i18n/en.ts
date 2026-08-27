@@ -69,7 +69,7 @@ export const en: Dictionary = {
     powerOn: 'power on',
     powerOut: 'power out',
     pointAria: '{name} — {status}, open {district}',
-    districtAria: '{district} — {status}',
+    districtAria: 'open the {district} district',
   },
   filter: {
     ariaLabel: 'Filter by district',

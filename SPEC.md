@@ -129,25 +129,46 @@ recognizable as Cyprus.
 
 ### 3.2 Settlement points
 
-Ship at least these fifteen, each with real coordinates and a district:
+**One point for every name the ingest can match.** `data/places.json` (§10.4) is
+the canonical list an announcement's areas are resolved against, so anything in
+it can appear in a record — and anything that can appear in a record needs a
+lamp, or the outage has nowhere to show.
 
-Lefkoşa · Girne · Gazimağusa · Güzelyurt · İskele · Lefke · Lapta · Alsancak ·
-Değirmenlik · Gönyeli · Yeniboğaziçi · Çatalköy · Esentepe · Dipkarpaz ·
-Yeşilyurt
+Coordinates are not typed by hand. `npm run harvest:coords` looks every name up
+in OpenStreetMap, rejects any match outside the service area, and writes
+`lib/geo/settlements.json`. Names OSM cannot place are sourced by hand in
+`lib/geo/settlements.overrides.json`, each with a note saying where its
+coordinate came from; names with no defensible point at all are declared
+`unplaceable` there. `lib/geography.test.ts` fails if the two files drift, so a
+place list that has grown past the map is caught in CI rather than on the page.
+
+A lamp's radius follows its `weight`, taken from what OSM calls the place —
+city, town, or anything smaller. The light of a hundred and ninety lamps adds
+up: the radii in `lib/map-style.ts` are set for that density, and the ones that
+suited twenty-six lamps turn the middle of the island into one sheet of amber.
 
 Place names are data, not code — they stay in their real Turkish spelling. The
 identifiers that reference them are English (`settlements`, `district`, `name`).
 
 ### 3.3 Point states
 
-| State   | Appearance                                         |
-| ------- | -------------------------------------------------- |
-| Powered | `--color-lamp` fill, small soft glow, radius `r`   |
-| Outage  | `--color-dark` fill, **no glow**, radius `r * 0.8` |
+| State   | Appearance                                           |
+| ------- | ---------------------------------------------------- |
+| Powered | `--color-lamp` core with its glow, radius by weight |
+| Outage  | the point goes out — no core, no glow                |
 
 An unlit point is unlit. It does **not** turn red — a light that has gone out
 does not burn red, and the earlier red-ring treatment broke the metaphor. The
-planned/fault distinction is communicated on the **cards**, not on the map.
+planned/fault distinction is communicated on the **cards** and in the point's
+popover (§3.6), not in the colour of the light.
+
+**Districts carry no power state.** They are the ground the light sits on and
+the thing a reader clicks; an outage is one or more places going dark, and a
+district is not a place. An earlier pass shaded the whole of a district under
+any outage inside it, which said every village in Lefkoşa was out when the
+record named three. Where an outage names only places the map cannot place —
+the handful declared in §3.2 — nothing goes out, and the list below the map is
+where it is read.
 
 ### 3.4 Outline legibility
 
@@ -170,11 +191,23 @@ final state immediately.
 
 ### 3.6 Map interaction
 
-- Clicking or tapping a point navigates to that district's page.
-- Points are reachable by keyboard (`tabindex`, `role="link"`, and an accessible
-  name that states the settlement and its current status).
-- Hover and focus show a small tooltip with name and status. Do **not** print
-  labels permanently on the map; it becomes cluttered fast.
+- **Hovering reads a place; clicking opens a district.** The click target is the
+  district polygon, not the point: a lamp is two units across and there are a
+  hundred and ninety of them. The keyboard tab stops are the six districts for
+  the same reason — one per village would put a hundred and ninety of them
+  between the header and the list.
+- Hovering the map surfaces the nearest lamp within a small radius in a
+  **popover** anchored to it: the settlement's name, whether the power is on,
+  and — when it is not — the kind of outage, its time range, and the source that
+  carried it. It answers the whole question at the point, so a reader does not
+  have to find the matching card to learn what is wrong.
+- The popover is **never interactive**. It opens on hover and would take the
+  pointer with it, so nothing inside it could be reached; the source is named in
+  plain text and the list under the map carries the link.
+- The same sentence goes to an `aria-live` line under the map, which is also
+  where the hint sits when nothing is hovered.
+- Do **not** print settlement labels permanently on the map. Only the six
+  district names are permanent, and below `LABEL_BREAKPOINT` even those give way.
 - Focus ring in `--color-lamp`, clearly visible against `--color-night`.
 
 ### 3.7 Mobile behaviour
@@ -186,9 +219,14 @@ mobile viewport — the list is the utility, the map is the identity.
 ### 3.8 Map on the district page
 
 The district page renders a **small, static** variant: whole island muted, the
-one district's point highlighted. No animation, no interaction. This keeps the
+one district's points highlighted. No animation, no interaction. This keeps the
 two pages feeling like the same product — in the first pass the district page
 had no map at all and read like a different site.
+
+At this size the light is a flat fill rather than the radial source: a gradient
+reads as a smudge. The halo is pulled well in from the radius the big map uses —
+İskele alone holds fifty lamps, and at full size the district came out as one
+solid patch instead of a scatter of villages.
 
 ---
 
@@ -699,6 +737,11 @@ supabase/
   migrations/                 # schema, applied via the Supabase CLI
 data/
   places.json                 # canonical place list + aliases
+lib/geo/
+  cyprus.geo.json             # coastline, north outline, six districts (WGS84)
+  settlements.json            # one lamp per place, written by harvest:coords
+  settlements.overrides.json  # hand-sourced coordinates + declared exceptions
+  map-layout.json             # the projected map, written by build:map
 ```
 
 **Environment variables.**
@@ -845,7 +888,8 @@ Run in this order, stopping as soon as a stage produces a complete record:
   precedence between the kinds of signal reads that leftover instead of the
   correction, and puts a real outage on the wrong day.
 - _Places_: match against `data/places.json`, which holds every settlement with
-  its district and a list of aliases. Normalise case with Turkish rules — `İ/ı`
+  its district and a list of aliases. Growing this file grows the map with it —
+  see §3.2 for the coordinate every new name needs. Normalise case with Turkish rules — `İ/ı`
   do not fold the way English does, and a naive `toLowerCase()` will corrupt
   them. Allow fuzzy matching for near-misses, but only above a high similarity
   threshold, and log every fuzzy hit for review.

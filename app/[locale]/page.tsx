@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getFreshness, getNow, getOutages } from '@/lib/data';
-import { deriveStatus, formatClock } from '@/lib/time';
+import { deriveStatus, formatClock, formatTimeRange } from '@/lib/time';
 import { DISTRICTS, getMapGeometry, isDistrictId, resolveDarkness } from '@/lib/geography';
 import type { DistrictId, Outage } from '@/lib/types';
 import IslandMap from '@/components/IslandMap';
@@ -66,7 +66,14 @@ export default async function HomePage({ params, searchParams }: Props) {
   const next = upcoming[0];
 
   const geometry = getMapGeometry();
-  const dark = resolveDarkness(active, geometry.settlements);
+  // The map is handed finished sentences rather than records: the locale, the
+  // clock and the dictionary all live here, and the popover only has to print.
+  const lampOutages = Object.fromEntries(
+    [...resolveDarkness(active, geometry.settlements)].map(([name, o]) => [
+      name,
+      { kind: dict.kind[o.kind], when: formatTimeRange(o, locale, dict), source: o.source },
+    ]),
+  );
 
   const listTitle = selectedDistrict
     ? fill(dict.list.titleDistrict, { district: DISTRICTS[selectedDistrict].name })
@@ -108,14 +115,14 @@ export default async function HomePage({ params, searchParams }: Props) {
           islandPath={geometry.islandPath}
           districts={geometry.districts}
           settlements={geometry.settlements}
-          darkDistricts={[...dark.districts]}
-          darkSettlements={[...dark.settlements]}
+          outages={lampOutages}
           locale={locale}
           strings={{
             ariaLabel: dict.map.ariaLabel,
             hint: dict.map.hint,
             powerOn: dict.map.powerOn,
             powerOut: dict.map.powerOut,
+            pointAria: dict.map.pointAria,
             districtAria: dict.map.districtAria,
           }}
         />

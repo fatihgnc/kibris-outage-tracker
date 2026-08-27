@@ -95,7 +95,7 @@ export const tr = {
     powerOn: 'elektrik var',
     powerOut: 'elektrik kesik',
     pointAria: '{name} — {status}, {district} sayfasına git',
-    districtAria: '{district} — {status}',
+    districtAria: '{district} bölgesinin kesinti sayfasını aç',
   },
   filter: {
     ariaLabel: 'Bölge filtresi',

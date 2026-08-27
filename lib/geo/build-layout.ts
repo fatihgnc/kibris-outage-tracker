@@ -7,6 +7,7 @@ import {
   LABEL_PX,
   LABEL_REFERENCE_SCALE,
   MAP_WIDTH,
+  GLOW_RADIUS,
   glowOpacity,
   glowRadius,
 } from '../map-style';
@@ -20,7 +21,8 @@ import settlementsData from './settlements.json';
 //
 // Geometry is data, never literals. `cyprus.geo.json` carries the island
 // coastline, the northern outline and the six district polygons in WGS84;
-// `settlements.json` carries the 26 lamps. Nothing here may be typed by hand —
+// `settlements.json` carries the lamps, one per name the ingest can match.
+// Nothing here may be typed by hand —
 // if a shape looks wrong, fix the data file, not the code.
 const FEATURES = cyprusGeo as unknown as GeoJSON.FeatureCollection<
   GeoJSON.Polygon,
@@ -117,6 +119,21 @@ export function computeMapGeometry(): MapGeometry {
   const overlaps = (a: LabelBox, b: LabelBox) =>
     a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 
+  // Lamps bucketed into square cells the width of the widest glow, so a probe
+  // only has to consider its own cell and the eight around it. Every lamp that
+  // can reach the probe is inside that block; the rest are out of range by
+  // construction. Walking all of them instead is what the label search used to
+  // do, and at 192 lamps that turned this build from one second into twenty-four.
+  const CELL = Math.max(...Object.values(GLOW_RADIUS));
+  const buckets = new Map<string, number[]>();
+  const cellKey = (x: number, y: number) => `${Math.floor(x / CELL)},${Math.floor(y / CELL)}`;
+  for (let k = 0; k < projectedSettlements.length; k++) {
+    const key = cellKey(projectedSettlements[k][0], projectedSettlements[k][1]);
+    const list = buckets.get(key);
+    if (list) list.push(k);
+    else buckets.set(key, [k]);
+  }
+
   // The brightest point under the label: lamps are blended with `screen`, so
   // overlapping light accumulates the same way here as it does on the map.
   const lightUnder = (box: LabelBox) => {
@@ -125,14 +142,20 @@ export function computeMapGeometry(): MapGeometry {
       for (let j = 0; j <= 2; j++) {
         const x = box.x0 + ((box.x1 - box.x0) * i) / 6;
         const y = box.y0 + ((box.y1 - box.y0) * j) / 2;
+        const cx = Math.floor(x / CELL);
+        const cy = Math.floor(y / CELL);
         let clear = 1;
-        for (let k = 0; k < SETTLEMENTS.length; k++) {
-          const radius = glowRadius(SETTLEMENTS[k].weight);
-          const distance = Math.hypot(
-            projectedSettlements[k][0] - x,
-            projectedSettlements[k][1] - y,
-          );
-          if (distance < radius) clear *= 1 - glowOpacity(distance / radius);
+        for (let gx = cx - 1; gx <= cx + 1; gx++) {
+          for (let gy = cy - 1; gy <= cy + 1; gy++) {
+            for (const k of buckets.get(`${gx},${gy}`) ?? []) {
+              const radius = glowRadius(SETTLEMENTS[k].weight);
+              const distance = Math.hypot(
+                projectedSettlements[k][0] - x,
+                projectedSettlements[k][1] - y,
+              );
+              if (distance < radius) clear *= 1 - glowOpacity(distance / radius);
+            }
+          }
         }
         brightest = Math.max(brightest, 1 - clear);
       }

@@ -7,6 +7,17 @@ import type { Locale } from '@/lib/i18n/config';
 import type { MapDistrict, MapSettlement } from '@/lib/geography';
 import { LABEL_PX, MAX_MAP_HEIGHT, coreRadius, glowRadius } from '@/lib/map-style';
 
+/**
+ * What the popover says about a lamp that is out. Already worded and already
+ * formatted: the locale, the clock and the dictionary all live on the server,
+ * and none of them need to be shipped here to render a line of text.
+ */
+export type LampOutage = {
+  kind: string;
+  when: string;
+  source: string;
+};
+
 export type Props = {
   viewBox: string;
   width: number;
@@ -14,23 +25,22 @@ export type Props = {
   islandPath: string;
   districts: MapDistrict[];
   settlements: MapSettlement[];
-  darkDistricts: string[];
-  darkSettlements: string[];
+  outages: Record<string, LampOutage>;
   locale: Locale;
   strings: {
     ariaLabel: string;
     hint: string;
     powerOn: string;
     powerOut: string;
-    districtAria: string; // {district} {status}
+    pointAria: string; // {name} {status} {district}
+    districtAria: string; // {district}
   };
 };
 
-// The north is lit everywhere a district is, so there is nowhere inside some
-// districts to put a name that is clear of the light — Lefke is three lamps in
-// a small polygon. Where placement cannot get out of the way, the name gets a
-// soft plate of night behind it: blurred, no edge, no box, and invisible where
-// there is nothing bright to sit on. Strength follows the measured light.
+// The island is lit place by place, so a name written on it always has light
+// under it somewhere. Where placement cannot get out of the way, the name gets
+// a soft plate of night behind it: blurred, no edge, no box, and invisible
+// where there is nothing bright to sit on. Strength follows the measured light.
 const readabilityPlate = (light: number) => {
   const layers = light > 0.45 ? 5 : light > 0.25 ? 3 : 2;
   return Array.from({ length: layers }, (_, i) => `0 0 ${3 + i * 3}px var(--color-night)`).join(', ');
@@ -43,6 +53,14 @@ const IGNITE_STEP = 320;
 const EXTINGUISH_AT = IGNITE_SPAN + 60;
 const SETTLED_AT = EXTINGUISH_AT + 500;
 
+// How near the pointer has to be, in frame units, before a lamp claims it.
+// This used to be a fraction of the glow, which worked when a lamp was one of
+// twenty-six and spilled sixty units. At the density the map carries now the
+// glow is twelve units for a village, and tying the target to it would mean
+// hunting for a four-unit dot; the lamps sit further apart than this anyway, so
+// nearest-wins settles the rest.
+const HOVER_RADIUS = 14;
+
 export default function IslandMap({
   viewBox,
   width,
@@ -50,18 +68,19 @@ export default function IslandMap({
   islandPath,
   districts,
   settlements,
-  darkDistricts,
-  darkSettlements,
+  outages,
   locale,
   strings,
 }: Props) {
   const router = useRouter();
   const svgRef = useRef<SVGSVGElement>(null);
-  const [hint, setHint] = useState<string | null>(null);
+  const [active, setActive] = useState<MapSettlement | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
 
-  const districtIsDark = useMemo(() => new Set(darkDistricts), [darkDistricts]);
-  const settlementIsDark = useMemo(() => new Set(darkSettlements), [darkSettlements]);
+  const districtName = useMemo(
+    () => new Map(districts.map((d) => [d.id, d.name])),
+    [districts],
+  );
 
   // Once the opening sequence has played, the lamps are driven by a plain
   // transition instead: a data refresh should ease, not replay the overture.
@@ -76,13 +95,10 @@ export default function IslandMap({
   const step = IGNITE_SPAN / Math.max(settlements.length - 1, 1);
 
   const open = (district: string) => router.push(`/${locale}/district/${district}`);
-  const statusOf = (district: string) =>
-    districtIsDark.has(district) ? strings.powerOut : strings.powerOn;
+  const statusOf = (name: string) => (outages[name] ? strings.powerOut : strings.powerOn);
 
-  // Settlement names are never written on the map; they surface here, on the
-  // line under it, when the pointer is over one. Typed by what it reads rather
-  // than by element: JSX types <a> as an HTML anchor even inside an <svg>,
-  // where React creates it in the SVG namespace.
+  // Settlement names are never written on the map; they surface in the popover
+  // when the pointer is over one, and on the line under it either way.
   const showNearestSettlement = (event: { clientX: number; clientY: number }) => {
     const svg = svgRef.current;
     const matrix = svg?.getScreenCTM();
@@ -100,17 +116,21 @@ export default function IslandMap({
         nearest = s;
       }
     }
-    if (nearest && best <= glowRadius(nearest.weight) * 0.7) {
-      const status = settlementIsDark.has(nearest.name) ? strings.powerOut : strings.powerOn;
-      setHint(`${nearest.name} — ${status}`);
-    } else {
-      setHint(null);
-    }
+    setActive(nearest && best <= HOVER_RADIUS ? nearest : null);
   };
 
   // Largest first, so the smallest district's hit area is never buried under a
   // neighbour's.
   const byHitOrder = [...districts].sort((a, b) => b.area - a.area);
+
+  const activeOutage = active ? outages[active.name] : undefined;
+  const readout = active
+    ? fillTemplate(strings.pointAria, {
+        name: active.name,
+        status: statusOf(active.name),
+        district: districtName.get(active.district) ?? active.district,
+      })
+    : null;
 
   return (
     <div>
@@ -151,28 +171,6 @@ export default function IslandMap({
             <clipPath id="map-island-clip">
               <path d={islandPath} />
             </clipPath>
-            {/* An outage is a place going dark, not a rectangle laid over one.
-             * The hollow is painted through a blurred mask of the district, so
-             * its edge falls away instead of stopping at the administrative
-             * line. */}
-            <filter id="map-out-soften" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation={9} />
-            </filter>
-            {districts
-              .filter((d) => districtIsDark.has(d.id))
-              .map((d) => (
-                <mask
-                  key={d.id}
-                  id={`map-out-${d.id}`}
-                  maskUnits="userSpaceOnUse"
-                  x={-500}
-                  y={-500}
-                  width={2000}
-                  height={2000}
-                >
-                  <path d={d.path} fill="#fff" filter="url(#map-out-soften)" />
-                </mask>
-              ))}
           </defs>
 
           {/* 1 — the sea, drawn well past the frame so no edge can band */}
@@ -194,31 +192,14 @@ export default function IslandMap({
            * plainly not the subject. */}
           <path d={islandPath} fill="var(--color-text)" fillOpacity={0.05} />
 
-          {/* 4 — districts, a clear step brighter than the south */}
+          {/* 4 — districts, a clear step brighter than the south. They are the
+           * ground the light sits on and the thing a reader clicks; they carry
+           * no outage state of their own. An outage is a place going dark, and
+           * a district is not a place — shading the whole of one said a village
+           * was out when only a neighbouring village was. */}
           {districts.map((d) => (
             <path key={d.id} d={d.path} fill="var(--color-text)" fillOpacity={0.1} />
           ))}
-
-          {/* A district under an outage goes the other way — darker than the
-           * land around it, a hollow rather than an alarm, and never red.
-           * Clipped to the island so the softened edge cannot reach the
-           * water. */}
-          <g clipPath="url(#map-island-clip)">
-            {districts
-              .filter((d) => districtIsDark.has(d.id))
-              .map((d) => (
-                <rect
-                  key={d.id}
-                  x={-500}
-                  y={-500}
-                  width={2000}
-                  height={2000}
-                  fill="var(--color-night)"
-                  fillOpacity={0.6}
-                  mask={`url(#map-out-${d.id})`}
-                />
-              ))}
-          </g>
 
           {/* Depth: a soft inner shadow along the coast, so the island reads as
            * a surface carved out of the water. */}
@@ -233,14 +214,14 @@ export default function IslandMap({
             />
           </g>
 
-          {/* 5 — the light. Overlapping lamps add up, so the dense middle of
-           * the island glows on its own. Isolated so the blend stays inside the
-           * map, and clipped to the island rather than to each district: light
-           * does not stop at an administrative line, and clipping it there left
-           * a visible cut across every internal border. */}
+          {/* 5 — the light, and the whole of the map's data. One lamp per name
+           * the ingest can match. Overlapping lamps add up, so the dense middle
+           * of the island glows on its own. Isolated so the blend stays inside
+           * the map, and clipped to the island rather than to each district:
+           * light does not stop at an administrative line. */}
           <g style={{ isolation: 'isolate' }} clipPath="url(#map-island-clip)">
             {settlements.map((s, i) => {
-              const out = settlementIsDark.has(s.name);
+              const out = Boolean(outages[s.name]);
               const ignite = `ignite ${IGNITE_STEP}ms ease-out ${Math.round(i * step)}ms both`;
               return (
                 <g
@@ -269,6 +250,22 @@ export default function IslandMap({
             })}
           </g>
 
+          {/* A lamp the pointer is on gets a ring rather than more light: the
+           * light is the data, and brightening it under the cursor would say
+           * the power had come back. */}
+          {active && (
+            <circle
+              cx={active.x}
+              cy={active.y}
+              r={coreRadius(active.weight) + 4}
+              fill="none"
+              stroke={activeOutage ? 'var(--color-muted)' : 'var(--color-lamp)'}
+              strokeWidth={0.8}
+              strokeOpacity={0.9}
+              className="pointer-events-none"
+            />
+          )}
+
           {/* 6 — district hairlines, thinner than the coast */}
           {districts.map((d) => (
             <path
@@ -276,7 +273,7 @@ export default function IslandMap({
               d={d.path}
               fill="none"
               stroke={hovered === d.id ? 'var(--color-lamp)' : 'var(--color-dark)'}
-              strokeWidth={hovered === d.id || districtIsDark.has(d.id) ? 1 : 0.6}
+              strokeWidth={hovered === d.id ? 1 : 0.6}
             />
           ))}
 
@@ -289,8 +286,9 @@ export default function IslandMap({
             strokeLinejoin="round"
           />
 
-          {/* 9 — the interaction layer. The target is the district, not the
-           * point: a lamp is two units across, and a district is a place.
+          {/* 9 — the interaction layer. The click target is the district, not
+           * the point: a lamp is two units across, and there are a hundred and
+           * ninety of them. Hovering reads a place; clicking opens a district.
            * A real <a> rather than a path with role="link": a focusable path
            * lands in document.activeElement but never fires a focus event, so
            * keyboard users would get no hover state and no readout. The click
@@ -300,10 +298,7 @@ export default function IslandMap({
               key={d.id}
               href={`/${locale}/district/${d.id}`}
               tabIndex={0}
-              aria-label={fillTemplate(strings.districtAria, {
-                district: d.name,
-                status: statusOf(d.id),
-              })}
+              aria-label={fillTemplate(strings.districtAria, { district: d.name })}
               onClick={(e) => {
                 e.preventDefault();
                 open(d.id);
@@ -321,16 +316,10 @@ export default function IslandMap({
               onMouseMove={showNearestSettlement}
               onMouseLeave={() => {
                 setHovered(null);
-                setHint(null);
+                setActive(null);
               }}
-              onFocus={() => {
-                setHovered(d.id);
-                setHint(`${d.name} — ${statusOf(d.id)}`);
-              }}
-              onBlur={() => {
-                setHovered(null);
-                setHint(null);
-              }}
+              onFocus={() => setHovered(d.id)}
+              onBlur={() => setHovered(null)}
             >
               <path className="map-hit" d={d.path} fill="transparent" />
             </a>
@@ -339,35 +328,69 @@ export default function IslandMap({
 
         {/* 8 — the six district names, drawn as HTML over the map. In the SVG
          * they would scale with the frame and fall to five pixels on a phone;
-         * here they keep their size. The 26 settlement names stay off the map —
-         * only these six are permanent, because they are what orients a reader.
-         * On a narrow screen even these give way, except where the power is out
-         * and the name is the only thing left to read the dark area by; the
-         * breakpoint is LABEL_BREAKPOINT, the width the placement maths is
-         * sized for. */}
-        {districts.map((d) => {
-          const out = districtIsDark.has(d.id);
-          return (
-            <span
-              key={d.id}
-              style={{
-                left: `${d.labelX * 100}%`,
-                top: `${d.labelY * 100}%`,
-                fontSize: LABEL_PX,
-                textShadow: readabilityPlate(d.lightUnder),
-              }}
-              className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-mono leading-none tracking-[0.14em] ${
-                out ? 'block text-text' : 'hidden text-muted md:block'
-              }`}
-            >
-              {d.label}
-            </span>
-          );
-        })}
+         * here they keep their size. Settlement names stay off the map — there
+         * are a hundred and ninety of them, and only these six are what orients
+         * a reader. On a narrow screen even these give way; the breakpoint is
+         * LABEL_BREAKPOINT, the width the placement maths is sized for. */}
+        {districts.map((d) => (
+          <span
+            key={d.id}
+            style={{
+              left: `${d.labelX * 100}%`,
+              top: `${d.labelY * 100}%`,
+              fontSize: LABEL_PX,
+              textShadow: readabilityPlate(d.lightUnder),
+            }}
+            className="pointer-events-none absolute hidden -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-mono leading-none tracking-[0.14em] text-muted md:block"
+          >
+            {d.label}
+          </span>
+        ))}
+
+        {/* The popover. It is the only place a settlement name appears on the
+         * map, so it has to answer the whole question at once: where this is,
+         * whether the power is on, and — if it is not — what kind of outage,
+         * until when, and who said so.
+         *
+         * Never interactive. It opens on hover and would take the pointer with
+         * it, so a link inside it could not be reached; the source is named in
+         * plain text and the list under the map carries the link. */}
+        {active && (
+          <div
+            className="pointer-events-none absolute z-10 w-max max-w-[15rem]"
+            style={{
+              left: `${Math.min(Math.max(active.x / width, 0.12), 0.88) * 100}%`,
+              top: `${(active.y / height) * 100}%`,
+              // Above the lamp, unless the lamp is near the top of the frame —
+              // Girne and the panhandle sit within a popover's height of it.
+              transform:
+                active.y / height < 0.28
+                  ? 'translate(-50%, 1rem)'
+                  : 'translate(-50%, calc(-100% - 0.75rem))',
+            }}
+          >
+            <div className="border border-dark bg-night/95 px-2 py-1.5 font-mono text-meta leading-snug">
+              <p className="m-0 text-text">{active.name}</p>
+              <p className={`m-0 ${activeOutage ? 'text-lamp' : 'text-muted'}`}>
+                {statusOf(active.name)}
+              </p>
+              {activeOutage && (
+                <>
+                  <p className="m-0 mt-1 text-muted">
+                    {activeOutage.kind} · {activeOutage.when}
+                  </p>
+                  {activeOutage.source && (
+                    <p className="m-0 text-muted opacity-70">{activeOutage.source}</p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <p aria-live="polite" className="m-0 min-h-[18px] pt-1 font-mono text-meta text-muted">
-        {hint ?? strings.hint}
+        {readout ?? strings.hint}
       </p>
     </div>
   );

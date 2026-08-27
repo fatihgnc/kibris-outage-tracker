@@ -33,8 +33,14 @@ export const LABEL_REFERENCE_SCALE = (LABEL_BREAKPOINT - 40) / MAP_WIDTH;
 
 // A lamp is a stain of light, not a dot: the radius scales with the weight the
 // data carries, so a city spills further than a village.
-export const GLOW_RADIUS = { 3: 60, 2: 43, 1: 28 } as const;
-export const CORE_RADIUS = { 3: 2.8, 2: 2.1, 1: 1.5 } as const;
+//
+// These were set when the map carried 26 lamps. It now carries one for every
+// name the ingest can match — 192 — and light adds up: at the old radii the
+// centre of the island was a single sheet of amber with no villages legible in
+// it, and the dimmest place to write a district label measured 0.84 bright.
+// Roughly halved, so the island reads as a scatter of lit places again.
+export const GLOW_RADIUS = { 3: 34, 2: 22, 1: 12 } as const;
+export const CORE_RADIUS = { 3: 2.6, 2: 1.9, 1: 1.2 } as const;
 export const glowRadius = (weight: number) => GLOW_RADIUS[weight as 1 | 2 | 3] ?? GLOW_RADIUS[1];
 export const coreRadius = (weight: number) => CORE_RADIUS[weight as 1 | 2 | 3] ?? CORE_RADIUS[1];
 
