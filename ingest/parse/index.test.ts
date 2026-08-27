@@ -23,6 +23,7 @@ function respondWith(outages: Partial<ExtractedOutage>[]): typeof fetch {
               cancelled: false,
               ongoing: false,
               resolved: false,
+              restoredAt: null,
               ...o,
             })),
           }),
@@ -242,6 +243,47 @@ test('a repair report becomes a resolution, not a record', async () => {
       resolvedAt: '2026-08-26T15:00:00.000Z',
     },
   ]);
+});
+
+// The article that prompted this: a fault at 16:00, power back "saat 18.30
+// itibariyla", filed at 19:55. Reading 18:30 as a start put a fault on the map
+// beginning at the moment it in fact ended — and even read correctly, closing
+// the record at the filing time would claim ninety minutes of darkness that
+// nobody sat through.
+test('the announced restoration time closes the record, not the filing time', async () => {
+  const outcome = await parseAnnouncement(
+    announcement({ publishedAt: '2026-07-15T16:55:00.000Z' }),
+    respondWith([
+      { kind: 'fault', resolved: true, start: '16:00', restoredAt: '18:30', areas: ['Yeniboğaziçi'] },
+    ]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.records.length, 0);
+  // 18:30 Nicosia in July is 15:30 UTC, an hour and a half before the article.
+  assert.equal(outcome.resolutions[0].resolvedAt, '2026-07-15T15:30:00.000Z');
+});
+
+// A repair filed just after midnight is about the evening before.
+test('a restoration time after publication belongs to the day before', async () => {
+  const outcome = await parseAnnouncement(
+    announcement({ publishedAt: '2026-07-15T21:10:00.000Z' }), // 00:10 local, the 16th
+    respondWith([{ kind: 'fault', resolved: true, start: null, restoredAt: '23:50', areas: ['Yeniboğaziçi'] }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.resolutions[0].resolvedAt, '2026-07-15T20:50:00.000Z');
+});
+
+// Nothing usable stands in for the publication time; it is still an upper bound.
+test('an unusable restoration time falls back to the publication time', async () => {
+  const outcome = await parseAnnouncement(
+    announcement({ publishedAt: '2026-08-26T15:00:00.000Z' }),
+    respondWith([{ kind: 'fault', resolved: true, start: null, restoredAt: '25:99', areas: ['Yeniboğaziçi'] }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.resolutions[0].resolvedAt, '2026-08-26T15:00:00.000Z');
 });
 
 test('a repair naming nowhere we know is not a resolution', async () => {

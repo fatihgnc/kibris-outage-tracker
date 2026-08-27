@@ -56,7 +56,18 @@ const SCHEMA = {
         items: {
           type: 'object',
           additionalProperties: false,
-          required: ['kind', 'date', 'weekday', 'start', 'end', 'areas', 'cancelled', 'ongoing', 'resolved'],
+          required: [
+            'kind',
+            'date',
+            'weekday',
+            'start',
+            'end',
+            'areas',
+            'cancelled',
+            'ongoing',
+            'resolved',
+            'restoredAt',
+          ],
           properties: {
             kind: { type: 'string', enum: ['planned', 'fault', 'rotating'] },
             date: {
@@ -73,7 +84,7 @@ const SCHEMA = {
             start: {
               type: ['string', 'null'],
               description:
-                'HH:MM, 24-hour local. null only when the announcement states no start time at all, which happens for a fault already in progress.',
+                'HH:MM, 24-hour local: when the outage BEGAN. null only when the announcement states no start time at all, which happens for a fault already in progress. Never the time the power came back — that is "restoredAt", and putting it here turns a repair report into an outage starting the moment it ended.',
             },
             end: {
               type: ['string', 'null'],
@@ -101,6 +112,11 @@ const SCHEMA = {
               description:
                 'true when this article reports that the fault has been REPAIRED and the power is back — "arıza giderildi", "elektrikler yeniden verildi", "normale döndü". Not the same as an article about works that are still going on: "arızanın giderilmesi için çalışmalar devam ediyor" is still an outage, not a repair.',
             },
+            restoredAt: {
+              type: ['string', 'null'],
+              description:
+                'HH:MM, 24-hour local: the time the article says the power CAME BACK — "saat 18.30 itibarıyla ... elektrik verildi". null unless it names one. A repair article usually carries two clocks, one for when the fault happened and one for when it was over; this is the later of the two.',
+            },
           },
         },
       },
@@ -120,6 +136,7 @@ const SYSTEM_PROMPT = [
   '- When the announcement names a WEEKDAY instead ("perşembe günü"), put it in "weekday" and do not try to work the date out — the date is computed from it afterwards. Still fill "date" with your best effort; it is ignored when "weekday" is set.',
   '- "date" is the day the outage STARTS. An announcement reading "bugün saat 23.00 ile yarın saat 02.00 arasında" starts today at 23:00 and ends tomorrow at 02:00: date is the publication date, start is 23:00, end is 02:00. Do not move the date forward because the window crosses midnight.',
   '- Never invent a time. When a fault is already in progress and no start is stated, set "start" to null and "ongoing" to true.',
+  '- A repair article carries two clocks and they must not be swapped: "bugun saat 16.00 siralarinda meydana gelen ariza" is "start", "saat 18.30 itibariyla elektrik verildi" is "restoredAt". The time the power returned is never a start time.',
   '- Planned work states its hours almost without exception. If a clearly scheduled outage gives no hours, return what you can find and leave the rest null rather than estimating.',
   '- "areas" must be the place names the announcement itself uses. Include villages, towns and neighbourhoods; leave out businesses and buildings used only as landmarks.',
 ].join('\n');
@@ -127,6 +144,8 @@ const SYSTEM_PROMPT = [
 export type ExtractedOutage = {
   kind: OutageKind;
   resolved: boolean;
+  /** HH:MM local, when the announcement says the power came back. */
+  restoredAt: string | null;
   date: string;
   weekday: Weekday | null;
   start: string | null;
@@ -264,15 +283,16 @@ export function validate(raw: string): ExtractedOutage[] | null {
   const out: ExtractedOutage[] = [];
   for (const entry of list) {
     if (typeof entry !== 'object' || entry === null) continue;
-    const { kind, date, weekday, start, end, areas, cancelled, ongoing, resolved } = entry as Record<
-      string,
-      unknown
-    >;
+    const { kind, date, weekday, start, end, areas, cancelled, ongoing, resolved, restoredAt } =
+      entry as Record<string, unknown>;
     if (kind !== 'planned' && kind !== 'fault' && kind !== 'rotating') continue;
     if (typeof date !== 'string' || !isCalendarDate(date)) continue;
     if (weekday !== null && !WEEKDAYS.includes(weekday as Weekday)) continue;
     if (start !== null && !(typeof start === 'string' && isClock(start))) continue;
     if (end !== null && !(typeof end === 'string' && isClock(end))) continue;
+    // A malformed restoration clock loses only itself: the publication time
+    // still bounds the repair, so the entry is worth keeping without it.
+    const restored = typeof restoredAt === 'string' && isClock(restoredAt) ? restoredAt : null;
     if (!Array.isArray(areas)) continue;
     const names = areas.filter((a): a is string => typeof a === 'string' && a.trim().length > 1);
     if (names.length === 0) continue;
@@ -286,6 +306,7 @@ export function validate(raw: string): ExtractedOutage[] | null {
       cancelled: cancelled === true,
       ongoing: ongoing === true,
       resolved: resolved === true,
+      restoredAt: restored,
     });
   }
   return out;

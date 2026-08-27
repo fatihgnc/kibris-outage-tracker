@@ -21,7 +21,11 @@ export type RawAnnouncement = {
 export type Resolution = {
   district: DistrictId;
   areas: string[];
-  /** When the repair was reported. An upper bound on when the power came back. */
+  /**
+   * When the power came back: the time the announcement names for it, and the
+   * time it was published when it names none. Either way an upper bound — the
+   * power was back at or before this.
+   */
   resolvedAt: string;
 };
 
@@ -88,7 +92,7 @@ export async function parseAnnouncement(
         resolutions.push({
           district,
           areas: repaired.filter((p) => p.district === district).map((p) => p.name),
-          resolvedAt: announcement.publishedAt,
+          resolvedAt: restoredAt(outage, announcement.publishedAt),
         });
       }
       continue;
@@ -189,6 +193,32 @@ function dateOfNext(weekday: Weekday, publishedAt: string): string {
   const current = (new Date(from).getUTCDay() + 6) % 7;
   const ahead = (target - current + 7) % 7;
   return new Date(from + ahead * 86400000).toISOString().slice(0, 10);
+}
+
+/**
+ * When the power came back.
+ *
+ * "Saat 18.30 itibarıyla ... elektrik verildi", published at 19:55. Both bound
+ * the outage's end, and the announcement's own clock is the tighter and the
+ * truer one; the publication time adds an hour and a half of darkness to the
+ * archive that nobody sat through. This value is written straight into
+ * `ends_at`, so the difference is what the reader is told.
+ *
+ * The clock is read against the publication's local day. Landing after
+ * publication means the article was written just past midnight about the
+ * evening before, so the day steps back — and anything still in the future
+ * after that is not a time to trust, leaving the publication time to stand.
+ */
+function restoredAt(outage: ExtractedOutage, publishedAt: string): string {
+  if (!outage.restoredAt) return publishedAt;
+  const published = Date.parse(publishedAt);
+  const local = nicosiaWallClock(published);
+  const midnight = Date.UTC(local.year, local.month - 1, local.day);
+  for (const day of [midnight, midnight - 86400000]) {
+    const iso = toIso(new Date(day).toISOString().slice(0, 10), outage.restoredAt);
+    if (iso && Date.parse(iso) <= published) return iso;
+  }
+  return publishedAt;
 }
 
 function toIso(date: string, clock: string): string | null {
