@@ -1,8 +1,8 @@
 import type { Outage, SourceRef } from '../lib/types';
 import { foldKey } from './parse/text';
 
-// With six adapters a single outage typically arrives five or six times.
-// Collapsing them is what keeps that from becoming five cards for one event.
+// With five adapters a single outage typically arrives four or five times.
+// Collapsing them is what keeps that from becoming four cards for one event.
 
 // Outlets round times, so ranges within this window are the same event.
 const TIME_TOLERANCE_MS = 15 * 60 * 1000;

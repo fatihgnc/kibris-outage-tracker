@@ -744,7 +744,6 @@ the utility's own site, so treat them as real sources, not fallbacks.
 
 | Adapter          | What it is                           | Notes                                                                                                |
 | ---------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `kibtek`         | The utility's own announcements page | Authoritative, sometimes slow                                                                        |
 | `yeniduzen`      | News outlet                          | Has a feed                                                                                           |
 | `kibrispostasi`  | News outlet                          | Has a feed                                                                                           |
 | `detaykibris`    | News outlet                          | HTML parse                                                                                           |
@@ -752,10 +751,17 @@ the utility's own site, so treat them as real sources, not fallbacks.
 | `kibrisgazetesi` | News outlet                          | HTML parse                                                                                           |
 
 Every adapter tags what it produces with a `SourceRef` carrying
-`kind: 'official'` for the utility and `kind: 'press'` for outlets.
+`kind: 'official'` for the utility and `kind: 'press'` for outlets. No adapter
+produces `official` today: the utility's own “Planlı Kesintiler” category is empty
+and its feed carries tenders and technical specifications, so that adapter was
+dropped after spending a request a run on nothing. The distinction stays,
+because merging prefers an official reading where one exists and because a feed
+from the utility is the one thing that would improve this pipeline outright.
+KIB-TEK is still the number to call and the definitive word on an outage — it
+is simply not a source this can read.
 
-With six adapters, a single outage typically arrives five or six times.
-Deduplication (§10.5) is what keeps that from becoming five cards for one event,
+With five adapters, a single outage typically arrives four or five times.
+Deduplication (§10.5) is what keeps that from becoming four cards for one event,
 so verify it after adding **each** adapter, not once at the end.
 
 **Outlets assert copyright over their article text.** This is why the pipeline
