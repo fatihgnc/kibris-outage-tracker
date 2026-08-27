@@ -70,6 +70,8 @@ export type SettlementOutage = {
  * the test below fails if they drift. Two names have no defensible coordinate
  * and are declared in `settlements.overrides.json`; an outage naming only
  * those lights nothing here and is read from the list under the map instead.
+ * Across 82 real archived records both were only ever named alongside a place
+ * that does have one, so no outage has yet gone unshown.
  *
  * Where a settlement is named by more than one active outage, the one that
  * started first wins — it is the one that has been dark longest.

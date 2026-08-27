@@ -47,11 +47,11 @@
   "unplaceable": [
     {
       "name": "Ayluga",
-      "note": "A Gazimağusa quarter. Neither OSM nor Nominatim knows the name under any spelling; an outage naming only Ayluga lights nothing on the map, and is read from the list instead."
+      "note": "A Gazimağusa quarter. Neither OSM nor Nominatim knows the name under any spelling. Measured against 82 real archived records: it appears twice, and both times alongside places that do have lamps — so no outage has yet been invisible because of it."
     },
     {
       "name": "Karakeşliler",
-      "note": "Same: no OSM or Nominatim record under any of the spellings places.json carries."
+      "note": "Same: no OSM or Nominatim record under any of the spellings places.json carries. Also appears twice in those 82 records, never on its own."
     }
   ]
 }
