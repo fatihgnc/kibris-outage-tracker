@@ -959,6 +959,30 @@ Run in this order, stopping as soon as a stage produces a complete record:
   the old wording standing in the paragraph below it. A fixed order of
   precedence between the kinds of signal reads that leftover instead of the
   correction, and puts a real outage on the wrong day.
+- **A fault in progress does not come with hours, and must not be thrown away
+  for it.** Planned work always states its window; a fault is reported while it
+  is still happening, because nobody knows when the power comes back. Requiring
+  a time range of both meant the first 82 stored records were 78 planned
+  outages and 2 faults — not because faults are rare, but because the parser
+  could only see the announcements that quoted a clock.
+
+  Where the kind is `fault` and no range is found, the announcement's own
+  publication time stands in for the start and `endsAt` is `null` — which is
+  what that field was always for (§4). It is the only time this parser invents,
+  and it errs late rather than early: a fault is reported once it is already
+  being felt, so the map never claims an outage before anyone had one.
+
+  Planned work keeps the hard requirement. A missing range there means the
+  parse went wrong, and standing a time in would print an invented window on a
+  card.
+
+  Guard this with the wording that says the fault is **over** — "giderildi",
+  "yeniden verildi", "sona erdi". An open-ended record is active until something
+  retires it, so writing one from a story about a fault that has already been
+  fixed leaves villages dark indefinitely over nothing. Match completed forms
+  only, never the bare stem: "arızanın **giderilmesi** için çalışmalar devam
+  ediyor" is an ongoing fault, and a `gideril` stem reads it as the opposite of
+  what it says.
 - _Places_: match against `data/places.json`, which holds every settlement with
   its district and a list of aliases. Growing this file grows the map with it —
   see §3.2 for the coordinate every new name needs. Normalise case with Turkish rules — `İ/ı`
@@ -1002,6 +1026,19 @@ The same outage arrives from several sources. Collapse rather than duplicate.
   treat them as the same event and merge.
 - Treat near-identical time ranges as the same event when they differ by less
   than fifteen minutes and the place sets overlap — outlets round times.
+- **Two open-ended faults get a much wider window: six hours.** Their starts are
+  not announced times that outlets rounded, they are the stand-in above, and
+  outlets pick a fault up across an afternoon — so the same broken line arrives
+  with starts hours apart and the fifteen-minute rule files it as four or five
+  separate outages. The wide window applies only where both records are
+  open-ended faults in the same district with overlapping places. Two genuinely
+  separate faults in the same villages within six hours would merge; that is the
+  rarer error, and one card that starts slightly early beats five for one event.
+- When two open-ended faults merge, the **earliest** start wins outright — ahead
+  of the official-source rule that settles the other fields. Being the utility's
+  own announcement says nothing about when a fault began; it confirms one after
+  the outlets have already run it. Letting it win also made the merge
+  asymmetric, and the order records merge in is a hash, not a chronology.
 
 ### 10.6 Corrections and cancellations
 

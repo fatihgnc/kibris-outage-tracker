@@ -130,3 +130,51 @@ test('a fault with an unknown end does not merge with a bounded outage', () => {
   const open = outage({ endsAt: null, kind: 'fault' });
   assert.equal(isSameEvent(open, outage()), false);
 });
+
+// An open-ended fault has no announced start; parse/index.ts stands the
+// announcement's own publication time in for one. Outlets pick a fault up over
+// hours, so those stand-ins are hours apart for one event and the fifteen
+// minute window would file the same broken line as five separate outages.
+const openFault = (overrides: Partial<Outage> = {}) =>
+  outage({
+    kind: 'fault',
+    endsAt: null,
+    district: 'gazimagusa',
+    areas: ['Yeniboğaziçi', 'Tuzla'],
+    startsAt: '2026-08-26T12:36:00.000Z',
+    ...overrides,
+  });
+
+test('one fault reported hours apart by two outlets is one event', () => {
+  const first = openFault({ id: 'a', sources: [PRESS] });
+  const later = openFault({
+    id: 'b',
+    sources: [PRESS2],
+    startsAt: '2026-08-26T16:10:00.000Z',
+    areas: ['Yeniboğaziçi'],
+  });
+  assert.equal(isSameEvent(first, later), true);
+  assert.equal(dedupe([first, later]).length, 1);
+});
+
+test('the earliest report wins the stand-in start', () => {
+  const later = openFault({ id: 'a', startsAt: '2026-08-26T16:10:00.000Z' });
+  const earlier = openFault({ id: 'b', startsAt: '2026-08-26T12:36:00.000Z', sources: [PRESS] });
+  assert.equal(mergeOutages(later, earlier).startsAt, '2026-08-26T12:36:00.000Z');
+  // and it does not go the other way
+  assert.equal(mergeOutages(earlier, later).startsAt, '2026-08-26T12:36:00.000Z');
+});
+
+test('a fault the next day is not the same fault', () => {
+  const monday = openFault({ id: 'a' });
+  const tuesday = openFault({ id: 'b', startsAt: '2026-08-27T12:36:00.000Z' });
+  assert.equal(isSameEvent(monday, tuesday), false);
+});
+
+// The wide window is only for two open-ended faults. Anything with an announced
+// end keeps the fifteen minute tolerance it always had.
+test('the wide window does not leak into announced outages', () => {
+  const nine = outage({ id: 'a' });
+  const later = outage({ id: 'b', startsAt: '2026-08-23T09:00:00.000Z', endsAt: '2026-08-23T15:00:00.000Z' });
+  assert.equal(isSameEvent(nine, later), false);
+});

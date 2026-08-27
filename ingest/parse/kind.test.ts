@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { classifyKind, isCancellation, looksLikeOutage } from './kind';
+import { classifyKind, isCancellation, isResolved, looksLikeOutage } from './kind';
 
 test('maintenance wording classifies as planned', () => {
   assert.equal(classifyKind('bakım çalışmaları nedeniyle elektrik kesintisi yapılacaktır'), 'planned');
@@ -72,4 +72,21 @@ test('rotating still wins over both', () => {
     classifyKind('Üretim yetersizliği nedeniyle planlı dönüşümlü kesinti uygulanacaktır.'),
     'rotating',
   );
+});
+
+// The trap this list is written around: the story that prompted the open-ended
+// fault record says "arızanın giderilmesi için çalışmalar devam ediyor" — the
+// works to fix it are ongoing. A bare 'gideril' stem reads that as the fault
+// being over, which is the opposite of what it says.
+test('a fault being worked on is not a fault that is over', () => {
+  assert.equal(
+    isResolved('KIB-TEK, arızanın giderilmesi için çalışmaların devam ettiğini bildirdi.'),
+    false,
+  );
+  assert.equal(isResolved('Bazı bölgelere elektrik verilemiyor.'), false);
+});
+
+test('a fault reported as fixed is recognised', () => {
+  assert.equal(isResolved('Arıza giderildi, elektrikler yeniden verildi.'), true);
+  assert.equal(isResolved('Kesinti sona erdi, şebeke normale döndü.'), true);
 });

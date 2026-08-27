@@ -86,6 +86,32 @@ const CANCELLATION = [
   'gerceklesmeyecek',
 ];
 
+// Wording that says the fault is over. This gates the open-ended fault record
+// in parse/index.ts, which has no end time and is therefore active until
+// something retires it — writing one from a story about a fault that has
+// already been fixed would leave the map dark indefinitely over nothing.
+//
+// Completed forms only, never the bare stem. 'giderilmesi' appears in the
+// middle of an ongoing fault — "arızanın giderilmesi için çalışmalar devam
+// ediyor", the works to fix it are continuing — and matching 'gideril' would
+// read that as the opposite of what it says.
+const RESOLVED = [
+  'giderildi',
+  'giderilmiştir',
+  'giderilmis',
+  'giderilmiş',
+  'normale döndü',
+  'normale dondu',
+  'sona erdi',
+  'sona ermiştir',
+  'sona ermistir',
+  'yeniden verildi',
+  'enerji verildi',
+  'elektrikler geldi',
+  'onarıldı',
+  'onarildi',
+];
+
 function containsAny(haystack: string, needles: string[]): boolean {
   return needles.some((needle) => haystack.includes(needle));
 }
@@ -104,6 +130,12 @@ export function classifyKind(text: string): OutageKind {
   if (containsAny(lower, FAULT) && !scheduled) return 'fault';
   if (scheduled || containsAny(lower, PLANNED)) return 'planned';
   return 'planned';
+}
+
+// True when the announcement reports the outage as already over. See RESOLVED:
+// only Stage 1's open-ended fault path consults this, and only to decline.
+export function isResolved(text: string): boolean {
+  return containsAny(toLowerTr(text), RESOLVED);
 }
 
 // True when the announcement retracts a previously announced outage. Such an

@@ -7,6 +7,18 @@ import { foldKey } from './parse/text';
 // Outlets round times, so ranges within this window are the same event.
 const TIME_TOLERANCE_MS = 15 * 60 * 1000;
 
+// An open-ended fault has no announced start to round — parse/index.ts stands
+// the announcement's own publication time in for one. Five outlets pick a fault
+// up over the course of a day, so those five stand-ins are hours apart for what
+// is one event, and the fifteen-minute window would file them as five.
+//
+// Wide enough to hold a day's coverage of one fault, and it only ever applies
+// where both records are open-ended faults, in the same district, with
+// overlapping places. Two genuinely separate faults hitting the same villages
+// within six hours would merge; that is the rarer error, and a reader is better
+// served by one card that starts slightly early than by five for one broken line.
+const OPEN_FAULT_TOLERANCE_MS = 6 * 60 * 60 * 1000;
+
 function areaKeys(outage: Outage): Set<string> {
   return new Set(outage.areas.map(foldKey));
 }
@@ -21,8 +33,13 @@ function overlaps(a: Set<string>, b: Set<string>): boolean {
   return false;
 }
 
+function bothOpenEndedFaults(a: Outage, b: Outage): boolean {
+  return a.endsAt === null && b.endsAt === null && a.kind === 'fault' && b.kind === 'fault';
+}
+
 function withinTolerance(a: Outage, b: Outage): boolean {
   const startDelta = Math.abs(Date.parse(a.startsAt) - Date.parse(b.startsAt));
+  if (bothOpenEndedFaults(a, b)) return startDelta <= OPEN_FAULT_TOLERANCE_MS;
   if (startDelta > TIME_TOLERANCE_MS) return false;
   if (a.endsAt === null || b.endsAt === null) return a.endsAt === b.endsAt;
   return Math.abs(Date.parse(a.endsAt) - Date.parse(b.endsAt)) <= TIME_TOLERANCE_MS;
@@ -73,10 +90,25 @@ export function mergeOutages(existing: Outage, incoming: Outage): Outage {
   // for a *new* record; once a record exists, later sources merge into it and
   // must not renumber it, or every run would write a fresh row and re-running
   // would stop being idempotent (§10.5).
+  // An open-ended fault's start is a stand-in for one nobody announced, so the
+  // earliest report of it is the closest thing to when the power actually went.
+  //
+  // The earliest wins outright here, ahead of the official-source rule that
+  // decides the other fields. Being the utility's own announcement says nothing
+  // about when a fault began — KIB-TEK confirms one after the outlets have
+  // already run it — and letting it win made the merge asymmetric: the same two
+  // records gave a different start depending on which arrived first, and dedupe
+  // orders by id, which is a hash.
+  const startsAt = bothOpenEndedFaults(existing, incoming)
+    ? Date.parse(incoming.startsAt) < Date.parse(existing.startsAt)
+      ? incoming.startsAt
+      : existing.startsAt
+    : authoritative.startsAt;
+
   return {
     ...existing,
     kind: authoritative.kind,
-    startsAt: authoritative.startsAt,
+    startsAt,
     endsAt: authoritative.endsAt,
     areas,
     sources: mergeSources(existing.sources, incoming.sources),
