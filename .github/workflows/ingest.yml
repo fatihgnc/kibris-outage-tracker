@@ -7,9 +7,18 @@ name: ingest
 
 on:
   schedule:
-    # Every ten minutes. Nothing in the announcements changes faster (§10.3).
-    # GitHub may delay a scheduled run under load; at this interval that is fine.
-    - cron: '*/10 * * * *'
+    # Asks for every ten minutes. It does not get it, and the comment that used
+    # to sit here — that a delay "at this interval is fine" — was wrong. Measured
+    # over 110 scheduled runs across 3.6 days: the median gap is 38 minutes, p90
+    # is 64, p95 is 95, and the worst was 569 — nine and a half hours. GitHub
+    # drops scheduled runs it cannot place, and does not make them up.
+    #
+    # The offset minutes are the only lever available from here. '*/10' fires on
+    # :00, :10, :20 and so on, which are the minutes every other repository also
+    # asks for, and the ones a loaded queue sheds first. This asks for the gaps
+    # between them instead. Whether it helps takes days of runs to tell; if the
+    # numbers above have not moved after a week, this was not the problem.
+    - cron: '3,13,23,33,43,53 * * * *'
   workflow_dispatch:
     inputs:
       adapter:

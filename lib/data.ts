@@ -41,9 +41,22 @@ export async function getMonthlyTotals(district: DistrictId, now: number): Promi
 
 // Data freshness (§10.7). `lastCheckedAt` is the start of the most recent
 // successful ingest run, never a hardcoded value. When that run is older than
-// an hour the UI says so: stale data presented as current is worse than an
-// honest gap.
-export const STALE_AFTER_MS = 60 * 60 * 1000;
+// this, the UI says so: stale data presented as current is worse than an honest
+// gap.
+//
+// Two hours, and it was one. The cron asks for every ten minutes and GitHub
+// does not deliver it: measured over 110 scheduled runs, the median gap is 38
+// minutes and p95 is 95. An hour is inside normal operation, so the warning was
+// showing for 19% of the clock — about four and a half hours a day — which is
+// not a warning any more, it is furniture, and a reader who sees it constantly
+// stops reading it.
+//
+// Two hours sits above p95, so ordinary throttling does not trip it, and it
+// still catches the thing worth catching: the worst real gap in that window was
+// nine and a half hours. Raising it further buys almost nothing — past two
+// hours the remaining time is one genuine stoppage, which is exactly what this
+// is for.
+export const STALE_AFTER_MS = 2 * 60 * 60 * 1000;
 
 export type Freshness = {
   lastCheckedAt: string | null;

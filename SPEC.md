@@ -997,7 +997,8 @@ to read the same article repeatedly. Two things prevent it:
   there is no reason to pay to be told so. Measured across all five outlets, a
   run carries about 2 announcements rather than the 60 the caps allow.
 - A `seen_articles` table keyed by URL, with a hash of the text beside it. The
-  adapters look three days back and the ingest runs every ten minutes, so the
+  adapters look three days back and the ingest is scheduled every ten minutes
+  (it achieves nearer thirty — see §10.7), so the
   same article arrives hundreds of times; it is read once. The hash is over the
   text rather than the URL because outlets rewrite announcements in place, and a
   rewritten one is new information. A failed reading is retried a few times and
@@ -1086,9 +1087,21 @@ with its own confirmation.
   created, updated, deduplicated, sent to review, and adapters that failed.
 - The last successful run timestamp comes from that table and is what the status
   bar's "last checked" line reads.
-- **If the last successful run is older than an hour, say so in the UI.** Stale
+- **If the last successful run is older than two hours, say so in the UI.** Stale
   data presented as current is worse than an honest gap. The frontend shows the
   last known state with its timestamp and a plain note that updates are delayed.
+
+  It was an hour, and an hour was wrong. The cron asks for every ten minutes and
+  GitHub does not deliver it — measured over 110 scheduled runs across 3.6 days,
+  the median gap is 38 minutes, p90 is 64 and p95 is 95. An hour therefore sits
+  *inside* normal operation, and the warning was on screen 19% of the clock,
+  roughly four and a half hours a day. A warning that is always up is not a
+  warning; a reader who sees it every visit stops reading it, and it is then
+  worth nothing on the day it is true.
+
+  Set this above p95 of the gaps you actually observe, not against the interval
+  the cron asks for. Two hours does that and still catches what matters: the
+  worst real gap in that window was nine and a half hours.
 
 ### 10.8 Backfill
 
