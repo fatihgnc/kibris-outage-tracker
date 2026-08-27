@@ -116,7 +116,7 @@ export default async function LocaleLayout({
         <main className="mx-auto w-full max-w-[1060px] flex-1 px-5 pb-2">{children}</main>
 
         <footer className="mt-12 border-t border-dark">
-          <div className="mx-auto flex w-full max-w-[1060px] flex-col gap-2 px-5 pb-9 pt-4">
+          <div className="mx-auto flex w-full max-w-[1060px] flex-col gap-6 px-5 pb-9 pt-4">
             {/* The persistent disclaimer (§1.4): every duration is an estimate. */}
             <p className="m-0 max-w-[68ch] text-meta text-muted">{dict.footer.disclaimer}</p>
             {/* Three parts: the domain, the legal links, the imprint. The

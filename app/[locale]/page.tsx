@@ -121,7 +121,7 @@ export default async function HomePage({ params, searchParams }: Props) {
         />
       </section>
 
-      <section className="pt-2">
+      <section className="pt-5">
         <DistrictFilter locale={locale} dict={dict} selected={selectedDistrict} basePath="" />
       </section>
 
