@@ -191,4 +191,95 @@ describe('store round-trip', () => {
     assert.equal(await queueForReview(client!, [item, item]), 0, 'nor does a batch repeating it');
     assert.equal(await rows(), 1, 'still exactly one row');
   });
+
+  // The repeat above is the ordinary case, and for two days it ended the run
+  // instead: the unique violation came back from the database, queueForReview
+  // threw, and the ingest died before it could log the run. Stated separately
+  // from the counts, because a count of zero and a raised error are the same
+  // number of rows and very different behaviour.
+  test('a repeat is tolerated, not raised', async (t) => {
+    if (!client) return t.skip('no local Supabase reachable');
+    const item = {
+      source: { name: 'Gündem Kıbrıs', url: `https://example.invalid/store-test-raises-${RUN}` },
+      rawText: `Fixture: a second announcement the parser cannot read. ${RUN}`,
+      reason: 'no time range found',
+    };
+
+    assert.equal(await queueForReview(client!, [item]), 1, 'the first sighting is queued');
+    await assert.doesNotReject(() => queueForReview(client!, [item]), 'a repeat must not throw');
+  });
+
+  // A batch carrying both is the shape a real run produces: one announcement
+  // already on the list from the last poll, one seen for the first time. The
+  // new one has to survive the repeat sitting next to it.
+  test('a repeat in a batch does not cost the new item beside it', async (t) => {
+    if (!client) return t.skip('no local Supabase reachable');
+    const seen = {
+      source: { name: 'Gündem Kıbrıs', url: `https://example.invalid/store-test-seen-${RUN}` },
+      rawText: `Fixture: already on the list. ${RUN}`,
+      reason: 'no time range found',
+    };
+    const fresh = {
+      source: { name: 'Gündem Kıbrıs', url: `https://example.invalid/store-test-fresh-${RUN}` },
+      rawText: `Fixture: seen for the first time. ${RUN}`,
+      reason: 'no known place names found',
+    };
+
+    await queueForReview(client!, [seen]);
+    assert.equal(await queueForReview(client!, [seen, fresh]), 1, 'only the new one counts');
+    const { count } = await client!
+      .from('review_queue')
+      .select('*', { count: 'exact', head: true })
+      .eq('raw_text', fresh.rawText);
+    assert.equal(count, 1, 'and it really reached the table');
+  });
+});
+
+// Runs without Docker, and that is the point: on CI the round-trip tests above
+// skip for want of a local Supabase, so nothing there would have caught this.
+// The failure was a duplicate the database reported and the code re-raised,
+// which a fake client reproduces exactly and cheaply.
+describe('queueForReview against a stubbed client', () => {
+  function clientReturning(...errors: ({ code: string; message: string } | null)[]) {
+    const attempts: Record<string, unknown>[] = [];
+    let call = 0;
+    const client = {
+      from() {
+        return {
+          insert(payload: Record<string, unknown>) {
+            attempts.push(payload);
+            return Promise.resolve({ error: errors[call++] ?? null });
+          },
+        };
+      },
+    };
+    return { client: client as unknown as SupabaseClient, attempts };
+  }
+
+  const item = {
+    source: { name: 'Gündem Kıbrıs', url: 'https://example.invalid/stub' },
+    rawText: 'Fixture text.',
+    reason: 'no time range found',
+  };
+
+  test('a unique violation is not counted and not raised', async () => {
+    const duplicate = { code: '23505', message: 'duplicate key value violates unique constraint' };
+    const { client } = clientReturning(duplicate);
+    assert.equal(await queueForReview(client, [item]), 0);
+  });
+
+  test('a repeat does not stop the items behind it being queued', async () => {
+    const duplicate = { code: '23505', message: 'duplicate key value violates unique constraint' };
+    const { client, attempts } = clientReturning(duplicate, null);
+    assert.equal(await queueForReview(client, [item, { ...item, rawText: 'Another.' }]), 1);
+    assert.equal(attempts.length, 2, 'the second item is still attempted');
+  });
+
+  // Anything else is a real fault — a dropped connection, a column that moved —
+  // and must still end the run rather than being swallowed with the repeats.
+  test('any other error still ends the run', async () => {
+    const broken = { code: '42703', message: 'column review_queue.reason does not exist' };
+    const { client } = clientReturning(broken);
+    await assert.rejects(() => queueForReview(client, [item]), /queueForReview: column/);
+  });
 });

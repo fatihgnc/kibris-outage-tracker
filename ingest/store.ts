@@ -116,19 +116,34 @@ export type ReviewItem = {
 // person's work list, and a cron would otherwise fill it with copies of the
 // same item. The database keys each row on the source URL plus the raw text
 // and drops repeats; the count returned is what was actually added.
+//
+// Written as one insert per item that tolerates the duplicate, rather than an
+// upsert with `onConflict: 'fingerprint'`. The conflict target is a generated
+// column, so it never appears in the payload, and an upsert only suppresses
+// the repeat while PostgREST can resolve that target from its schema cache. It
+// could not for two days: every run reached this line, took a unique violation
+// on a repeat it was supposed to ignore, and died before logRun, so the site
+// went on telling readers its data was two days stale while the ingest was in
+// fact storing outages the whole time. Handling the violation here needs no
+// conflict target and cannot regress that way — the guarantee stays in the
+// schema, where the unique index enforces it against every writer.
 export async function queueForReview(client: SupabaseClient, items: ReviewItem[]): Promise<number> {
-  if (items.length === 0) return 0;
-  const { data, error } = await client
-    .from('review_queue')
-    .upsert(
-      items.map((item) => ({
-        source: item.source,
-        raw_text: item.rawText.slice(0, 8000),
-        reason: item.reason,
-      })),
-      { onConflict: 'fingerprint', ignoreDuplicates: true },
-    )
-    .select('id');
-  if (error) throw new Error(`queueForReview: ${error.message}`);
-  return data?.length ?? 0;
+  let queued = 0;
+  for (const item of items) {
+    const { error } = await client.from('review_queue').insert({
+      source: item.source,
+      raw_text: item.rawText.slice(0, 8000),
+      reason: item.reason,
+    });
+    if (!error) {
+      queued++;
+      continue;
+    }
+    // 23505 is the unique violation on review_queue_fingerprint_idx: this
+    // announcement is already on the list, which is the ordinary case and not
+    // a reason to end the run.
+    if (error.code === '23505') continue;
+    throw new Error(`queueForReview: ${error.message}`);
+  }
+  return queued;
 }
