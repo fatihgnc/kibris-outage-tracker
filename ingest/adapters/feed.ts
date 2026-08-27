@@ -1,4 +1,4 @@
-import { htmlToText } from '../parse/text';
+import { collapseWhitespace, htmlToText } from '../parse/text';
 
 export type FeedItem = {
   title: string;
@@ -79,8 +79,7 @@ export function extractArticle(html: string): { title: string; body: string } {
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<nav[\s\S]*?<\/nav>/gi, ' ')
     .replace(/<footer[\s\S]*?<\/footer>/gi, ' ');
-  const h1 = /<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(withoutChrome);
-  const title = h1 ? htmlToText(h1[1]) : htmlToText(/<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? '');
+  const title = headline(withoutChrome, html);
   const paragraphs = [...withoutChrome.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)]
     .map((match) => htmlToText(match[1]))
     .filter((text) => text.length > 25);
@@ -96,6 +95,36 @@ export function extractArticle(html: string): { title: string; body: string } {
       : paragraphs.join('\n');
 
   return { title, body };
+}
+
+// A page can carry more than one <h1>: yeniduzen opens the article with a bare
+// <h1>HABERLER</h1> section banner and puts the headline in the one after it.
+// Taking the first cost seven of the thirty items sitting in the review queue
+// their headline, and the headline is where these announcements name the day
+// and the place — the facts the parser most needs, and the ones it now reads
+// first, since the earliest date signal in `title. body` is the one that wins.
+//
+// The page names its own headline in <title> and og:title. Neither is used as
+// the headline directly, because some outlets append the site name there
+// ('... - Kıbrıs Gazetesi') while the <h1> is clean; they are used to pick
+// which <h1> is the article's.
+function headline(withoutChrome: string, html: string): string {
+  const h1s = [...withoutChrome.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/gi)]
+    .map((match) => collapseWhitespace(htmlToText(match[1])))
+    .filter((text) => text.length > 0);
+  const declared = collapseWhitespace(
+    htmlToText(
+      /<meta\b[^>]*(?:property|name)=["']og:title["'][^>]*content=["']([^"']+)["']/i.exec(html)?.[1] ??
+        /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ??
+        '',
+    ),
+  );
+
+  if (h1s.length > 1 && declared) {
+    const stated = h1s.find((text) => declared.startsWith(text) || text.startsWith(declared));
+    if (stated) return stated;
+  }
+  return h1s[0] ?? declared;
 }
 
 function extractSummary(withoutChrome: string, html: string): string {
