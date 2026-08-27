@@ -13,6 +13,16 @@
 // reports, it never writes. Run it after any change to the parser, and against
 // production before trusting what the archive says.
 //
+// Two verdicts, because they call for different things. X is a record no
+// source supports and nothing about the sources has changed since it was
+// ingested: the parser was wrong, and its ids are printed for retire-records.
+// ~ is a record whose source has been republished since — outlets rewrite
+// these announcements in place, moving a lead from 'yarın' to 'bugün' on the
+// morning of the work — so today's text says nothing about a record parsed
+// from the earlier one. Those ids are withheld deliberately: read the article
+// and decide. Retiring one on this evidence once removed a correct record and
+// left the wrong one standing.
+//
 //   node --import tsx scripts/audit-records.ts
 //
 // Reads NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, from the
@@ -32,17 +42,22 @@ import { foldKey } from '../ingest/parse/text';
 
 type Derived = { district: string; areas: Set<string>; startsAt: string };
 
+// What a source says today: the records today's parser derives from it, and
+// the publication date the page carries now. The date is what separates a
+// record an edit has overtaken from one that was simply wrong.
+type Rederived = { records: Derived[]; publishedAt: string };
+
 const cache: ConditionalCache = new Map();
-const derived = new Map<string, Derived[] | null>();
+const derived = new Map<string, Rederived | null>();
 
 // null means the announcement could not be re-derived at all — a dead link, a
 // block, or text today's parser rejects. That is not evidence against the
 // record, so it is reported separately and never counted as a failure.
-async function deriveFrom(source: SourceRef): Promise<Derived[] | null> {
+async function deriveFrom(source: SourceRef): Promise<Rederived | null> {
   const hit = derived.get(source.url);
   if (hit !== undefined) return hit;
 
-  let result: Derived[] | null = null;
+  let result: Rederived | null = null;
   const article = await politeFetch(source.url, cache);
   if (article.status === 'ok') {
     const { title, body } = extractArticle(article.body);
@@ -50,11 +65,14 @@ async function deriveFrom(source: SourceRef): Promise<Derived[] | null> {
     if (publishedAt) {
       const outcome = parseAnnouncement({ source, title, body, publishedAt, fetchedAt: publishedAt });
       if (outcome.status === 'parsed') {
-        result = outcome.records.map((record) => ({
-          district: record.district,
-          areas: new Set(record.areas.map(foldKey)),
-          startsAt: record.startsAt,
-        }));
+        result = {
+          publishedAt,
+          records: outcome.records.map((record) => ({
+            district: record.district,
+            areas: new Set(record.areas.map(foldKey)),
+            startsAt: record.startsAt,
+          })),
+        };
       }
     }
   }
@@ -62,9 +80,9 @@ async function deriveFrom(source: SourceRef): Promise<Derived[] | null> {
   return result;
 }
 
-function describe(records: Derived[] | null): string {
-  if (!records) return '(could not re-derive)';
-  return records
+function describe(rederived: Rederived | null): string {
+  if (!rederived) return '(could not re-derive)';
+  return rederived.records
     .map((record) => `${record.district}@${record.startsAt.slice(0, 10)}[${[...record.areas].join('|')}]`)
     .join(' ; ');
 }
@@ -78,7 +96,7 @@ async function main() {
   const client = createClient(url, key, { auth: { persistSession: false } });
   const { data, error } = await client
     .from('outages')
-    .select('id, starts_at, district, areas, sources, cancelled_reason')
+    .select('id, starts_at, district, areas, sources, ingested_at, cancelled_reason')
     // Records already retired as bad data are expected to fail this check —
     // failing it is why they were retired.
     .or('cancelled_reason.is.null,cancelled_reason.neq.bad_data')
@@ -88,22 +106,29 @@ async function main() {
   const rows = data ?? [];
   console.log(`${rows.length} record(s)\n`);
   const unsupported: string[] = [];
+  const edited: string[] = [];
   let unreadable = 0;
 
   for (const row of rows) {
     const stored = new Set((row.areas as string[]).map(foldKey));
     let readable = false;
     let supported = false;
+    let editedSince = false;
 
     for (const source of row.sources as SourceRef[]) {
-      const records = await deriveFrom(source);
-      if (!records) continue;
+      const rederived = await deriveFrom(source);
+      if (!rederived) continue;
       readable = true;
+      // The page says it was published after we read it, so what stands there
+      // now is not what this record was parsed from. Outlets rewrite these
+      // announcements in place and republish under a new slug that the old
+      // URL redirects to.
+      if (Date.parse(rederived.publishedAt) > Date.parse(row.ingested_at)) editedSince = true;
       // Supported means some source still puts this district at this instant
       // with at least one of these places. Outlets abbreviate place lists, so
       // an overlap is the honest bar; demanding the full set would flag rows
       // that are merely less complete than the article.
-      for (const record of records) {
+      for (const record of rederived.records) {
         if (record.district !== row.district) continue;
         if (Date.parse(record.startsAt) !== Date.parse(row.starts_at)) continue;
         if ([...stored].some((area) => record.areas.has(area))) supported = true;
@@ -117,19 +142,31 @@ async function main() {
     }
     if (supported) continue;
 
-    unsupported.push(row.id);
-    console.log(`X ${row.starts_at.slice(0, 10)} ${row.district} ${(row.areas as string[]).join(', ')}`);
+    // Reported, never retired. An edit means today's text is no evidence about
+    // a record parsed from the earlier one, and retiring on that evidence once
+    // removed a correct record while leaving the wrong one standing. Which of
+    // the two the archive should keep is a judgement about what the utility
+    // actually announced, so it goes to a person.
+    const bucket = editedSince ? edited : unsupported;
+    bucket.push(row.id);
+    const mark = editedSince ? '~' : 'X';
+    const note = editedSince ? ' — source edited since ingest, decide by hand' : '';
+    console.log(`${mark} ${row.starts_at.slice(0, 10)} ${row.district} ${(row.areas as string[]).join(', ')}${note}`);
     for (const source of row.sources as SourceRef[]) {
       console.log(`    ${source.url}`);
       console.log(`      today: ${describe(derived.get(source.url) ?? null)}`);
     }
   }
 
-  console.log(`\n${unsupported.length} unsupported, ${unreadable} unreadable, ${rows.length} checked`);
+  console.log(`\n${unsupported.length} unsupported, ${edited.length} edited since ingest, ` +
+      `${unreadable} unreadable, ${rows.length} checked`);
+  // Only the unsupported ids are printed in the form retire-records.ts takes.
+  // The edited ones deliberately are not: pasting them onward is the mistake
+  // this split exists to prevent.
   if (unsupported.length > 0) console.log(JSON.stringify(unsupported));
   // A wrong archive is the failure this exists to catch, so say so in the exit
   // code: this belongs in CI as much as in a terminal.
-  process.exit(unsupported.length > 0 ? 1 : 0);
+  process.exit(unsupported.length > 0 || edited.length > 0 ? 1 : 0);
 }
 
 main().catch((error: unknown) => {
