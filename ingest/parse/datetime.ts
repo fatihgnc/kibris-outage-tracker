@@ -1,5 +1,5 @@
 import { nicosiaWallClock, zonedTimeToUtc } from '../../lib/time';
-import { foldKey, toLowerTr } from './text';
+import { toLowerTr } from './text';
 
 export type TimeRange = {
   startHour: number;
@@ -82,7 +82,7 @@ export type CalendarDate = { year: number; month: number; day: number };
 //
 // Longest first, so 'cumartesi' is not read as 'cuma' and 'pazartesi' not as
 // 'pazar'.
-// Matched against foldKey(text), which is ASCII. Writing the Turkish letters
+// Matched against the letter-folded text, which is ASCII. Writing the Turkish letters
 // into the pattern instead makes the match depend on which Unicode
 // normalisation the outlet's HTML happens to use — the same word can arrive
 // precomposed or as a letter plus a combining mark, and only one of them
@@ -105,12 +105,67 @@ function nextWeekday(published: CalendarDate, weekday: number): CalendarDate {
   return shiftDays(published, (weekday - publishedDow + 7) % 7);
 }
 
+const RELATIVE_DAYS: [RegExp, number][] = [
+  [/\byar[ıi]n\b/, 1],
+  [/\bbug[üu]n\b/, 0],
+  [/\bd[üu]n\b/, -1],
+];
+
+// Every signal a text can carry about which day the work falls on, with where
+// it was found. The position is what decides between them (see parseDate).
+type DateSignal = { date: CalendarDate; index: number; rank: number };
+
+// Only breaks a tie between two signals starting at the same index, which takes
+// an overlap like a weekday inside a longer date phrase. An explicit calendar
+// date says more than a relative word, which says more than a bare weekday.
+const EXPLICIT = 0;
+const RELATIVE = 1;
+const WEEKDAY = 2;
+
+// foldKey collapses runs of punctuation to one space and trims, so a position
+// in its output does not line up with one in the original. The weekday scan
+// needs a position comparable with the other patterns', so fold letter by
+// letter instead: same ASCII result for these patterns, one character in and
+// one character out, indices intact.
+const LETTER_FOLDS: Record<string, string> = {
+  ı: 'i',
+  ğ: 'g',
+  ü: 'u',
+  ş: 's',
+  ö: 'o',
+  ç: 'c',
+  â: 'a',
+  î: 'i',
+  û: 'u',
+};
+
+function foldLetters(lower: string): string {
+  let folded = '';
+  for (const character of lower) folded += LETTER_FOLDS[character] ?? character;
+  return folded;
+}
+
 // Resolves the announcement's date. Relative words are resolved against the
 // announcement's own publishedAt, never the run time — a job running at 00:05
 // must not read yesterday's 'yarın' as today (§10.4).
+//
+// Where a story carries several date signals, the earliest one in the text
+// wins, because the text arrives as "title. body" and a news story states the
+// operative fact in its headline and lead. Anything contradicting it further
+// down is leftover: outlets edit these announcements in place, and
+// kibrispostasi n611748 is the case that forced this rule — the lead was
+// updated from "yarın" to "bugün" on the morning of the outage while the
+// paragraph below it kept saying "yarın". Reading the words in a fixed order
+// let the stale one win and moved a real outage a day into the future.
 export function parseDate(text: string, publishedAt: string): CalendarDate | null {
   const published = nicosiaWallClock(Date.parse(publishedAt));
-  const lower = toLowerTr(text);
+  // One source string for every detector, so their positions are comparable.
+  // NFC first: the same word arrives precomposed from one outlet and as a
+  // letter plus a combining mark from another, and only the composed form
+  // folds a character at a time.
+  const lower = toLowerTr(text).normalize('NFC');
+  const folded = foldLetters(lower);
+  const signals: DateSignal[] = [];
 
   // '15 Ağustos 2026' or '15 Ağustos'
   const named = /(\d{1,2})\s+([a-zçğıöşü]+)\s*(\d{4})?/.exec(lower);
@@ -119,7 +174,9 @@ export function parseDate(text: string, publishedAt: string): CalendarDate | nul
     if (month) {
       const day = Number(named[1]);
       const year = named[3] ? Number(named[3]) : inferYear(published, month);
-      if (isValidDate(year, month, day)) return { year, month, day };
+      if (isValidDate(year, month, day)) {
+        signals.push({ date: { year, month, day }, index: named.index, rank: EXPLICIT });
+      }
     }
   }
 
@@ -129,21 +186,24 @@ export function parseDate(text: string, publishedAt: string): CalendarDate | nul
     const day = Number(numeric[1]);
     const month = Number(numeric[2]);
     const year = Number(numeric[3]);
-    if (isValidDate(year, month, day)) return { year, month, day };
+    if (isValidDate(year, month, day)) {
+      signals.push({ date: { year, month, day }, index: numeric.index, rank: EXPLICIT });
+    }
   }
 
-  if (/\byar[ıi]n\b/.test(lower)) return shiftDays(published, 1);
-  if (/\bbug[üu]n\b/.test(lower)) return shiftDays(published, 0);
-  if (/\bd[üu]n\b/.test(lower)) return shiftDays(published, -1);
+  for (const [pattern, offset] of RELATIVE_DAYS) {
+    const match = pattern.exec(lower);
+    if (match) signals.push({ date: shiftDays(published, offset), index: match.index, rank: RELATIVE });
+  }
 
-  // After the explicit words, which win when a story carries both: "Bugün
-  // Lefkoşa'da ... perşembe günü ..." is about today.
-  const folded = foldKey(text);
   for (const [pattern, weekday] of WEEKDAYS) {
-    if (pattern.test(folded)) return nextWeekday(published, weekday);
+    const match = pattern.exec(folded);
+    if (match) signals.push({ date: nextWeekday(published, weekday), index: match.index, rank: WEEKDAY });
   }
 
-  return null;
+  if (signals.length === 0) return null;
+  signals.sort((a, b) => a.index - b.index || a.rank - b.rank);
+  return signals[0].date;
 }
 
 function foldMonth(word: string): string {

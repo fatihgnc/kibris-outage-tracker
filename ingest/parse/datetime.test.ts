@@ -142,3 +142,54 @@ test('an explicit date still beats a weekday in the same sentence', () => {
   );
 });
 
+
+// kibrispostasi.com/...n611748-... , which put a real outage a day into the
+// future. The outlet rewrote the lead from "yarın" to "bugün" on the morning of
+// the work and republished under a new slug, but left the paragraph below it
+// saying "yarın". Reading the words in a fixed order let that leftover win.
+test('the lead wins over a stale "yarın" left further down the story', () => {
+  const published = '2026-08-26T04:33:00.000Z'; // 07:33 in Nicosia, the day of the work
+  const text =
+    'Yuvacık ve çevresinde bugün 09.30-11.30 saatleri arasında elektrik kesintisi. ' +
+    'KIB-TEK, orta gerilim elektrik şebekesinde yapılacak proje çalışması nedeniyle bugün ' +
+    '09.30-11.30 saatleri arasında Yuvacık köyü ile çevresindeki tesis ve su motorlarına ' +
+    'elektrik verilemeyeceğini açıkladı. Kıbrıs Türk Elektrik Kurumu’ndan yapılan açıklamaya ' +
+    'göre, yarın orta gerilim elektrik şebekesinde yapılacak proje çalışması nedeniyle 09.30 ' +
+    'ile 11.30 saatleri arasında; Yuvacık köyü ile civarındaki tesis ve su motorlarına ' +
+    'elektrik verilemeyecek.';
+  assert.deepEqual(parseDate(text, published), { year: 2026, month: 8, day: 26 });
+});
+
+// The mirror of the case above, so the fix is a rule about position and not a
+// standing preference for "bugün": the same two words the other way round still
+// resolve to the day after publication.
+test('a "yarın" in the lead is not overruled by a "bugün" further down', () => {
+  const published = '2026-08-26T04:33:00.000Z';
+  const text =
+    'Yuvacık ve çevresinde yarın iki saatlik elektrik kesintisi. ' +
+    'KIB-TEK, yarın 09.30-11.30 saatleri arasında elektrik verilemeyeceğini açıkladı. ' +
+    'Kurum, bugün yaptığı açıklamada çalışmanın proje kapsamında olduğunu belirtti.';
+  assert.deepEqual(parseDate(text, published), { year: 2026, month: 8, day: 27 });
+});
+
+// Position decides between kinds too, not just between two relative words. A
+// weekday opening the story is the announcement; a relative word later on is
+// about when the announcement was made.
+test('a weekday in the lead beats a relative word later in the story', () => {
+  const wednesday = '2026-08-05T05:08:00.000Z';
+  assert.deepEqual(
+    parseDate('Perşembe günü Lefkoşa’da elektrik kesintisi yapılacak; duyuru dün paylaşıldı.', wednesday),
+    { year: 2026, month: 8, day: 6 },
+  );
+});
+
+// An explicit date is the most precise signal, but only where it is the one the
+// story is making. Trailing references — an archived duyuru, a related story —
+// used to win from anywhere in the text.
+test('an explicit date trailing the story does not beat the lead', () => {
+  const published = '2026-08-26T04:33:00.000Z';
+  assert.deepEqual(
+    parseDate('Yuvacık’ta yarın elektrik kesintisi. Konu, 15 Ağustos 2026 tarihli duyuruda da yer almıştı.', published),
+    { year: 2026, month: 8, day: 27 },
+  );
+});
