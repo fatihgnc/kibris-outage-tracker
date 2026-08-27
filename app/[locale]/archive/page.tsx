@@ -94,7 +94,7 @@ export default async function ArchivePage({ params, searchParams }: Props) {
         <p className="mb-0 mt-2 max-w-[46ch] text-pretty text-small text-muted">{dict.archive.lead}</p>
       </section>
 
-      <section className="flex flex-col gap-3 pt-4">
+      <section className="flex flex-col gap-4 pt-4">
         <DistrictFilter
           locale={locale}
           dict={dict}

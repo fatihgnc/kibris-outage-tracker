@@ -11,7 +11,7 @@ export const en: Dictionary = {
       'View the power outages happening now and the ones already over in Northern Cyprus: districts with an outage right now, upcoming planned work, and an archive of past outages. Compiled from official announcements.',
     share:
       'Power outages in Northern Cyprus — where the power is out right now, upcoming planned work, and an archive of past outages.',
-    archiveTitle: 'Past outages',
+    archiveTitle: 'Past power outages in Northern Cyprus',
     archiveDescription:
       'The archive of power outages in Northern Cyprus. Filter past outages by district and month to view them.',
     districtTitle: (district: string) => `Power outages in ${district}`,
@@ -135,7 +135,7 @@ export const en: Dictionary = {
     monthAria: '{month}: {planned} hours planned, {fault} hours of fault outages',
   },
   archive: {
-    title: 'Past outages',
+    title: 'Past power outages',
     lead: 'Outages that have ended. Filter them by district and month.',
     monthLabel: 'month',
     allMonths: 'all months',

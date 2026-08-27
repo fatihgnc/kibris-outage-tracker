@@ -32,7 +32,7 @@ export const tr = {
     // written for a search result and is far too long for a card.
     share:
       "Kuzey Kıbrıs'ta yaşanan elektrik kesintileri — şu an kesinti yaşayan yerler, yaklaşan planlı çalışmalar ve geçmişte yaşanan kesintilerin arşivi.",
-    archiveTitle: 'Geçmiş kesintiler',
+    archiveTitle: "KKTC'de yaşanmış elektrik kesintileri",
     archiveDescription:
       "Kuzey Kıbrıs'ta yaşanan elektrik kesintilerinin arşivi. Yaşanmış kesintileri bölgeye ve aya göre filtreleyip görüntüleyin.",
     districtTitle: (district: string) => `${district} elektrik kesintileri`,
@@ -71,7 +71,7 @@ export const tr = {
     label: 'reklam',
   },
   statusBar: {
-    allClear: 'Bilinen kesinti yok, ada ışıkta.',
+    allClear: 'Bilinen kesinti yok, ada aydınlık.',
     oneActive: (district: string) => `${locative(district)} kesinti sürüyor`,
     manyActive: '{count} bölgede kesinti sürüyor',
     checked: 'son güncelleme {time}',
@@ -83,7 +83,7 @@ export const tr = {
     neverChecked: 'henüz güncellenmedi',
   },
   hero: {
-    allClear: 'Ada şu anda tamamen ışıkta.',
+    allClear: 'Ada şu anda tamamen aydınlık.',
     oneOut: (district: string) => `${locative(district)} elektrik kesik.`,
     manyOut: '{count} bölgede elektrik kesik.',
     nextPrefix: 'sıradaki: {district} {time}, ',
@@ -98,7 +98,7 @@ export const tr = {
     districtAria: '{district} — {status}',
   },
   filter: {
-    ariaLabel: 'Bölge süzgeci',
+    ariaLabel: 'Bölge filtresi',
     all: 'Tüm ada',
   },
   list: {
@@ -161,12 +161,12 @@ export const tr = {
     monthAria: '{month}: {planned} saat planlı, {fault} saat arıza kesintisi',
   },
   archive: {
-    title: 'Geçmiş kesintiler',
-    lead: 'Bitmiş kesintiler. Bölgeye ve aya göre süzebilirsin.',
+    title: 'Geçmiş elektrik kesintileri',
+    lead: 'Bitmiş kesintiler. Bölgeye ve aya göre filtreleyebilirsin.',
     monthLabel: 'ay',
     allMonths: 'tüm aylar',
     count: '{count} kayıt gösteriliyor',
-    empty: 'Bu süzgeçle kayıt bulunamadı. Ayı ya da bölgeyi değiştir.',
+    empty: 'Bu filtreyle kayıt bulunamadı. Ayı ya da bölgeyi değiştir.',
   },
   footer: {
     disclaimer:
