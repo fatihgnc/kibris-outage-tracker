@@ -52,7 +52,7 @@ export default async function GuidePage({ params }: Props) {
   const [firstSection, ...restSections] = splitAfterFirstSection(guide.html);
 
   return (
-    <article className="mx-auto w-full max-w-[880px]">
+    <article className="w-full">
       <JsonLd
         data={articleJsonLd({
           locale,

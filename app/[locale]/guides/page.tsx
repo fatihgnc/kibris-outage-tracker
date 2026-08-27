@@ -32,7 +32,7 @@ export default async function GuidesPage({ params }: Props) {
   const guides = await getGuideIndex(locale);
 
   return (
-    <div className="mx-auto w-full max-w-[880px]">
+    <div className="w-full">
       <JsonLd
         data={breadcrumbJsonLd([
           { name: dict.nav.home, path: `/${locale}` },

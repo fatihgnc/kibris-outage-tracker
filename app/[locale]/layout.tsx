@@ -118,7 +118,7 @@ export default async function LocaleLayout({
         <footer className="mt-12 border-t border-dark">
           <div className="mx-auto flex w-full max-w-[1060px] flex-col gap-6 px-5 pb-9 pt-4">
             {/* The persistent disclaimer (§1.4): every duration is an estimate. */}
-            <p className="m-0 max-w-[68ch] text-meta text-muted">{dict.footer.disclaimer}</p>
+            <p className="m-0 text-meta text-muted">{dict.footer.disclaimer}</p>
             {/* Three parts: the domain, the legal links, the imprint. The
               * update stamp is not repeated here — the status bar carries it,
               * at the top, where the reader is already looking for it. The

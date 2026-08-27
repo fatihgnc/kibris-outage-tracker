@@ -86,9 +86,6 @@ select {
 
 /* Rendered markdown for guides and the legal pages. Stays inside the same
  * tokens and type scale as the rest of the site; no new colors, no shadows. */
-.prose {
-  max-width: 68ch;
-}
 .prose > * + * {
   margin-top: 16px;
 }

@@ -65,7 +65,7 @@ export default async function DistrictPage({ params }: Props) {
   const totalHours = totals.reduce((sum, t) => sum + t.plannedHours + t.faultHours, 0);
 
   return (
-    <div className="mx-auto w-full max-w-[880px]">
+    <div className="w-full">
       <JsonLd
         data={breadcrumbJsonLd([
           { name: dict.nav.home, path: `/${locale}` },

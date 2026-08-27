@@ -38,7 +38,7 @@ export default async function LegalPage({ slug, rawLocale }: { slug: LegalSlug; 
     : null;
 
   return (
-    <article className="mx-auto w-full max-w-[880px]">
+    <article className="w-full">
       <JsonLd
         data={breadcrumbJsonLd([
           { name: dict.nav.home, path: `/${locale}` },
