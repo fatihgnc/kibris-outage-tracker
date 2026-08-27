@@ -1,5 +1,6 @@
 import type { OutageKind } from '../../lib/types';
 import type { RawAnnouncement } from './index';
+import { envOr } from '../env';
 
 // The parser (§10.4).
 //
@@ -18,7 +19,15 @@ import type { RawAnnouncement } from './index';
 // list in store.ts on top, which keeps an article from being sent twice, the
 // model sees each announcement once.
 
-const MODEL = process.env.LLM_MODEL ?? 'gpt-4o-mini';
+// `||`, not `??`. A workflow that passes an unset repository variable through
+// to the environment sets it to the empty string, which is not nullish — the
+// first production run sent `model: ""` and OpenAI answered "you must provide a
+// model parameter" for every announcement. Both went to the review queue and
+// the job stayed green, because a failed reading is a supported outcome.
+//
+// An env var that is present but empty is the normal case for CI, not an edge
+// one, and the same reasoning applies to every override read this way.
+const MODEL = envOr('LLM_MODEL', 'gpt-4o-mini');
 const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 const TIMEOUT_MS = 30000;
 // A dry run against live sources hit one "fetch failed" in the middle of an

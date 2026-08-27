@@ -1,11 +1,15 @@
 import { setTimeout as delay } from 'node:timers/promises';
+import { envOr } from './env';
 
 // Fetching etiquette (§10.3). This project is public and takes public data, so
 // it behaves accordingly: a descriptive User-Agent with a contact address,
 // robots.txt respected, conditional requests, one request per host at a time
 // with a short delay, and bounded retries.
 
-const CONTACT = process.env.INGEST_CONTACT ?? 'fathgnc.dev@gmail.com';
+// See envOr: a repository secret or variable that is not set still arrives as
+// an empty string through the workflow, and an empty contact in the User-Agent
+// is worse than none — it is what the outlets would use to reach us.
+const CONTACT = envOr('INGEST_CONTACT', 'fathgnc.dev@gmail.com');
 export const USER_AGENT = `KesintiMiVarBot/0.1 (+https://github.com/fatihgnc/kibris-outage-tracker; outage tracker for Northern Cyprus; contact: ${CONTACT})`;
 
 const REQUEST_TIMEOUT_MS = 20000;
