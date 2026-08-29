@@ -111,7 +111,10 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
         <p className="m-0 break-words text-small text-muted">{outage.areas.join(', ')}</p>
       </div>
 
-      <div className="mt-auto flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono text-meta text-muted">
+      {/* Two lines, never one: the date and the source read as separate facts,
+        * and a wrapping row put them side by side or stacked depending on the
+        * column width. The source goes last — it is what the reader leaves on. */}
+      <div className="mt-auto flex flex-col items-start gap-0.5 font-mono text-meta text-muted">
         <span>{fill(dict.card.published, { time: formatDateTimeShort(outage.publishedAt, locale) })}</span>
         <a
           href={source.url}
