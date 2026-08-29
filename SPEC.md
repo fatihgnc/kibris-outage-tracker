@@ -1111,10 +1111,18 @@ survivable the moment the parser started catching faults on purpose (§10.4).
 Two mechanisms, and the difference between them matters.
 
 - **The assumption, in the reading only.** After `NO_END_ASSUMED_OVER_MS` —
-  twelve hours — an unclosed outage is read as past. This is *not* written to
-  `endsAt`: that field means "the announced end", and filling it with a guess
+  twenty-four hours — an unclosed outage is read as past. This is *not* written
+  to `endsAt`: that field means "the announced end", and filling it with a guess
   would make an assumption indistinguishable from something KIB-TEK said. The
   record stays honest; only the reading of it is bounded.
+
+  The window was twelve hours, reasoned from planned work, which runs two to
+  six. Faults do not. Three open faults from 29 August — Lefke, Girne,
+  Güzelyurt, all announced 12:29 with no end — were retired at 00:29 while the
+  power was still out, and with nothing active left the home page said the
+  island was entirely lit. Holding an unclosed fault a day too long shows a card
+  that overstays; dropping a live one makes the site assert something false in
+  its own voice. Prefer the first.
 - **The repair report, which is a fact.** A follow-up article saying the fault is
   fixed — "arıza giderildi", "elektrikler yeniden verildi" — closes the record
   for real, with `endsAt` set to the article's publication time. That is an

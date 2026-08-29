@@ -50,12 +50,20 @@ export function nicosiaWallClock(ms: number): WallClock {
  * That was survivable while open-ended records were 2 of 82. It stopped being
  * survivable the moment the parser started catching faults on purpose.
  *
- * Twelve hours. Planned work runs two to six; a fault still out after half a day
- * is exceptional, and an evening one clears by morning rather than sitting there
- * all of the next day. Both directions of error are real — assume too early and
- * the map says the power is back when it is not; too late and it holds a village
- * dark that is fine — and the second is the one that compounds, because nothing
- * else ever corrects it.
+ * Twenty-four hours, up from twelve. Both directions of error are real — assume
+ * too early and the map says the power is back when it is not; too late and it
+ * holds a village dark that is fine.
+ *
+ * Twelve was reasoned from planned work, which runs two to six hours. Faults do
+ * not: on 29 August three of them, Lefke and Girne and Güzelyurt, went out at
+ * 12:29 with no announced end and were still out when the assumption retired all
+ * three at 00:29 — and the home page, with nothing left active, then said the
+ * island was entirely lit. That is the worse failure of the two. An unclosed
+ * fault held a day too long is a card that overstays; a live one dropped is the
+ * site asserting, in its own voice, something that is not true.
+ *
+ * A day is still a bound, not a belief: nothing here says a fault runs that long,
+ * only that we will not call it over on our own before then.
  *
  * Deliberately not written to `endsAt`. That field means "the announced end",
  * and filling it with a guess would make an assumption indistinguishable from
@@ -63,7 +71,7 @@ export function nicosiaWallClock(ms: number): WallClock {
  * it is bounded. A real end still arrives two ways: the utility announcing one,
  * or a follow-up article reporting the fault fixed (§10.6).
  */
-export const NO_END_ASSUMED_OVER_MS = 12 * 60 * 60 * 1000;
+export const NO_END_ASSUMED_OVER_MS = 24 * 60 * 60 * 1000;
 
 export function deriveStatus(outage: Pick<Outage, 'startsAt' | 'endsAt'>, now: number): OutageStatus {
   const start = Date.parse(outage.startsAt);
