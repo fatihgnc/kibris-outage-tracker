@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ArchivedOutage, DistrictId, MonthlyTotal, Outage, SourceRef } from './types';
 import { getAnonClient } from './supabase';
 import { isDistrictId } from './geography';
@@ -200,14 +201,18 @@ export async function fetchOutagesByAreaKey(key: string, limit = 200): Promise<A
  * Decides which settlement pages exist at all: a page carrying one outage is
  * thin content, and 193 settlements in two locales would be a lot of it.
  *
+ * The client is a parameter so the ingest can ask the same question with its
+ * own service-role connection: a second implementation of this count is how the
+ * two would start disagreeing about which settlements have a page.
+ *
  * Counted in JavaScript over a single column rather than grouped in SQL —
  * Postgres cannot group by an array element without an unnest, which PostgREST
  * does not expose, and the alternative is a database view for an arithmetic
  * this cheap. The callers are the sitemap and the settlement pages, both of
  * which cache.
  */
-export async function fetchAreaKeyCounts(): Promise<Map<string, number>> {
-  const { data, error } = await getAnonClient()
+export async function fetchAreaKeyCounts(client?: SupabaseClient): Promise<Map<string, number>> {
+  const { data, error } = await (client ?? getAnonClient())
     .from('outages')
     .select('area_keys')
     .or(NOT_BAD_DATA);

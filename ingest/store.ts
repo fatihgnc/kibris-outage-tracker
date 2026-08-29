@@ -11,6 +11,13 @@ export type StoreResult = {
   created: number;
   updated: number;
   cancelled: number;
+  /**
+   * The records actually written, merged form and all. Returned rather than
+   * only counted because the pages that changed are the ones worth telling a
+   * search engine about (ingest/indexnow.ts), and their addresses are built
+   * from the record — the merged `startsAt` and `areas`, not the incoming ones.
+   */
+  written: Outage[];
 };
 
 // The stored form carries the retraction flag, which the public Outage type
@@ -43,7 +50,7 @@ async function loadCandidates(client: SupabaseClient, records: Outage[]): Promis
 // (§8.1). Merging sources and preserving the earliest publishedAt happens
 // here, before the upsert — never in SQL.
 export async function storeOutages(client: SupabaseClient, records: Outage[]): Promise<StoreResult> {
-  if (records.length === 0) return { created: 0, updated: 0, cancelled: 0 };
+  if (records.length === 0) return { created: 0, updated: 0, cancelled: 0, written: [] };
 
   // Cancelled rows stay out of matching: a retracted outage that is announced
   // again is a new event, not a row to quietly revive.
@@ -77,7 +84,7 @@ export async function storeOutages(client: SupabaseClient, records: Outage[]): P
     if (storedIds.has(id)) updated++;
     else created++;
   }
-  return { created, updated, cancelled: 0 };
+  return { created, updated, cancelled: 0, written: [...toWrite.values()] };
 }
 
 // A cancellation announcement retracts the matching record rather than adding

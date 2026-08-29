@@ -20,6 +20,7 @@ import {
   type StoreResult,
 } from './store';
 import { logRun } from './log';
+import { pingIndexNow } from './indexnow';
 import { adapters as allAdapters } from './adapters';
 import type { RawAnnouncement, SourceAdapter } from './adapters/types';
 
@@ -158,7 +159,7 @@ export async function ingest(options: IngestOptions = {}) {
   }
 
   const client = readClient ?? createServiceClient();
-  let stored: StoreResult = { created: 0, updated: 0, cancelled: 0 };
+  let stored: StoreResult = { created: 0, updated: 0, cancelled: 0, written: [] };
   let retracted = 0;
   let closed = 0;
   let reviewCount = 0;
@@ -214,6 +215,19 @@ export async function ingest(options: IngestOptions = {}) {
       `${stored.cancelled + retracted} retracted, ${closed} closed by a repair report, ` +
       `${reviewCount} queued for review`,
   );
+
+  // After logRun, and never in front of it: this run's evidence matters, a
+  // search engine ping does not. pingIndexNow catches its own errors, so a
+  // failure here cannot change whether the run is recorded or whether the job
+  // passes — the archive is the product, being crawled promptly is a courtesy.
+  if (refreshed) {
+    const ping = await pingIndexNow(client, stored.written);
+    console.log(
+      ping.skipped
+        ? `indexnow: skipped — ${ping.skipped}`
+        : `indexnow: submitted ${ping.submitted} urls (${ping.status})`,
+    );
+  }
 
   if (failure) throw failure;
   return { startedAt, records: collapsed, retractions, resolutions, review, adaptersOk, adaptersFailed };

@@ -68,6 +68,12 @@ jobs:
           # Without it the run stores nothing and everything goes to review.
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LLM_MODEL: ${{ vars.LLM_MODEL }}
+          # Optional. Together these tell IndexNow which pages a run changed, so
+          # Bing does not wait to rediscover a notice that is only useful today.
+          # With either one unset the ingest simply does not ping (§indexnow.ts),
+          # and the run is unaffected either way.
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
           # Dispatch inputs travel through the environment instead of being
           # interpolated into the shell command, so a crafted input cannot
           # become part of it. On a scheduled run they are simply empty.
