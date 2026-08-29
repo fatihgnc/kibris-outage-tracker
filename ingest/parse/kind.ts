@@ -20,5 +20,22 @@ export function looksLikeOutage(text: string): boolean {
   // queue on the first live run.
   // 'kesintisiz' is the opposite word ("uninterrupted"), so it is excluded.
   const mentionsCut = /kesinti(?!siz)|kesil(ecek|di|iyor|mi[şs]|ir)|kesme/.test(lower);
-  return mentionsPower && mentionsCut;
+  // The end of an outage is reported in words that never mention cutting:
+  // 'arıza giderildi', 'elektrikler yeniden verildi', 'normale döndü'. Requiring
+  // a cut word held every one of them out of the crawl: a repair report worded
+  // that way never reached the model, so the record it should have closed
+  // (§10.6) stayed open for the display's assumption to retire on its own. That
+  // is how three live faults vanished off the home page on 30 August. The URL
+  // filter already lets 'enerji-verildi' slugs through; this is the same gate on
+  // the body.
+  //
+  // Deliberately loose in one direction: 'arızanın giderilmesi için çalışmalar
+  // devam ediyor' matches here and is not a repair at all. That is fine — the
+  // model makes that distinction and this filter must not try to, it only keeps
+  // tenders and tariffs and football from being paid for.
+  const mentionsRestored =
+    /gideril|yeniden\s+veril|enerji\s+veril|elektrik(ler)?\s+veril|normale\s+d[öo]n/.test(
+      lower,
+    );
+  return mentionsPower && (mentionsCut || mentionsRestored);
 }
