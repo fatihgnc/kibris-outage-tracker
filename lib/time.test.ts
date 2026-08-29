@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { deriveStatus, NO_END_ASSUMED_OVER_MS } from './time';
+import { NO_END_ASSUMED_OVER_MS, deriveStatus, formatDuration } from './time';
 
 const at = (iso: string) => Date.parse(iso);
 const outage = (startsAt: string, endsAt: string | null) => ({ startsAt, endsAt });
@@ -46,4 +46,18 @@ test('an outage that has not started is upcoming, announced end or not', () => {
     deriveStatus(outage('2026-08-26T06:00:00.000Z', '2026-08-26T10:00:00.000Z'), now),
     'upcoming',
   );
+});
+
+// "2 sa 0 dk" is how long nobody says something lasted. An outage page prints
+// this under the hours, and a countdown ticks through it every hour.
+test('a duration never ends in a zero unit', () => {
+  const units = { day: 'gün', hour: 'sa', minute: 'dk' };
+  const ms = (h: number, m = 0) => (h * 60 + m) * 60000;
+  assert.equal(formatDuration(ms(2), units), '2 sa');
+  assert.equal(formatDuration(ms(2, 30), units), '2 sa 30 dk');
+  assert.equal(formatDuration(ms(1, 59), units), '1 sa 59 dk');
+  assert.equal(formatDuration(ms(24), units), '1 gün');
+  assert.equal(formatDuration(ms(26), units), '1 gün 2 sa');
+  assert.equal(formatDuration(ms(0, 45), units), '45 dk');
+  assert.equal(formatDuration(ms(0, 0), units), '0 dk');
 });

@@ -114,8 +114,12 @@ export function formatDuration(ms: number, dict: Pick<Dictionary['time'], 'day' 
   const days = Math.floor(totalMinutes / 1440);
   const hours = Math.floor((totalMinutes % 1440) / 60);
   const minutes = totalMinutes % 60;
-  if (days > 0) return `${days} ${dict.day} ${hours} ${dict.hour}`;
-  if (hours > 0) return `${hours} ${dict.hour} ${minutes} ${dict.minute}`;
+  // At most two units, and never a zero tail: "2 sa 0 dk" is how long nobody
+  // says something lasted. The smaller unit is dropped when it is zero, so a
+  // round duration reads "2 sa" and a countdown ticking past the hour still
+  // reads "1 sa 59 dk".
+  if (days > 0) return hours > 0 ? `${days} ${dict.day} ${hours} ${dict.hour}` : `${days} ${dict.day}`;
+  if (hours > 0) return minutes > 0 ? `${hours} ${dict.hour} ${minutes} ${dict.minute}` : `${hours} ${dict.hour}`;
   return `${minutes} ${dict.minute}`;
 }
 

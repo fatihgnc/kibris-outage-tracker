@@ -3,6 +3,7 @@ import type { ArchivedOutage, DistrictId, MonthlyTotal, Outage, SourceRef } from
 import { getAnonClient } from './supabase';
 import { isDistrictId } from './geography';
 import { bucketMonthlyTotals, nicosiaWallClock } from './time';
+import { dedupeSources } from './sources';
 // The ingest's own Turkish-aware comparison key. `areas` holds the spelling the
 // announcement used ('YENIBOGAZICI'), so anything that looks a record up by
 // place has to fold both sides the same way.
@@ -60,7 +61,10 @@ export function mapOutageRow(row: OutageRow): Outage {
     endsAt: row.ends_at,
     district: row.district,
     areas: row.areas,
-    sources: row.sources,
+    // Also on the way out, not only on the way in: the records stored before
+    // the ingest learned to collapse these still carry the duplicate, and a
+    // page that names one outlet twice overstates its corroboration.
+    sources: dedupeSources(row.sources),
     publishedAt: row.published_at,
     ingestedAt: row.ingested_at,
     confidence: row.confidence,

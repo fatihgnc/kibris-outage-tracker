@@ -1,5 +1,6 @@
 import type { Outage, SourceRef } from '../lib/types';
 import { foldKey } from './parse/text';
+import { dedupeSources } from '../lib/sources';
 
 // With five adapters a single outage typically arrives four or five times.
 // Collapsing them is what keeps that from becoming four cards for one event.
@@ -62,12 +63,10 @@ function isOfficial(outage: Outage): boolean {
 }
 
 function mergeSources(a: SourceRef[], b: SourceRef[]): SourceRef[] {
-  const merged = [...a];
-  for (const source of b) {
-    if (!merged.some((existing) => existing.url === source.url && existing.name === source.name)) {
-      merged.push(source);
-    }
-  }
+  // Keyed on the article rather than the address: outlets rewrite an
+  // announcement in place and change its slug with it, and the same piece
+  // arriving under two URLs is one source, not two (lib/sources.ts).
+  const merged = dedupeSources([...a, ...b]);
   // Official first: a reader trusts 'KIB-TEK' more than a newspaper name, and
   // the card footer shows sources[0].
   return merged.sort((x, y) => Number(y.kind === 'official') - Number(x.kind === 'official'));
