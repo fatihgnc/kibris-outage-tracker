@@ -492,16 +492,16 @@ The workhorse. Vertical order inside the card:
    beside it is not, so it reads as a note and not a warning.
 4. **Divider**, 1px `--color-dark`.
 5. **District name** in the display face, and **affected areas** in body text.
-6. **Footer row**, mono and muted: publish time, then **every** source as a
-   link labelled with its organisation name, underlined so the affordance is
-   obvious. The whole list, not `sources[0]`: how many outlets carried an
-   announcement is what tells a reader how well corroborated it is. Official
-   sources sort first, so the most authoritative name leads.
+6. **Footer row**, mono and muted: publish time, and **one** source as a link
+   labelled with the organisation name from `sources[0]`, underlined so its
+   affordance is obvious. One name, not the list: the card is a summary, and
+   the full set of sources is on the outage's own page. `sources[0]` is the
+   most authoritative, because official sources sort first.
 
-   An outlet that ran the outage twice — a preview and a next-day piece are
-   both real articles, and `dedupeSources` keeps both — has its repeats
-   numbered by `labelSources`, since two identical labels read as a bug rather
-   than as two links. The outage page's source list uses the same helper.
+   The outage page lists them all, and there an outlet that ran the outage
+   twice — a preview and a next-day piece are both real articles, and
+   `dedupeSources` keeps both — has its repeats numbered by `labelSources`,
+   since two identical labels read as a bug rather than as two links.
 
 **Density:** the first pass produced cards too tall to scan. Cut vertical
 padding, keep horizontal padding. Target **4–5 records visible** in the first

@@ -6,7 +6,6 @@ import type { Locale } from '@/lib/i18n/config';
 import { formatDateTimeShort, formatDayLabel, formatTimeRange } from '@/lib/time';
 import { DISTRICTS } from '@/lib/geography';
 import { outageSlug } from '@/lib/slug';
-import { labelSources } from '@/lib/sources';
 import { routeHref } from '@/lib/routes';
 import KindBadge from './KindBadge';
 import Countdown from './Countdown';
@@ -35,10 +34,10 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
       : status === 'upcoming'
         ? dict.card.statusUpcoming
         : dict.card.statusPast;
-  // Every article that carried the announcement, not just the first: how many
-  // outlets ran it is what tells a reader how well corroborated it is, and one
-  // name hid the rest. Official sources sort first (ingest/dedupe.ts).
-  const sources = labelSources(outage.sources);
+  // One name only: the card is a summary, and the full list is on the outage's
+  // own page. `sources[0]` is the most authoritative — official sources sort
+  // first (ingest/dedupe.ts).
+  const source = outage.sources[0];
   const units = { day: dict.time.day, hour: dict.time.hour, minute: dict.time.minute };
   const countdown = compact
     ? null
@@ -114,17 +113,14 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
 
       <div className="mt-auto flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono text-meta text-muted">
         <span>{fill(dict.card.published, { time: formatDateTimeShort(outage.publishedAt, locale) })}</span>
-        {sources.map((source) => (
-          <a
-            key={source.url}
-            href={source.url}
-            target="_blank"
-            rel="noreferrer"
-            className="break-words text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
-          >
-            {source.label}
-          </a>
-        ))}
+        <a
+          href={source.url}
+          target="_blank"
+          rel="noreferrer"
+          className="break-words text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
+        >
+          {source.name}
+        </a>
       </div>
     </article>
   );
