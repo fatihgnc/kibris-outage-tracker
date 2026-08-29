@@ -485,14 +485,23 @@ The workhorse. Vertical order inside the card:
 2. **Time block**: the time range in large mono. The most prominent element in
    the card. When the end is unknown, the range shows the start followed by the
    "unknown" string from the active dictionary.
-3. **Context line**, mono and muted: the date plus the estimated countdown.
+3. **Context line**, mono and muted: the date, then the "unverified" string
+   from the dictionary when `confidence` is `low`, then the estimated
+   countdown. The caveat sits here rather than in the footer because it
+   qualifies the hours directly above it; it stays muted while the countdown
+   beside it is not, so it reads as a note and not a warning.
 4. **Divider**, 1px `--color-dark`.
 5. **District name** in the display face, and **affected areas** in body text.
-6. **Footer row**, mono and muted: publish time, and the source as a link
-   labelled with the organisation name from `sources[0]`, underlined so its
-   affordance is obvious. When `confidence` is `low`, append the "unverified"
-   string from the dictionary here — quietly, in muted text, not as a warning
-   banner.
+6. **Footer row**, mono and muted: publish time, then **every** source as a
+   link labelled with its organisation name, underlined so the affordance is
+   obvious. The whole list, not `sources[0]`: how many outlets carried an
+   announcement is what tells a reader how well corroborated it is. Official
+   sources sort first, so the most authoritative name leads.
+
+   An outlet that ran the outage twice — a preview and a next-day piece are
+   both real articles, and `dedupeSources` keeps both — has its repeats
+   numbered by `labelSources`, since two identical labels read as a bug rather
+   than as two links. The outage page's source list uses the same helper.
 
 **Density:** the first pass produced cards too tall to scan. Cut vertical
 padding, keep horizontal padding. Target **4–5 records visible** in the first

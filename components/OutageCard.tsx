@@ -6,6 +6,7 @@ import type { Locale } from '@/lib/i18n/config';
 import { formatDateTimeShort, formatDayLabel, formatTimeRange } from '@/lib/time';
 import { DISTRICTS } from '@/lib/geography';
 import { outageSlug } from '@/lib/slug';
+import { labelSources } from '@/lib/sources';
 import { routeHref } from '@/lib/routes';
 import KindBadge from './KindBadge';
 import Countdown from './Countdown';
@@ -34,7 +35,10 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
       : status === 'upcoming'
         ? dict.card.statusUpcoming
         : dict.card.statusPast;
-  const source = outage.sources[0];
+  // Every article that carried the announcement, not just the first: how many
+  // outlets ran it is what tells a reader how well corroborated it is, and one
+  // name hid the rest. Official sources sort first (ingest/dedupe.ts).
+  const sources = labelSources(outage.sources);
   const units = { day: dict.time.day, hour: dict.time.hour, minute: dict.time.minute };
   const countdown = compact
     ? null
@@ -83,6 +87,11 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
         )}
         <p className="m-0 font-mono text-small text-muted">
           {formatDayLabel(outage.startsAt, now, locale, dict)}
+          {/* The caveat belongs beside the time it qualifies, not down in the
+            * footer among the provenance — the reader has already moved on by
+            * then. It stays muted while the countdown next to it is not: this
+            * is a note on the hours above, not a warning (§6.1). */}
+          {outage.confidence === 'low' && <span> · {dict.card.unverified}</span>}
           {countdown && (
             <span className="text-text">
               {' · '}
@@ -105,15 +114,17 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
 
       <div className="mt-auto flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono text-meta text-muted">
         <span>{fill(dict.card.published, { time: formatDateTimeShort(outage.publishedAt, locale) })}</span>
-        <a
-          href={source.url}
-          target="_blank"
-          rel="noreferrer"
-          className="break-words text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
-        >
-          {source.name}
-        </a>
-        {outage.confidence === 'low' && <span>{dict.card.unverified}</span>}
+        {sources.map((source) => (
+          <a
+            key={source.url}
+            href={source.url}
+            target="_blank"
+            rel="noreferrer"
+            className="break-words text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
+          >
+            {source.label}
+          </a>
+        ))}
       </div>
     </article>
   );

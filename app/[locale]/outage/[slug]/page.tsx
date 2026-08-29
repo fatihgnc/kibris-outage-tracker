@@ -9,6 +9,7 @@ import { deriveStatus, formatDateLong, formatDayLabel, formatDuration, formatTim
 import { DISTRICTS } from '@/lib/geography';
 import { findEligiblePlace } from '@/lib/places';
 import { outageIdPrefix, outageSlug, placeSlug } from '@/lib/slug';
+import { labelSources } from '@/lib/sources';
 import { routeHref } from '@/lib/routes';
 import { pageMetadata } from '@/lib/seo';
 import { breadcrumbJsonLd, specialAnnouncementJsonLd } from '@/lib/jsonld';
@@ -225,7 +226,7 @@ export default async function OutagePage({ params }: Props) {
         {/* Every claim on this page traces to one of these. The site compiles
           * announcements, it does not issue them (§12). */}
         <ul className="m-0 mt-2 flex list-none flex-col gap-1 p-0 font-mono text-small">
-          {outage.sources.map((source) => (
+          {labelSources(outage.sources).map((source) => (
             <li key={source.url}>
               <a
                 href={source.url}
@@ -233,7 +234,7 @@ export default async function OutagePage({ params }: Props) {
                 rel="noreferrer"
                 className="break-words text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
               >
-                {source.name}
+                {source.label}
               </a>
               <span className="text-muted">
                 {' · '}

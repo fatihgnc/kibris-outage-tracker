@@ -68,7 +68,7 @@ function mergeSources(a: SourceRef[], b: SourceRef[]): SourceRef[] {
   // arriving under two URLs is one source, not two (lib/sources.ts).
   const merged = dedupeSources([...a, ...b]);
   // Official first: a reader trusts 'KIB-TEK' more than a newspaper name, and
-  // the card footer shows sources[0].
+  // the card footer lists them in this order.
   return merged.sort((x, y) => Number(y.kind === 'official') - Number(x.kind === 'official'));
 }
 
