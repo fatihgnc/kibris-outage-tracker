@@ -43,18 +43,18 @@ npm run ingest
 ```
 
 Cron-invoked standalone script, never a Next.js route. Add `--dry-run` to parse
-without writing, `--no-fallback` to skip the LLM stage, or an adapter id to run
-just one source. `npm run backfill` walks the outlets' archives for history.
+without writing, or an adapter id to run just one source. `npm run backfill`
+walks the outlets' archives for history.
 
-Parsing runs rules first (SPEC §10.4) and only falls back to a language model
-for announcements the rules cannot fully parse. That second stage works with
-either **OpenAI** (`OPENAI_API_KEY`) or **Anthropic** (`ANTHROPIC_API_KEY`) —
-set whichever you have, and `LLM_MODEL` if your account lacks the default.
-With neither set, the stage is skipped and unparsed announcements go to
-`review_queue` with their raw text; nothing is ever silently dropped. Whatever
-the model returns is validated against a schema, place names are re-matched
-against `data/places.json`, and the resulting records are marked
-`confidence: low` and show as "unverified" on the card.
+A language model reads every announcement that clears the crawl filter (SPEC
+§10.4); there is no rules-based first stage. It works with either **OpenAI**
+(`OPENAI_API_KEY`) or **Anthropic** (`ANTHROPIC_API_KEY`) — set whichever you
+have, and `LLM_MODEL` if your account lacks the default. With neither set,
+announcements go to `review_queue` with their raw text; nothing is ever
+silently dropped. Whatever the model returns is validated against a schema and
+place names are re-matched against `data/places.json`. A record is marked
+`confidence: low` only when the announcement stated no start time — an ongoing
+fault — and the publication time stands in for one; the card says so.
 
 Sources: `yeniduzen`, `kibrispostasi`, `detaykibris`, `gundemkibris`, and
 `kibrisgazetesi`. There is no adapter for KIB-TEK itself: its planned-outages
@@ -70,7 +70,7 @@ text is never stored or republished; the card links back to the source.
 npm test
 ```
 
-Parser, dedupe, and fallback-validation unit tests, plus a store round-trip
+Parser, dedupe, and schema-validation unit tests, plus a store round-trip
 against the local Supabase that skips when none is reachable.
 
 ## Keys
@@ -91,8 +91,9 @@ a `NEXT_PUBLIC_*` variable, a component, or a route handler.
   (Europe/Nicosia, duration/status helpers), `geography.ts` (outline +
   settlements), `i18n/` (dictionaries; the English one is type-checked against
   the Turkish one).
-- `ingest/` — `run.ts` (entry point), `adapters/`, `parse/` (rules first, LLM
-  fallback second), `dedupe.ts`, `store.ts`, `log.ts`, `backfill.ts`.
+- `ingest/` — `run.ts` (entry point), `adapters/`, `parse/` (`llm.ts` reads the
+  announcement, everything after it is ours), `dedupe.ts`, `store.ts`, `log.ts`,
+  `backfill.ts`.
 - `supabase/migrations/` — the schema. Applied with the Supabase CLI; never
   create or alter tables in the dashboard.
 - `data/places.json` — every settlement with its district and aliases. Parsing

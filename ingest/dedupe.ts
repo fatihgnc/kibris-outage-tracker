@@ -121,7 +121,7 @@ export function mergeOutages(existing: Outage, incoming: Outage): Outage {
       Date.parse(incoming.ingestedAt) > Date.parse(existing.ingestedAt)
         ? incoming.ingestedAt
         : existing.ingestedAt,
-    // A record confirmed by a rules-parsed source is no longer low-confidence.
+    // A source that announced a start time settles the one we had to infer.
     confidence: existing.confidence === 'high' || incoming.confidence === 'high' ? 'high' : 'low',
   };
 }

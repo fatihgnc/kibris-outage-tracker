@@ -52,41 +52,51 @@ never stops the whole run.
 
 ## From prose to a record
 
-Announcement language is quite formulaic. A typical sentence gives a reason, a
-time range, and a list of settlements. So we apply rules first.
+A language model does the reading. We ask it for what the page says rather than
+for an interpretation: the times, the date, the settlement names, and the kind
+of outage — planned, rotating or fault ([the difference between
+them](/en/guides/outage-types)). Its response is validated against our schema;
+we never trust the shape it returns as given.
 
-**Time range.** We recognise the common forms, such as
-`09.00 ile 15.00 saatleri arasında` and `09:00 – 15:00`, and normalise the dot
-separator to a colon. Where no end time is announced, we mark it unknown — we do
-not invent one.
+This replaced a stack of Turkish regexes — time formats, date ranges, weekday
+words like `perşembe günü`. Announcement language looks formulaic until you sit
+down to write the rules, and every new phrasing added another line to the list.
 
-**Date.** Relative words like `bugün` (today) and `yarın` (tomorrow) are
-resolved against the **announcement's publication date**, not against the time
-our job runs. A job running at 00:05 must not read yesterday's "tomorrow" as
-today.
+What happens after the reading is still ours:
 
 **Place names.** We keep a list of every settlement with its district and its
-alternative spellings. Turkish case rules matter here: `İ` and `I` do not map
-the way they do in English, and a careless conversion corrupts `İSKELE`. We also
-allow near-miss matching for typos, but only above a high similarity threshold,
-and every approximate match is logged for review.
+alternative spellings, and the names the model returns are re-matched against
+it; a name with no entry never reaches a record. Turkish case rules matter
+here: `İ` and `I` do not map the way they do in English, and a careless
+conversion corrupts `İSKELE`. We also allow near-miss matching for typos, but
+only above a high similarity threshold, and every approximate match is logged
+for review.
 
-**Kind.** We classify planned, rotating or fault from the wording. The
-difference between them is covered in
-[a separate guide](/en/guides/outage-types).
+**Working out the day.** When an announcement says `perşembe günü`, we take the
+weekday from the model but count the date ourselves — against the
+**announcement's publication date**, not against the time our job runs. A job
+running at 00:05 must not read yesterday's "tomorrow" as today. Asked to do
+this arithmetic, the model gave the wrong day five times out of five; here it
+is a subtraction, and a subtraction cannot be wrong.
+
+**End time.** Where no end time is announced, we mark it unknown — we do not
+invent one. A window crossing midnight, 22:00 to 02:00, ends the next day.
 
 **District.** Derived from the settlements matched. If an announcement spans
 districts, we split it into one record per district, so that someone filtering
 by district still sees their own.
 
-If the rules cannot fully parse an announcement, a second stage sends the text
-to a language model and asks for structured data only. We validate the response
-against a schema — we never trust its shape as given — and records produced this
-way are marked **"unverified"**. If you see that word on a card, it came through
-this second stage.
+**When there is no start time.** An article about a fault already under way
+usually does not say when the power went off. For those records we take the
+article's publication time as the start and mark the card **"start time
+unconfirmed"**. An outage carrying that note most likely began before the time
+shown: a fault reaches the news after people have sat in the dark for a while.
+We would rather be late than early, so that the map never claims an outage
+nobody had.
 
-If both stages fail, the announcement is not quietly dropped; it goes to a
-review list with its original text.
+If the model cannot parse an announcement, or not one familiar place name comes
+out of it, the announcement is not quietly dropped; it goes to a review list
+with its original text.
 
 ## Duplicates
 

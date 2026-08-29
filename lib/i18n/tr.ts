@@ -125,7 +125,7 @@ export const tr = {
     statusPast: 'bitti',
     endUnknown: 'belirsiz',
     published: '{time} yayınlandı',
-    unverified: 'doğrulanmadı',
+    unverified: 'başlangıç saati doğrulanmadı',
     cancelled: 'iptal edildi',
   },
   countdown: {
@@ -192,7 +192,7 @@ export const tr = {
     cancelled:
       'Bu çalışma duyuruldu, sonra iptal edildi. Aşağıdaki saatlerde bir kesinti yaşanmadı.',
     unverified:
-      'Bu kayıt yedek ayrıştırıcıyla okundu ve ikinci bir kaynakla doğrulanmadı. Saatleri kaynak duyurudan teyit edin.',
+      'Duyuruda kesintinin kaçta başladığı yazmıyordu; yukarıdaki saat, duyurunun yayına girdiği saattir. Kesinti bir süre önce başlamış olabilir.',
     duration: 'süre {duration}',
   },
   place: {

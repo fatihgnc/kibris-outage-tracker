@@ -52,40 +52,50 @@ kaynağın arızası tüm derlemeyi durdurmaz.
 
 ## Metinden kayda
 
-Duyuru dili oldukça kalıplaşmıştır. Tipik bir cümle bir sebep, bir saat aralığı
-ve bir yerleşim listesi içerir. Bu yüzden önce kural tabanlı bir ayrıştırma
-uyguluyoruz:
+Duyuruyu okuma işini bir dil modeline yaptırıyoruz. Modelden yorum değil,
+sayfada ne yazdığı isteniyor: saatler, tarih, yerleşim adları ve kesintinin
+türü — planlı mı, dönüşümlü mü, arıza mı ([aradaki
+fark](/tr/guides/outage-types)). Gelen yanıtı şemamıza göre denetliyoruz;
+döndürdüğü biçime olduğu gibi hiç güvenmiyoruz.
 
-**Saat aralığı.** `09.00 ile 15.00 saatleri arasında` ve `09:00 – 15:00` gibi
-yaygın biçimleri tanıyoruz. Nokta ayracını iki noktaya çeviriyoruz. Bitiş saati
-yoksa "belirsiz" olarak işaretliyoruz — uydurmuyoruz.
+Eskiden burada bir yığın Türkçe düzenli ifade vardı: saat biçimleri, tarih
+aralıkları, "perşembe günü" gibi gün adları. Duyuru dili ilk bakışta kalıplı
+görünür, ama her yeni yazım biçimi listeye bir madde daha ekletiyordu.
 
-**Tarih.** `bugün` ve `yarın` gibi göreli ifadeleri, duyurunun **yayın
-tarihine** göre çözüyoruz; işlemin çalıştığı saate göre değil. Gece 00.05'te
-çalışan bir iş, dünün "yarın"ını bugün diye okumamalıdır.
+Modelin okuduğundan sonrası yine bize ait:
 
 **Yer adları.** Elimizde her yerleşimin ilçesini ve alternatif yazımlarını
-tutan bir liste var. Türkçe büyük-küçük harf kuralları burada önemlidir:
-`İ` ve `I` İngilizcedeki gibi eşlenmez ve dikkatsiz bir dönüşüm `İSKELE`'yi
-bozar. Yazım hatalarını yakalamak için benzerlik eşiği yüksek tutulmuş bir
-eşleştirme de yapıyoruz, ama her yaklaşık eşleşme kontrol için kaydediliyor.
+tutan bir liste var; modelin verdiği adları bu listeye karşı yeniden
+eşleştiriyoruz, listede karşılığı çıkmayan bir ad kayda hiç girmiyor. Türkçe
+büyük-küçük harf kuralları burada önemlidir: `İ` ve `I` İngilizcedeki gibi
+eşlenmez ve dikkatsiz bir dönüşüm `İSKELE`'yi bozar. Yazım hatalarını yakalamak
+için benzerlik eşiği yüksek tutulmuş bir eşleştirme de yapıyoruz, ama her
+yaklaşık eşleşme kontrol için kaydediliyor.
 
-**Tür.** Metindeki ifadelerden planlı, dönüşümlü ya da arıza ayrımını
-çıkarıyoruz. Aradaki fark [ayrı bir rehberde](/tr/guides/outage-types)
-anlatılıyor.
+**Gün hesabı.** Duyuru "perşembe günü" diyorsa günün adını modelden alıyoruz
+ama tarihi kendimiz sayıyoruz — duyurunun **yayın tarihine** göre, işlemin
+çalıştığı saate göre değil. Gece 00.05'te çalışan bir iş, dünün "yarın"ını
+bugün diye okumamalıdır. Bu hesabı modele bıraktığımızda beş denemenin beşinde
+de yanlış günü verdi; bizde ise düpedüz bir çıkarma işlemi, orada yanılma
+imkânı yok.
+
+**Bitiş saati.** Duyuruda bitiş yoksa "belirsiz" yazıyoruz, uydurmuyoruz. Gece
+yarısını aşan bir aralık — 22.00 ile 02.00 arası — ertesi gün bitiyor sayılıyor.
 
 **İlçe.** Eşleşen yerleşimlerden türetiliyor. Bir duyuru birden fazla ilçeyi
 kapsıyorsa, ilçe başına ayrı kayıt oluşturuyoruz; böylece ilçeye göre süzen biri
 kendi bölgesini görebiliyor.
 
-Kurallar bir duyuruyu tam çözemezse, metni bir dil modeline gönderip yalnızca
-yapılandırılmış veri isteyen ikinci bir aşama devreye giriyor. Dönen yanıtı
-şemaya göre doğruluyoruz — biçimine asla olduğu gibi güvenmiyoruz — ve bu yolla
-oluşan kayıtları **"doğrulanmadı"** olarak işaretliyoruz. Kartın altında bu ibare
-varsa, kayıt bu ikinci aşamadan geçmiş demektir.
+**Başlangıç saati yoksa.** Süregelen bir arızayı duyuran haberde kesintinin
+kaçta başladığı çoğu zaman yazmaz. Böyle bir kayıtta duyurunun yayın saatini
+başlangıç sayıyoruz ve kartın altına **"başlangıç saati doğrulanmadı"** notunu
+koyuyoruz. Bu notu gördüğünüz kesinti büyük ihtimalle yazan saatten önce
+başlamıştır; arıza, insanlar bir süre elektriksiz kaldıktan sonra habere düşer.
+Erken değil geç tarafta yanılmayı yeğliyoruz, ki harita kimsenin yaşamadığı bir
+kesintiyi göstermesin.
 
-Her iki aşama da başarısız olursa duyuru sessizce atılmaz; ham metniyle birlikte
-bir inceleme listesine düşer.
+Model duyuruyu çözemezse ya da tanıdık tek bir yer adı bile çıkmazsa, duyuru
+sessizce atılmıyor; ham metniyle birlikte bir inceleme listesine düşüyor.
 
 ## Mükerrer kayıtlar
 

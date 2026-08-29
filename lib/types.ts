@@ -27,7 +27,7 @@ export type Outage = {
   sources: SourceRef[]; // one record may be confirmed by several sources
   publishedAt: string; // ISO 8601, when the announcement went out
   ingestedAt: string; // ISO 8601, when this record entered the system
-  confidence: 'high' | 'low'; // 'low' = parsed by fallback
+  confidence: 'high' | 'low'; // 'low' = start inferred from publish time
   // ISO 8601, last write to the stored row. Set by a database trigger, never
   // by the ingest — so a record that has only ever existed in memory (mocks,
   // a batch mid-parse) does not have one. Callers that need a timestamp for a

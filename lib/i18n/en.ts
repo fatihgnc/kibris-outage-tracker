@@ -100,7 +100,7 @@ export const en: Dictionary = {
     endUnknown: 'unknown',
     published: 'published {time}',
     cancelled: 'cancelled',
-    unverified: 'unverified',
+    unverified: 'start time unconfirmed',
   },
   countdown: {
     untilEnd: 'estimated back in {duration}',
@@ -161,7 +161,7 @@ export const en: Dictionary = {
     guides: 'Might help',
     cancelled: 'This work was announced and then called off. No outage took place at the times below.',
     unverified:
-      'This record was read by the fallback parser and has not been confirmed by a second source. Check the times against the source announcement.',
+      'The announcement did not say when the outage began, so the time above is when it was published. The outage may have started earlier.',
     duration: 'lasted {duration}',
   },
   place: {

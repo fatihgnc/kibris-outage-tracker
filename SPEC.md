@@ -334,7 +334,7 @@ export type Outage = {
   sources: SourceRef[]; // one record may be confirmed by several sources
   publishedAt: string; // ISO 8601, when the announcement went out
   ingestedAt: string; // ISO 8601, when this record entered the system
-  confidence: 'high' | 'low'; // 'low' = parsed by fallback, see §10.4
+  confidence: 'high' | 'low'; // 'low' = start inferred from publish time, see §10.4
 };
 
 export type Settlement = {
@@ -815,10 +815,11 @@ ingest/
     kibrisgazetesi.ts
     types.ts                  # SourceAdapter interface
   parse/
-    datetime.ts               # date and time-range extraction
+    index.ts                  # orchestration; date arithmetic is ours, see §10.4
+    llm.ts                    # the model call and its schema, see §10.4
     places.ts                 # place-name matching to settlements
-    kind.ts                   # planned / fault / rotating classification
-    fallback.ts               # LLM fallback, see §10.4
+    kind.ts                   # looksLikeOutage crawl filter
+    text.ts                   # Turkish-aware case folding and matching
   dedupe.ts
   store.ts                    # upserts into Supabase
   log.ts                      # writes ingest_runs rows
@@ -1425,7 +1426,7 @@ interleaving them produces three half-finished thirds.
 15. The remaining adapters, one at a time. **After each one, re-run and confirm
     the count of records did not grow** — if it did, dedupe is failing and
     adding another adapter will only compound it.
-16. The LLM fallback and the review queue.
+16. The LLM reading stage and the review queue.
 17. Point `lib/data.ts` at Supabase, flip `USE_MOCKS=false`, and confirm the
     real records render correctly in both locales.
 18. Staleness handling in the status bar (§10.7), then `ingest_runs` logging.
