@@ -92,8 +92,18 @@ export const tr = {
     allClear: 'Ada şu anda tamamen aydınlık.',
     oneOut: (district: string) => `${locative(district)} elektrik kesik.`,
     manyOut: '{count} bölgede elektrik kesik.',
+    // `dict.kind` is the uppercase badge on the card and does not sit in prose,
+    // so the hero carries its own sentence-case wording.
+    kindPlanned: 'planlı çalışma',
+    kindFault: 'arıza',
+    kindRotating: 'dönüşümlü kesinti',
+    activeItem: (district: string, kind: string) => `${locative(district)} ${kind}`,
     nextPrefix: 'sıradaki: {district} {time}, ',
     noneUpcoming: 'duyurulmuş yeni bir çalışma yok',
+    // Only when nothing is running and nothing is announced. Said while an
+    // outage is in progress it would contradict the headline directly above
+    // it, so the branch that prints it checks both.
+    noneAtAll: 'Şu anda duyurulmuş planlı ya da plansız bir elektrik kesintisi bulunmuyor.',
   },
   map: {
     ariaLabel: 'Kıbrıs haritası, kuzeydeki yerleşim yerlerinin elektrik durumu',

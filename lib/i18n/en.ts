@@ -66,8 +66,13 @@ export const en: Dictionary = {
     allClear: 'The whole island has power right now.',
     oneOut: (district: string) => `The power is out in ${district}.`,
     manyOut: 'The power is out in {count} districts.',
+    kindPlanned: 'planned work',
+    kindFault: 'a fault',
+    kindRotating: 'a rotating outage',
+    activeItem: (district: string, kind: string) => `${kind} in ${district}`,
     nextPrefix: 'next: {district} at {time}, ',
     noneUpcoming: 'no new work has been announced',
+    noneAtAll: 'No planned or unplanned outage has been announced right now.',
   },
   map: {
     ariaLabel: 'Map of Cyprus showing the power status of northern settlements',

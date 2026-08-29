@@ -67,6 +67,21 @@ export default async function HomePage({ params, searchParams }: Props) {
         ? dict.hero.oneOut(DISTRICTS[[...activeDistricts][0]].name)
         : fill(dict.hero.manyOut, { count: numberFormat.format(activeDistricts.size) });
   const next = upcoming[0];
+  // The headline says how many districts are dark; this names them and says
+  // what kind of outage each one is, which is the part a reader acts on — a
+  // fault might end any minute, announced work will not.
+  //
+  // Every active record is listed rather than a capped few: across the stored
+  // archive four at once is the worst it has ever been, and a bad day honestly
+  // costs a longer line.
+  const kindWord = {
+    planned: dict.hero.kindPlanned,
+    fault: dict.hero.kindFault,
+    rotating: dict.hero.kindRotating,
+  };
+  const activeSummary = active
+    .map((outage) => dict.hero.activeItem(DISTRICTS[outage.district].name, kindWord[outage.kind]))
+    .join(' · ');
 
   const geometry = getMapGeometry();
   // The map is handed finished sentences rather than records: the locale, the
@@ -118,21 +133,32 @@ export default async function HomePage({ params, searchParams }: Props) {
           {heroTitle}
         </h1>
         <p className="mb-0 mt-1 max-w-[52ch] text-pretty font-mono text-small text-muted">
-          {next ? (
-            <>
-              {fill(dict.hero.nextPrefix, {
-                district: DISTRICTS[next.district].name,
-                time: formatClock(next.startsAt, locale),
-              })}
-              <Countdown
-                targetIso={next.startsAt}
-                pattern={dict.countdown.plain}
-                units={{ day: dict.time.day, hour: dict.time.hour, minute: dict.time.minute }}
-                initialNow={now}
-              />
-            </>
+          {/* 'Nothing announced' is only true when nothing is running either.
+            * Printed on the strength of an empty upcoming list alone it would
+            * sit directly under a headline saying the power is out. */}
+          {active.length === 0 && !next ? (
+            dict.hero.noneAtAll
           ) : (
-            dict.hero.noneUpcoming
+            <>
+              {activeSummary}
+              {activeSummary && ' · '}
+              {next ? (
+                <>
+                  {fill(dict.hero.nextPrefix, {
+                    district: DISTRICTS[next.district].name,
+                    time: formatClock(next.startsAt, locale),
+                  })}
+                  <Countdown
+                    targetIso={next.startsAt}
+                    pattern={dict.countdown.plain}
+                    units={{ day: dict.time.day, hour: dict.time.hour, minute: dict.time.minute }}
+                    initialNow={now}
+                  />
+                </>
+              ) : (
+                dict.hero.noneUpcoming
+              )}
+            </>
           )}
         </p>
       </section>
