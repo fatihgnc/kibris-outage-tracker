@@ -48,7 +48,6 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
       : status === 'upcoming'
         ? { target: outage.startsAt, pattern: dict.countdown.untilStart }
         : null;
-  const showEndUnknown = !compact && status === 'active' && !outage.endsAt;
   // The card's own page. The time range carries the link because it is what
   // identifies the outage — the district name below it names a place that has
   // its own, different page. The card already contains a link to the source, so
@@ -86,18 +85,12 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
         )}
         <p className="m-0 font-mono text-small text-muted">
           {formatDayLabel(outage.startsAt, now, locale, dict)}
-          {/* The caveat belongs beside the time it qualifies, not down in the
-            * footer among the provenance — the reader has already moved on by
-            * then. It stays muted while the countdown next to it is not: this
-            * is a note on the hours above, not a warning (§6.1). */}
-          {outage.confidence === 'low' && <span> · {dict.card.unverified}</span>}
           {countdown && (
             <span className="text-text">
               {' · '}
               <Countdown targetIso={countdown.target} pattern={countdown.pattern} units={units} initialNow={now} />
             </span>
           )}
-          {showEndUnknown && <span className="text-text"> · {dict.countdown.endUnknown}</span>}
         </p>
       </div>
 

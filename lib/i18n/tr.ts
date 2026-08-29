@@ -134,14 +134,13 @@ export const tr = {
     statusPast: 'bitti',
     endUnknown: 'belirsiz',
     published: '{time} yayınlandı',
-    unverified: 'başlangıç saati doğrulanmadı',
     cancelled: 'iptal edildi',
   },
   countdown: {
     untilEnd: 'tahmini {duration} sonra gelecek',
     untilStart: 'tahmini {duration} sonra kesilecek',
     plain: 'tahmini {duration} sonra',
-    endUnknown: 'dönüş saati henüz belirsiz',
+    endUnknown: 'bitiş saati henüz belirsiz',
   },
   time: {
     day: 'gün',

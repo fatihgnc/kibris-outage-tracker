@@ -104,7 +104,6 @@ export const en: Dictionary = {
     endUnknown: 'unknown',
     published: 'published {time}',
     cancelled: 'cancelled',
-    unverified: 'start time unconfirmed',
   },
   countdown: {
     untilEnd: 'estimated back in {duration}',
