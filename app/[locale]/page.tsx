@@ -141,8 +141,12 @@ export default async function HomePage({ params, searchParams }: Props) {
           ) : (
             <>
               {activeSummary}
-              {activeSummary && ' · '}
-              {next ? (
+              {activeSummary && next && ' · '}
+              {/* No "nothing else announced" tail. Once the line has named what
+                * is out, the absence of a follow-up is not news, and reaching
+                * here with nothing active is impossible — that is the branch
+                * above. */}
+              {next && (
                 <>
                   {fill(dict.hero.nextPrefix, {
                     district: DISTRICTS[next.district].name,
@@ -155,8 +159,6 @@ export default async function HomePage({ params, searchParams }: Props) {
                     initialNow={now}
                   />
                 </>
-              ) : (
-                dict.hero.noneUpcoming
               )}
             </>
           )}

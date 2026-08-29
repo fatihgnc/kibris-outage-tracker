@@ -13,7 +13,7 @@ import { formatYear } from '@/lib/time';
 import StatusBar from '@/components/StatusBar';
 import NavLinks from '@/components/NavLinks';
 import ConsentBanner from '@/components/ConsentBanner';
-import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
+import { adsConfigured, CONSENT_COOKIE, readConsent } from '@/lib/consent';
 import { routeHref } from '@/lib/routes';
 
 // Latin Extended so Turkish characters (ı, İ, ş, ğ, ü, ö, ç) render correctly.
@@ -152,8 +152,13 @@ export default async function LocaleLayout({
           </div>
         </footer>
 
-        {/* Asked once; a refusal is never re-prompted (§11.6). */}
-        {consent === 'unanswered' && <ConsentBanner locale={locale} strings={dict.consent} />}
+        {/* Asked once, and only when there is something to ask about: with no
+          * ad network configured nothing sets an advertising cookie, so the
+          * banner would be consent theatre. A refusal is never re-prompted
+          * (§11.6). */}
+        {adsConfigured() && consent === 'unanswered' && (
+          <ConsentBanner locale={locale} strings={dict.consent} />
+        )}
 
         {/* Cookieless page counts: no identifier is stored on the device, so it
           * sits outside the consent question above (§11.6), which guards the

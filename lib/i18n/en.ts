@@ -71,7 +71,6 @@ export const en: Dictionary = {
     kindRotating: 'a rotating outage',
     activeItem: (district: string, kind: string) => `${kind} in ${district}`,
     nextPrefix: 'next: {district} at {time}, ',
-    noneUpcoming: 'no new work has been announced',
     noneAtAll: 'No planned or unplanned outage has been announced right now.',
   },
   map: {

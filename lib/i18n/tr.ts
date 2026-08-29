@@ -99,7 +99,6 @@ export const tr = {
     kindRotating: 'dönüşümlü kesinti',
     activeItem: (district: string, kind: string) => `${locative(district)} ${kind}`,
     nextPrefix: 'sıradaki: {district} {time}, ',
-    noneUpcoming: 'duyurulmuş yeni bir çalışma yok',
     // Only when nothing is running and nothing is announced. Said while an
     // outage is in progress it would contradict the headline directly above
     // it, so the branch that prints it checks both.

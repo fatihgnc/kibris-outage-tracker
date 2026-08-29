@@ -15,3 +15,19 @@ export function isConsentChoice(value: string | undefined): value is ConsentChoi
 export function readConsent(value: string | undefined): ConsentState {
   return isConsentChoice(value) ? value : 'unanswered';
 }
+
+/**
+ * Whether advertising is actually configured.
+ *
+ * Without a network client id `AdSlot` renders nothing at all, so no
+ * advertising cookie is ever set — and a consent dialog for cookies that do
+ * not exist is a question with no honest answer. It also trains a reader to
+ * dismiss the banner, so it is worth less on the day it does matter.
+ *
+ * Gating on the same value `AdSlot` checks means the banner comes back on its
+ * own the moment ads are switched on, rather than being a step someone has to
+ * remember (§11.6).
+ */
+export function adsConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_AD_CLIENT_ID);
+}
