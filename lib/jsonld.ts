@@ -1,5 +1,6 @@
 import type { Locale } from './i18n/config';
 import type { Dictionary } from './i18n/dictionaries';
+import type { Outage } from './types';
 import { resolveSiteUrl } from './site';
 
 // Structured data has to be absolute — a search engine reads these documents
@@ -92,5 +93,99 @@ export function articleJsonLd({ locale, dict, path, title, description, updated 
     ...(updated && { datePublished: updated, dateModified: updated }),
     author: publisher,
     publisher,
+  };
+}
+
+type AnnouncementArgs = {
+  locale: Locale;
+  dict: Dictionary;
+  outage: Outage;
+  /** The district's display name — the announcement's area, in words. */
+  districtName: string;
+  /** This outage's page, locale segment included. */
+  path: string;
+  name: string;
+  text: string;
+};
+
+/**
+ * One outage, as the schema type Google defines for exactly this: a public
+ * announcement about a utility interruption.
+ *
+ * `expires` is what tells a search engine to stop surfacing the notice, so it
+ * matters that it is honest. A fault with no announced end has no expiry we
+ * know — the field is omitted rather than filled with the display bound from
+ * `NO_END_ASSUMED_OVER_MS`, which is an assumption this site makes for layout
+ * and not a time anybody published.
+ *
+ * `category` is deliberately absent. The vocabulary wants a URL naming the kind
+ * of announcement, and a wrong one is worse than none: it would tell a search
+ * engine this notice is about something it is not.
+ */
+export function specialAnnouncementJsonLd({
+  locale,
+  dict,
+  outage,
+  districtName,
+  path,
+  name,
+  text,
+}: AnnouncementArgs) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SpecialAnnouncement',
+    name,
+    text,
+    inLanguage: locale,
+    url: absoluteUrl(path),
+    mainEntityOfPage: absoluteUrl(path),
+    datePosted: outage.publishedAt,
+    ...(outage.endsAt && { expires: outage.endsAt }),
+    spatialCoverage: {
+      '@type': 'AdministrativeArea',
+      name: districtName,
+    },
+    publisher: {
+      '@type': 'Organization',
+      '@id': absoluteUrl(PUBLISHER),
+      name: dict.brand,
+      url: absoluteUrl('/'),
+    },
+  };
+}
+
+/**
+ * The questions a page actually prints.
+ *
+ * Callers pass the same array they render. Google drops an FAQPage whose
+ * answers are not visible on the page, and — worse for a site whose whole
+ * claim is that its data is checked — structured data that says something the
+ * page does not is the kind of mismatch a manual action is for.
+ */
+export function faqJsonLd(entries: readonly { q: string; a: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: entries.map((entry) => ({
+      '@type': 'Question',
+      name: entry.q,
+      acceptedAnswer: { '@type': 'Answer', text: entry.a },
+    })),
+  };
+}
+
+/** An ordered list of pages — the archive, and the outage lists that link into it. */
+export function itemListJsonLd(name: string, items: readonly { name: string; path: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      url: absoluteUrl(item.path),
+    })),
   };
 }

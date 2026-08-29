@@ -1,10 +1,17 @@
 import type { ArchivedOutage, DistrictId, MonthlyTotal, Outage } from './types';
 import { getMockLastCheckedAt, getMockMonthlyTotals, getMockOutages } from './mock';
 import {
+  areaKeys,
+  fetchAreaKeyCounts,
   fetchArchivedOutages,
+  fetchDistrictOutages,
   fetchLastSuccessfulRunAt,
   fetchLiveOutages,
   fetchMonthlyTotals,
+  fetchOutageByIdPrefix,
+  fetchOutageRefs,
+  fetchOutagesByAreaKey,
+  type OutageRef,
 } from './db';
 
 // The single data seam (§8): every read in the app goes through this module.
@@ -32,6 +39,75 @@ export async function getArchivedOutages(now: number): Promise<ArchivedOutage[]>
   // The mocks describe a healthy day; none of them is a retraction.
   if (mocksEnabled()) return (await getMockOutages(now)).map((outage) => ({ ...outage, cancelled: false }));
   return fetchArchivedOutages(now);
+}
+
+// One outage, by the leading characters of its id — see lib/slug.ts for why
+// the readable half of the URL is not what identifies it.
+export async function getOutageByIdPrefix(now: number, prefix: string): Promise<ArchivedOutage | null> {
+  if (mocksEnabled()) {
+    const match = (await getMockOutages(now)).filter((outage) => outage.id.startsWith(prefix));
+    // Same rule as the database path: an ambiguous prefix names no record
+    // rather than an arbitrary one of them.
+    return match.length === 1 ? { ...match[0], cancelled: false } : null;
+  }
+  return fetchOutageByIdPrefix(prefix);
+}
+
+// The rest of one district, for the cross-links at the foot of an outage page.
+export async function getDistrictOutages(
+  now: number,
+  district: DistrictId,
+  limit = 12,
+): Promise<ArchivedOutage[]> {
+  if (mocksEnabled()) {
+    return (await getMockOutages(now))
+      .filter((outage) => outage.district === district)
+      .sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt))
+      .slice(0, limit)
+      .map((outage) => ({ ...outage, cancelled: false }));
+  }
+  return fetchDistrictOutages(district, limit);
+}
+
+// Every record naming one settlement, newest first. `key` is a folded place
+// name (lib/slug.ts `placeSlug` without the hyphens), never a display name.
+export async function getOutagesByAreaKey(now: number, key: string): Promise<ArchivedOutage[]> {
+  if (mocksEnabled()) {
+    return (await getMockOutages(now))
+      .filter((outage) => areaKeys(outage.areas).includes(key))
+      .sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt))
+      .map((outage) => ({ ...outage, cancelled: false }));
+  }
+  return fetchOutagesByAreaKey(key);
+}
+
+// How many records name each place — what decides whether a settlement has a
+// page at all (§ settlement pages: a page carrying one outage is thin content).
+export async function getAreaKeyCounts(now: number): Promise<Map<string, number>> {
+  if (mocksEnabled()) {
+    const counts = new Map<string, number>();
+    for (const outage of await getMockOutages(now)) {
+      for (const key of areaKeys(outage.areas)) counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  }
+  return fetchAreaKeyCounts();
+}
+
+// Just enough of each record to build its address and its sitemap lastmod.
+export async function getOutageRefs(now: number, since: string): Promise<OutageRef[]> {
+  if (mocksEnabled()) {
+    return (await getMockOutages(now))
+      .filter((outage) => outage.startsAt >= since)
+      .map((outage) => ({
+        id: outage.id,
+        startsAt: outage.startsAt,
+        district: outage.district,
+        areas: outage.areas,
+        updatedAt: outage.updatedAt ?? outage.ingestedAt,
+      }));
+  }
+  return fetchOutageRefs(since);
 }
 
 export async function getMonthlyTotals(district: DistrictId, now: number): Promise<MonthlyTotal[]> {

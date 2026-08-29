@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
-import { getFreshness, getMonthlyTotals, getNow, getOutages } from '@/lib/data';
+import { getAreaKeyCounts, getFreshness, getMonthlyTotals, getNow, getOutages } from '@/lib/data';
 import { deriveStatus, formatClock } from '@/lib/time';
 import { DISTRICTS, getMapGeometry, isDistrictId } from '@/lib/geography';
 import type { Outage } from '@/lib/types';
@@ -12,6 +12,7 @@ import IslandMapMini from '@/components/IslandMapMini';
 import OutageCard from '@/components/OutageCard';
 import HistoryChart from '@/components/HistoryChart';
 import AdSlot from '@/components/AdSlot';
+import { eligiblePlaces } from '@/lib/places';
 import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 import { pageMetadata } from '@/lib/seo';
 import { breadcrumbJsonLd } from '@/lib/jsonld';
@@ -41,11 +42,12 @@ export default async function DistrictPage({ params }: Props) {
   const dict = await getDictionary(locale);
 
   const now = await getNow();
-  const [outages, totals, freshness, cookieStore] = await Promise.all([
+  const [outages, totals, freshness, cookieStore, areaCounts] = await Promise.all([
     getOutages(now),
     getMonthlyTotals(id, now),
     getFreshness(now),
     cookies(),
+    getAreaKeyCounts(now),
   ]);
   const consent = readConsent(cookieStore.get(CONSENT_COOKIE)?.value);
 
@@ -56,12 +58,20 @@ export default async function DistrictPage({ params }: Props) {
 
   const district = DISTRICTS[id];
   // The English exonym appears here and nowhere else (§7.3).
-  const heading = locale === 'en' && district.exonym ? `${district.name} (${district.exonym})` : district.name;
+  const displayName = locale === 'en' && district.exonym ? `${district.name} (${district.exonym})` : district.name;
+  // The heading says what the page is about rather than only where it is: the
+  // <title> already reads "Lefkoşa elektrik kesintileri", and a bare place name
+  // as the H1 left the two disagreeing about the subject of the page.
+  const heading = dict.district.h1(displayName);
   const summary = active.length
     ? dict.district.summaryActive(district.name)
     : fill(dict.district.summaryQuiet, { district: district.name });
 
   const geometry = getMapGeometry();
+  // The settlements in this district that have a page of their own. Without
+  // these links nothing on the site points at a settlement page, and a page
+  // reached only from the sitemap is a page search engines treat as orphaned.
+  const places = eligiblePlaces(areaCounts).filter((place) => place.settlement.district === id);
   const numberFormat = new Intl.NumberFormat(locale);
   const totalHours = totals.reduce((sum, t) => sum + t.plannedHours + t.faultHours, 0);
 
@@ -165,6 +175,25 @@ export default async function DistrictPage({ params }: Props) {
           }}
         />
       </section>
+
+      {places.length > 0 && (
+        <section className="pt-8">
+          <h2 className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{dict.district.places}</h2>
+          <p className="m-0 mt-1 text-small text-muted">{dict.district.placesLead}</p>
+          <ul className="m-0 mt-3 flex list-none flex-wrap gap-x-2 gap-y-2 p-0 text-small">
+            {places.map((place) => (
+              <li key={place.slug}>
+                <Link
+                  href={routeHref(locale, 'place', place.slug)}
+                  className="inline-flex min-h-11 items-center rounded-[2px] border border-dark px-4 text-text no-underline hover:border-lamp"
+                >
+                  {place.settlement.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

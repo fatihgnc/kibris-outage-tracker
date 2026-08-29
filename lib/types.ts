@@ -28,6 +28,11 @@ export type Outage = {
   publishedAt: string; // ISO 8601, when the announcement went out
   ingestedAt: string; // ISO 8601, when this record entered the system
   confidence: 'high' | 'low'; // 'low' = parsed by fallback
+  // ISO 8601, last write to the stored row. Set by a database trigger, never
+  // by the ingest — so a record that has only ever existed in memory (mocks,
+  // a batch mid-parse) does not have one. Callers that need a timestamp for a
+  // record's freshness fall back to `ingestedAt`.
+  updatedAt?: string;
 };
 
 // The archive is the one view that shows retracted records, so it is the one

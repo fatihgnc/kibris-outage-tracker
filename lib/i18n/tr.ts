@@ -38,6 +38,12 @@ export const tr = {
     districtTitle: (district: string) => `${district} elektrik kesintileri`,
     districtDescription: (district: string) =>
       `${locative(district)} şu anki elektrik durumu, yaklaşan planlı çalışmalar ve son 12 ayın özeti.`,
+    outageTitle: (district: string, date: string) => `${district} elektrik kesintisi — ${date}`,
+    outageDescription: (date: string, places: string) =>
+      `${date} tarihli elektrik kesintisi. Etkilenen yerler: ${places}. Saatler, kesinti tipi ve duyurunun kaynağı.`,
+    placeTitle: (place: string) => `${place} elektrik kesintileri`,
+    placeDescription: (place: string) =>
+      `${locative(place)} şu anki elektrik durumu, yaklaşan çalışmalar ve geçmiş kesintilerin listesi.`,
   },
   brand: 'kesintimivar.com',
   nav: {
@@ -139,6 +145,9 @@ export const tr = {
     dateWithWeekday: '{date} {weekday}',
   },
   district: {
+    // The <title> already reads this way; the heading matches it rather than
+    // standing alone as a bare place name.
+    h1: (district: string) => `${district} elektrik kesintileri`,
     back: 'ada haritası',
     now: 'Şu an',
     upcoming: 'Yaklaşan',
@@ -150,6 +159,8 @@ export const tr = {
     noUpcoming: 'planlanmış bir çalışma duyurulmadı',
     miniCaption: '{district} bölgesi, ada üzerinde',
     miniAria: '{district} bölgesinin ada üzerindeki konumu',
+    places: 'Bu bölgedeki yerler',
+    placesLead: 'Kesinti geçmişi biriken yerleşimler:',
   },
   chart: {
     ariaLabel: 'Son 12 ayın kesinti saatleri, aylık çubuk grafik',
@@ -168,6 +179,65 @@ export const tr = {
     count: '{count} kayıt gösteriliyor',
     empty: 'Bu filtreyle kayıt bulunamadı. Ayı ya da bölgeyi değiştir.',
   },
+  outage: {
+    backToDistrict: '{district} kesintileri',
+    areas: 'Etkilenen yerler',
+    sources: 'Kaynaklar',
+    sourceOfficial: 'resmi duyuru',
+    sourcePress: 'haber',
+    nearby: '{district} bölgesindeki diğer kesintiler',
+    guides: 'İşine yarayabilir',
+    // A retraction has to be unmistakable: an unmarked one reads as an outage
+    // that happened, which is the opposite of the truth (§10.6).
+    cancelled:
+      'Bu çalışma duyuruldu, sonra iptal edildi. Aşağıdaki saatlerde bir kesinti yaşanmadı.',
+    unverified:
+      'Bu kayıt yedek ayrıştırıcıyla okundu ve ikinci bir kaynakla doğrulanmadı. Saatleri kaynak duyurudan teyit edin.',
+    duration: 'süre {duration}',
+  },
+  place: {
+    backToDistrict: '{district} bölgesi',
+    now: 'Şu an',
+    upcoming: 'Yaklaşan',
+    history: 'Geçmiş kesintiler',
+    noActive: (place: string) => `${locative(place)} şu anda bilinen bir kesinti yok.`,
+    noUpcoming: 'planlanmış bir çalışma duyurulmadı',
+    // Said plainly, because the number is small and the reader should know why:
+    // this is what has been collected since the site started, not the history
+    // of the place.
+    summary: (place: string) => `${locative(place)} derlenen kesinti kayıtları.`,
+    count: '{count} kayıt · ilk kayıt {since}',
+  },
+  home: {
+    recent: 'Son 30 günde',
+    recentEmpty: 'Son 30 günde kayda geçen bir kesinti yok.',
+    recentAll: 'tüm arşiv',
+    faq: 'Sık sorulanlar',
+    guidesLead: 'Kesinti sırasında ne yapılacağı, arıza nasıl bildirilir ve fatura nasıl okunur:',
+    guidesLink: 'rehberlere göz at',
+  },
+  faq: [
+    {
+      q: 'Şu anda elektrik kesintisi var mı?',
+      a: 'Bu sayfanın en üstündeki durum satırı, derlenen son duyurulara göre adanın o anki halini gösterir. Harita üzerinde ışığı sönmüş yerler, o an kesinti bildirilen yerleşimlerdir.',
+    },
+    {
+      q: 'Elektrik ne zaman gelecek?',
+      a: 'Planlı çalışmalarda duyurulan bitiş saatini gösteriyoruz. Arızalarda çoğu zaman bir bitiş saati duyurulmaz; böyle durumlarda dönüş saati belirsizdir. Her saat tahmindir — çalışma erken bitebilir, uzayabilir veya iptal olabilir.',
+    },
+    {
+      q: 'Bu bilgiler nereden geliyor?',
+      a: 'KIB-TEK duyuruları ve Kıbrıs basınının kesinti haberleri otomatik olarak derlenir. Her kaydın altında geldiği kaynağın bağlantısı vardır. Bu site resmi bir kurum değildir.',
+    },
+    {
+      q: 'Arızayı nereye bildireceğim?',
+      a: "Arıza ihbarı KIB-TEK'e yapılır; bu sitenin bildirim yapma yetkisi yoktur. Numaralar ve izlenecek adımlar için rehberlerdeki arıza bildirimi sayfasına bakın.",
+    },
+    {
+      q: 'Kendi bölgemi nasıl takip ederim?',
+      a: 'Haritadan ya da bölge listesinden bölgenizi açın. Bölge sayfasında o anki durum, yaklaşan çalışmalar ve son 12 ayın özeti bulunur. Sayfayı yer imlerine ekleyebilirsiniz.',
+    },
+  ],
   footer: {
     disclaimer:
       'Buradaki bilgiler resmi duyurulardan otomatik derlenir. Çalışmalar erken bitebilir, uzayabilir veya iptal olabilir. Her saati tahmin olarak değerlendirin; kesin bilgi için KIB-TEK duyurularına bakın.',

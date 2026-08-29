@@ -1,9 +1,12 @@
+import Link from 'next/link';
 import type { Outage, OutageStatus } from '@/lib/types';
 import type { Dictionary } from '@/lib/i18n/dictionaries';
 import { fill } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
 import { formatDateTimeShort, formatDayLabel, formatTimeRange } from '@/lib/time';
 import { DISTRICTS } from '@/lib/geography';
+import { outageSlug } from '@/lib/slug';
+import { routeHref } from '@/lib/routes';
 import KindBadge from './KindBadge';
 import Countdown from './Countdown';
 
@@ -43,6 +46,15 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
         ? { target: outage.startsAt, pattern: dict.countdown.untilStart }
         : null;
   const showEndUnknown = !compact && status === 'active' && !outage.endsAt;
+  // The card's own page. The time range carries the link because it is what
+  // identifies the outage — the district name below it names a place that has
+  // its own, different page. The card already contains a link to the source, so
+  // the whole card cannot become one: anchors do not nest.
+  //
+  // A record with no addressable id has no page, and the time renders plain
+  // rather than as a link to a 404.
+  const slug = outageSlug(outage);
+  const href = slug && routeHref(locale, 'outage', slug);
 
   return (
     <article className="flex h-full flex-col gap-2 rounded-[4px] border border-dark bg-night px-4 pb-2.5 pt-3">
@@ -52,12 +64,23 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
       </div>
 
       <div className="flex flex-col gap-0.5">
-        <time
-          dateTime={outage.startsAt}
-          className={`font-mono font-medium tracking-[-0.01em] ${timeColor} ${compact ? 'text-body' : 'text-h2'}`}
-        >
-          {formatTimeRange(outage, locale, dict)}
-        </time>
+        {href ? (
+          <Link href={href} className="no-underline">
+            <time
+              dateTime={outage.startsAt}
+              className={`font-mono font-medium tracking-[-0.01em] underline decoration-transparent underline-offset-[4px] hover:decoration-current ${timeColor} ${compact ? 'text-body' : 'text-h2'}`}
+            >
+              {formatTimeRange(outage, locale, dict)}
+            </time>
+          </Link>
+        ) : (
+          <time
+            dateTime={outage.startsAt}
+            className={`font-mono font-medium tracking-[-0.01em] ${timeColor} ${compact ? 'text-body' : 'text-h2'}`}
+          >
+            {formatTimeRange(outage, locale, dict)}
+          </time>
+        )}
         <p className="m-0 font-mono text-small text-muted">
           {formatDayLabel(outage.startsAt, now, locale, dict)}
           {countdown && (

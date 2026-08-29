@@ -1,0 +1,12 @@
+-- Outage detail pages address a record by the leading characters of its id.
+--
+-- The readable half of the URL (date, district, first place) cannot be the
+-- identifier: §10.6 merges pull `starts_at` earlier and widen `areas`, so a
+-- slug built from those changes under a URL that has already been indexed. The
+-- id is a content fingerprint that `mergeOutages` deliberately preserves, so it
+-- is the half that is safe to point at.
+--
+-- The primary key index cannot serve `id like 'a3f19c%'` under a non-C
+-- collation, so the prefix lookup needs its own operator class. No backfill —
+-- this only indexes what is already there.
+create index outages_id_prefix_idx on outages (id text_pattern_ops);

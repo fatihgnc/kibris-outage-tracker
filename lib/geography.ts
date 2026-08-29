@@ -3,6 +3,7 @@ import type { DistrictId, Outage } from './types';
 // on exactly the terms it matched a place on the way in. Pure string work, no
 // dependencies — importing it costs the client bundle nothing.
 import { foldKey } from '../ingest/parse/text';
+import { placeSlug } from './slug';
 import mapLayout from './geo/map-layout.json';
 
 // Re-exported so callers have one import for everything map-shaped.
@@ -103,4 +104,30 @@ export function resolveDarkness(
     }
   }
   return dark;
+}
+
+/**
+ * The settlement one URL segment names, or null.
+ *
+ * Built off the same list the map is drawn from, so a settlement page can only
+ * exist for a place that has a lamp — the two never disagree about which
+ * places this site knows. `lib/slug.test.ts` fails if two settlements ever fold
+ * to the same segment, which would make one of them unreachable.
+ */
+export function findSettlementBySlug(slug: string): MapSettlement | null {
+  return settlementsBySlug().get(slug) ?? null;
+}
+
+/** Every settlement's URL segment, for the sitemap and for district cross-links. */
+export function settlementSlugs(): { slug: string; settlement: MapSettlement }[] {
+  return [...settlementsBySlug()].map(([slug, settlement]) => ({ slug, settlement }));
+}
+
+let slugIndex: Map<string, MapSettlement> | null = null;
+
+function settlementsBySlug(): Map<string, MapSettlement> {
+  if (!slugIndex) {
+    slugIndex = new Map(getMapGeometry().settlements.map((s) => [placeSlug(s.name), s]));
+  }
+  return slugIndex;
 }

@@ -4,8 +4,8 @@ import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getArchivedOutages, getNow } from '@/lib/data';
-import { deriveStatus, formatMonthYear, monthKey } from '@/lib/time';
-import { isDistrictId } from '@/lib/geography';
+import { deriveStatus, formatDateLong, formatMonthYear, monthKey } from '@/lib/time';
+import { DISTRICTS, isDistrictId } from '@/lib/geography';
 import type { ArchivedOutage, DistrictId } from '@/lib/types';
 import DistrictFilter from '@/components/DistrictFilter';
 import ArchiveMonthSelect from '@/components/ArchiveMonthSelect';
@@ -13,8 +13,9 @@ import OutageCard from '@/components/OutageCard';
 import AdSlot from '@/components/AdSlot';
 import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 import { pageMetadata } from '@/lib/seo';
-import { breadcrumbJsonLd } from '@/lib/jsonld';
+import { breadcrumbJsonLd, itemListJsonLd } from '@/lib/jsonld';
 import { routeHref } from '@/lib/routes';
+import { addressable } from '@/lib/slug';
 import JsonLd from '@/components/JsonLd';
 
 type Props = {
@@ -87,6 +88,23 @@ export default async function ArchivePage({ params, searchParams }: Props) {
           { name: dict.archive.title, path: routeHref(locale, 'archive') },
         ])}
       />
+      {/* The archive is a list of pages, so it is published as one. The entries
+        * follow the active filter, because that is what the reader is looking
+        * at — the canonical still points past the query string (lib/seo.ts). */}
+      {filtered.length > 0 && (
+        <JsonLd
+          data={itemListJsonLd(
+            dict.archive.title,
+            addressable(filtered).map(({ record, slug }) => ({
+              name: dict.meta.outageTitle(
+                DISTRICTS[record.district].name,
+                formatDateLong(record.startsAt, locale),
+              ),
+              path: routeHref(locale, 'outage', slug),
+            })),
+          )}
+        />
+      )}
 
       <section className="pt-5">
         <h1 className="opsz-120 m-0 font-display text-display font-semibold tracking-[-0.02em] text-text">

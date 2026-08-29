@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getFreshness, getNow, getOutages } from '@/lib/data';
-import { deriveStatus, formatClock, formatTimeRange } from '@/lib/time';
+import { deriveStatus, formatClock, formatDateLong, formatTimeRange } from '@/lib/time';
 import { DISTRICTS, getMapGeometry, isDistrictId, resolveDarkness } from '@/lib/geography';
 import type { DistrictId, Outage } from '@/lib/types';
 import IslandMap from '@/components/IslandMap';
@@ -14,8 +14,10 @@ import Countdown from '@/components/Countdown';
 import AdSlot from '@/components/AdSlot';
 import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 import { pageMetadata } from '@/lib/seo';
-import { siteJsonLd } from '@/lib/jsonld';
+import { faqJsonLd, itemListJsonLd, siteJsonLd } from '@/lib/jsonld';
 import { routeHref } from '@/lib/routes';
+import { addressable } from '@/lib/slug';
+import Link from 'next/link';
 import JsonLd from '@/components/JsonLd';
 
 // One full row on a desktop grid, so the ad can never appear before a reader
@@ -80,9 +82,36 @@ export default async function HomePage({ params, searchParams }: Props) {
     ? fill(dict.list.titleDistrict, { district: DISTRICTS[selectedDistrict].name })
     : dict.list.titleAll;
 
+  // `getOutages` already reaches thirty days back — the records are in hand, so
+  // this section costs no extra query. It exists because on a quiet day the page
+  // above it is one sentence, a map and a row of chips: nothing for a reader who
+  // arrived asking what has been happening, and nothing for a crawler either.
+  const recent = outages
+    .filter((o) => deriveStatus(o, now) === 'past')
+    .sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt))
+    .slice(0, 6);
+
   return (
     <>
       <JsonLd data={siteJsonLd(locale, dict)} />
+      {list.length > 0 && (
+        <JsonLd
+          data={itemListJsonLd(
+            listTitle,
+            addressable(list).map(({ record, slug }) => ({
+              name: dict.meta.outageTitle(
+                DISTRICTS[record.district].name,
+                formatDateLong(record.startsAt, locale),
+              ),
+              path: routeHref(locale, 'outage', slug),
+            })),
+          )}
+        />
+      )}
+      {/* The questions below are printed on the page, which is what makes this
+        * legitimate: structured data describing answers a reader cannot see is
+        * exactly what the FAQ rich result guidelines forbid. */}
+      <JsonLd data={faqJsonLd(dict.faq)} />
 
       <section className="pt-2">
         <h1 className="opsz-120 m-0 max-w-[22ch] text-pretty font-display text-display font-semibold tracking-[-0.02em] text-text">
@@ -191,6 +220,51 @@ export default async function HomePage({ params, searchParams }: Props) {
             </p>
           </div>
         )}
+      </section>
+
+      {recent.length > 0 && (
+        <section className="pt-9">
+          <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{dict.home.recent}</h2>
+            <Link
+              href={routeHref(locale, 'archive')}
+              className="font-mono text-meta text-muted no-underline hover:text-text"
+            >
+              {dict.home.recentAll} &rarr;
+            </Link>
+          </div>
+          <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
+            {recent.map((outage) => (
+              <li key={outage.id}>
+                <OutageCard outage={outage} status="past" locale={locale} dict={dict} now={now} compact />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="pt-9">
+        <h2 className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{dict.home.faq}</h2>
+        <dl className="m-0 mt-3 flex flex-col gap-4">
+          {dict.faq.map((entry) => (
+            <div key={entry.q}>
+              <dt className="opsz-24 m-0 font-display text-body font-semibold text-text">{entry.q}</dt>
+              <dd className="m-0 mt-1 max-w-[68ch] text-pretty text-small text-muted">{entry.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className="pt-7">
+        <p className="m-0 text-small text-muted">
+          {dict.home.guidesLead}{' '}
+          <Link
+            href={routeHref(locale, 'guides')}
+            className="text-text underline decoration-dark underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
+          >
+            {dict.home.guidesLink}
+          </Link>
+        </p>
       </section>
     </>
   );

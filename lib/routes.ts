@@ -12,7 +12,16 @@ import { locales, type Locale } from './i18n/config';
  * server pages and two client components all read the same map.
  */
 
-export const ROUTE_KEYS = ['archive', 'guides', 'district', 'about', 'privacy', 'terms'] as const;
+export const ROUTE_KEYS = [
+  'archive',
+  'guides',
+  'district',
+  'outage',
+  'place',
+  'about',
+  'privacy',
+  'terms',
+] as const;
 
 export type RouteKey = (typeof ROUTE_KEYS)[number];
 
@@ -22,6 +31,8 @@ const SEGMENTS: Record<RouteKey, Record<Locale, string>> = {
   archive: { tr: 'arsiv', en: 'archive' },
   guides: { tr: 'rehberler', en: 'guides' },
   district: { tr: 'bolge', en: 'district' },
+  outage: { tr: 'kesinti', en: 'outage' },
+  place: { tr: 'yer', en: 'place' },
   about: { tr: 'hakkinda', en: 'about' },
   privacy: { tr: 'gizlilik', en: 'privacy' },
   terms: { tr: 'kullanim-kosullari', en: 'terms' },
@@ -102,10 +113,15 @@ export function parsePath(pathname: string): ParsedPath | null {
     const slug = guideKeyOf(third);
     return slug ? { locale: first, key, sub: slug } : null;
   }
-  // Only guides and districts take a child; a slug under /gizlilik is not a page.
-  if (key !== 'district') return null;
+  // A slug under /gizlilik is not a page, so only the sections that actually
+  // take one are let through. Their children are locale-neutral — a district
+  // id, a settlement's folded name, an outage's address — so unlike a guide
+  // slug they are carried across a locale switch unchanged.
+  if (!CHILD_KEYS.has(key)) return null;
   return { locale: first, key, sub: third };
 }
+
+const CHILD_KEYS = new Set<RouteKey>(['district', 'outage', 'place']);
 
 function isLocaleSegment(value: string | undefined): value is Locale {
   return value !== undefined && (locales as readonly string[]).includes(value);

@@ -4,6 +4,11 @@ import { nicosiaWallClock, zonedTimeToUtc } from './time';
 // Mock records are generated relative to the injected "now" so the home page
 // always has active, upcoming, and past outages to render. Times are always on
 // the hour or half hour, like real announcements.
+//
+// The ids are 32-character hex like the real ones (§10.5), not 'o-001'. An
+// outage's page is addressed by the leading characters of its id, so a mock id
+// in a different shape is not merely cosmetic: every detail link 404s under
+// USE_MOCKS=true, which is the mode the pages are built in.
 
 const KIBTEK: SourceRef = {
   name: 'KIB-TEK',
@@ -33,7 +38,7 @@ export function getMockOutages(now: number): Outage[] {
   const records: Outage[] = [
     // Active
     {
-      id: 'o-001',
+      id: '1ec7522fe22271f266b1ea841f2ef4a2',
       utility: 'electricity',
       kind: 'planned',
       startsAt: rel(-2),
@@ -46,7 +51,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-002',
+      id: 'f8c4df7fb73e24db753a3fd68be13107',
       utility: 'electricity',
       kind: 'fault',
       startsAt: rel(-1.5),
@@ -60,7 +65,7 @@ export function getMockOutages(now: number): Outage[] {
     },
     // Upcoming
     {
-      id: 'o-003',
+      id: 'ed00e6c964cf37610a13fd90b1d7024c',
       utility: 'electricity',
       kind: 'planned',
       startsAt: rel(2),
@@ -73,7 +78,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-004',
+      id: 'c37dd39ed9c9671ffef5b59f81533766',
       utility: 'electricity',
       kind: 'rotating',
       startsAt: rel(3.5),
@@ -86,7 +91,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-005',
+      id: '05be686d15cff28ce8d3562169021a79',
       utility: 'electricity',
       kind: 'planned',
       startsAt: at(1, 9, 0),
@@ -99,7 +104,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-006',
+      id: '6c5402dcc8e8c7929f9773aaf709fd68',
       utility: 'electricity',
       kind: 'planned',
       startsAt: at(2, 10, 0),
@@ -112,7 +117,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-007',
+      id: 'dea47baf032f3e2e8a81b1af9dcb6260',
       utility: 'electricity',
       kind: 'rotating',
       startsAt: at(1, 13, 0),
@@ -126,7 +131,7 @@ export function getMockOutages(now: number): Outage[] {
     },
     // Past
     {
-      id: 'o-008',
+      id: '20f551125b59da1d9734caca5c076c31',
       utility: 'electricity',
       kind: 'fault',
       startsAt: at(-1, 19, 0),
@@ -139,7 +144,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-009',
+      id: 'aa9d08e0b0a0da1d4e7cacb17f4d5ec5',
       utility: 'electricity',
       kind: 'planned',
       startsAt: at(-2, 9, 0),
@@ -152,7 +157,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-010',
+      id: 'a4ba69f6f06a21301bc7e35489a02906',
       utility: 'electricity',
       kind: 'planned',
       startsAt: at(-12, 9, 0),
@@ -165,7 +170,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-011',
+      id: '153b97aad1f2a8acd58b165282f8cbd2',
       utility: 'electricity',
       kind: 'rotating',
       startsAt: at(-30, 9, 0),
@@ -178,7 +183,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-012',
+      id: '05ebc035c265522e7a44680387d130e8',
       utility: 'electricity',
       kind: 'fault',
       startsAt: at(-45, 14, 0),
@@ -191,7 +196,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-013',
+      id: '5071ec31252653675ac54379b72276df',
       utility: 'electricity',
       kind: 'planned',
       startsAt: at(-68, 9, 0),
@@ -204,7 +209,7 @@ export function getMockOutages(now: number): Outage[] {
       confidence: 'high',
     },
     {
-      id: 'o-014',
+      id: '59e12a86a6320fc9b979951343ab7b9b',
       utility: 'electricity',
       kind: 'fault',
       startsAt: at(-100, 15, 0),
@@ -215,6 +220,37 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-100, 14, 30),
       ingestedAt: minutesAfter(at(-100, 14, 30), 5),
       confidence: 'low',
+    },
+    // Gönyeli three times over three months. A settlement only gets a page once
+    // it has a history worth reading (PLACE_PAGE_MIN_RECORDS), and without a
+    // place that clears that bar these mocks cannot render the settlement page
+    // at all — the fixture has to be able to draw every screen the app has.
+    // Recurrence in one village is also what the real archive looks like.
+    {
+      id: '31f5503466f7b453d25ab71a5c8507d4',
+      utility: 'electricity',
+      kind: 'planned',
+      startsAt: at(-38, 9, 0),
+      endsAt: at(-38, 13, 0),
+      district: 'lefkosa',
+      areas: ['Gönyeli', 'Yenikent'],
+      sources: [KIBTEK, YENIDUZEN],
+      publishedAt: at(-39, 17, 0),
+      ingestedAt: minutesAfter(at(-39, 17, 0), 10),
+      confidence: 'high',
+    },
+    {
+      id: 'a34e4fa8146ead495b5632934de4ad0c',
+      utility: 'electricity',
+      kind: 'fault',
+      startsAt: at(-77, 19, 30),
+      endsAt: at(-77, 22, 0),
+      district: 'lefkosa',
+      areas: ['Gönyeli'],
+      sources: [GUNDEM_KIBRIS],
+      publishedAt: at(-77, 20, 0),
+      ingestedAt: minutesAfter(at(-77, 20, 0), 5),
+      confidence: 'high',
     },
   ];
   return records;

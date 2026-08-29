@@ -1,4 +1,4 @@
-import type { Outage, OutageStatus } from './types';
+import type { MonthlyTotal, Outage, OutageStatus } from './types';
 import type { Dictionary } from './i18n/dictionaries';
 import { fill } from './i18n/dictionaries';
 import type { Locale } from './i18n/config';
@@ -131,6 +131,20 @@ export function formatDateTimeShort(iso: string, locale: Locale): string {
   }).format(Date.parse(iso));
 }
 
+// '26 Ağustos 2026' / '26 August 2026'. The whole date, spelled out, for the
+// places a record is named rather than listed: an outage page's heading, its
+// title, and the sentence a search result shows. Unlike formatDayLabel it
+// carries the year and never says 'bugün' — an archive page read in December
+// must not describe an August outage as today's.
+export function formatDateLong(iso: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: TIME_ZONE,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(Date.parse(iso));
+}
+
 // The freshness stamp: 'bugün 09:58' and 'dün 09:58' inside the ±1 day
 // window, '19 Ağu 2026 09:58' outside it. A clock alone is only legible while
 // the check is today's; once it is not, the reader needs the day, and the year
@@ -159,6 +173,51 @@ export function formatYear(ms: number, locale: Locale): string {
 export function monthKey(iso: string): string {
   const w = wallClock(Date.parse(iso));
   return `${w.year}-${String(w.month).padStart(2, '0')}`;
+}
+
+/**
+ * Twelve months of outage hours, bucketed in the island's zone.
+ *
+ * Shared by the district chart, which buckets a district's records, and the
+ * settlement chart, which buckets one place's — two views that must not
+ * disagree about how an outage is counted. The rule that matters is the last
+ * one: a fault with no announced end contributes nothing rather than an
+ * invented duration. The display bound in `NO_END_ASSUMED_OVER_MS` exists so a
+ * card does not run forever; it is not a measurement, and a chart that spent it
+ * would be publishing a number nobody announced.
+ *
+ * Months with no outages are present with zeroes, so the axis is always twelve
+ * columns wide and a quiet month reads as quiet rather than as missing.
+ */
+export function bucketMonthlyTotals(
+  records: readonly Pick<Outage, 'kind' | 'startsAt' | 'endsAt'>[],
+  now: number,
+): MonthlyTotal[] {
+  const wall = wallClock(now);
+  const buckets = new Map<string, MonthlyTotal>();
+  for (let i = 11; i >= 0; i--) {
+    const monthIndex = wall.month - 1 - i;
+    const year = wall.year + Math.floor(monthIndex / 12);
+    const month = (((monthIndex % 12) + 12) % 12) + 1;
+    const key = `${year}-${String(month).padStart(2, '0')}`;
+    buckets.set(key, { month: key, plannedHours: 0, faultHours: 0 });
+  }
+
+  for (const record of records) {
+    const bucket = buckets.get(monthKey(record.startsAt));
+    if (!bucket) continue;
+    if (!record.endsAt) continue;
+    const hours = (Date.parse(record.endsAt) - Date.parse(record.startsAt)) / 3600000;
+    if (hours <= 0) continue;
+    if (record.kind === 'fault') bucket.faultHours += hours;
+    else bucket.plannedHours += hours;
+  }
+
+  return [...buckets.values()].map((bucket) => ({
+    month: bucket.month,
+    plannedHours: Math.round(bucket.plannedHours),
+    faultHours: Math.round(bucket.faultHours),
+  }));
 }
 
 export function formatMonthYear(key: string, locale: Locale): string {

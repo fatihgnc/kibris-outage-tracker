@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createHash } from 'node:crypto';
 import type { Outage } from '../lib/types';
 import type { RawAnnouncement, Resolution } from './parse';
-import { mapOutageRow, toOutageRow, type OutageRow } from '../lib/db';
+import { mapOutageRow, OUTAGE_COLUMNS, toOutageRow, type OutageRow } from '../lib/db';
 import { isSameEvent, mergeOutages } from './dedupe';
 import { foldKey } from './parse/text';
 import { NO_END_ASSUMED_OVER_MS } from '../lib/time';
@@ -12,9 +12,6 @@ export type StoreResult = {
   updated: number;
   cancelled: number;
 };
-
-const OUTAGE_COLUMNS =
-  'id, utility, kind, starts_at, ends_at, district, areas, sources, published_at, ingested_at, confidence, cancelled_at, cancelled_reason';
 
 // The stored form carries the retraction flag, which the public Outage type
 // deliberately does not expose to the frontend.
