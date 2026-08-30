@@ -51,15 +51,33 @@ async function main() {
   const client = createClient(url, key, { auth: { persistSession: false } });
   console.log(`${confirm ? 'retiring' : 'previewing'} ${ids.length} record(s) on ${url}\n`);
 
+  // Whole ids or the leading characters of one. The readable half of an outage
+  // URL carries only the first eight — `outageIdPrefix` — and that URL is what a
+  // person actually has in hand when they decide a record should go, so
+  // demanding the other twenty-four means a separate query first, by hand,
+  // against production.
+  //
+  // Ambiguity refuses rather than picks, exactly as fetchOutageByIdPrefix does
+  // for the page: two records behind one prefix is a prefix that names neither,
+  // and retiring an arbitrary one of them is the mistake this script exists to
+  // be careful about.
   const { data, error } = await client
     .from('outages')
     .select('id, starts_at, district, areas, cancelled_at, cancelled_reason')
-    .in('id', ids)
+    .or(ids.map((id) => `id.like.${id}*`).join(','))
     .order('starts_at');
   if (error) throw new Error(`outages: ${error.message}`);
 
-  const rows = data ?? [];
-  const missing = ids.filter((id) => !rows.some((row) => row.id === id));
+  const all = data ?? [];
+  const ambiguous = ids.filter((id) => all.filter((row) => row.id.startsWith(id)).length > 1);
+  const rows = all.filter((row) => !ambiguous.some((id) => row.id.startsWith(id)));
+  const missing = ids.filter(
+    (id) => !ambiguous.includes(id) && !all.some((row) => row.id.startsWith(id)),
+  );
+  for (const id of ambiguous) {
+    const hits = all.filter((row) => row.id.startsWith(id)).map((row) => row.id);
+    console.log(`  ! ${id} — names ${hits.length} records, not one: ${hits.join(', ')}`);
+  }
   for (const row of rows) {
     const was = row.cancelled_reason ?? 'active';
     console.log(`  ${row.starts_at.slice(0, 10)} ${row.district} ${(row.areas as string[]).join(', ')}`);
@@ -69,6 +87,11 @@ async function main() {
 
   if (!confirm) {
     console.log('\nnothing written. Re-run with --confirm to apply.');
+    return;
+  }
+
+  if (rows.length === 0) {
+    console.log('\nnothing to retire.');
     return;
   }
 
