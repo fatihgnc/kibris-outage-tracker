@@ -111,6 +111,11 @@ export const tr = {
     powerOut: 'elektrik kesik',
     pointAria: '{name} — {status}, {district} sayfasına git',
     districtAria: '{district} bölgesinin kesinti sayfasını aç',
+    backToday: 'bugün bir ara kesilmişti',
+    timelineLabel: 'son 24 saat',
+    timelineNow: 'şimdi',
+    timelineAria: 'Son 24 saat içinde zamanda gezin',
+    timelineReset: 'şimdiye dön',
   },
   filter: {
     ariaLabel: 'Bölge filtresi',

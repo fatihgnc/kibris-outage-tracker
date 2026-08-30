@@ -73,9 +73,31 @@ export function nicosiaWallClock(ms: number): WallClock {
  */
 export const NO_END_ASSUMED_OVER_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * When a record is read as being over: the announced end, or the assumption
+ * above. The same number `deriveStatus` decides on, exposed for the callers
+ * that need the instant rather than the verdict — the map's timeline draws it.
+ */
+export function readEndOf(outage: Pick<Outage, 'startsAt' | 'endsAt'>): number {
+  return outage.endsAt
+    ? Date.parse(outage.endsAt)
+    : Date.parse(outage.startsAt) + NO_END_ASSUMED_OVER_MS;
+}
+
+/** The hour on the island, 0–23. The map's night is the island's, not the reader's. */
+export function islandHour(now: number): number {
+  return Number(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: TIME_ZONE,
+      hour: '2-digit',
+      hourCycle: 'h23',
+    }).format(now),
+  );
+}
+
 export function deriveStatus(outage: Pick<Outage, 'startsAt' | 'endsAt'>, now: number): OutageStatus {
   const start = Date.parse(outage.startsAt);
-  const end = outage.endsAt ? Date.parse(outage.endsAt) : start + NO_END_ASSUMED_OVER_MS;
+  const end = readEndOf(outage);
   if (start <= now && end > now) return 'active';
   return start > now ? 'upcoming' : 'past';
 }

@@ -174,10 +174,10 @@ identifiers that reference them are English (`settlements`, `district`, `name`).
 
 ### 3.3 Point states
 
-| State   | Appearance                                     |
-| ------- | ---------------------------------------------- |
-| Powered | `--color-lamp` core with its glow             |
-| Outage  | `--color-muted` dot at half opacity, no glow  |
+| State   | Appearance                                          |
+| ------- | --------------------------------------------------- |
+| Powered | `--color-lamp` core with its glow                   |
+| Outage  | `--color-fault` dot, no glow, with a slow ping       |
 
 **An unlit place is dark, not absent.** The lamp's glow and its amber core fade
 away and a cold dot is left standing where they were — the village is still on
@@ -186,17 +186,37 @@ the one that has gone out. Removing the point entirely was the first attempt and
 it read as the place having been deleted from the map at the exact moment it
 mattered most.
 
-The cold dot is *wider* than the lit core it replaces. The frame is a thousand
-units drawn into at most eight hundred pixels, so a core is about a pixel
-across; what makes a lit point legible is the glow around it, and an unlit point
-has none. It is also drawn outside the `screen` blend group the lamps live in —
-that blend can only add light, so anything darker than the ground is invisible
-inside it.
+The dot is the **same size** as the lit core it replaces, and the bloom behind
+it is what makes it legible — the same division of labour as a lamp, where the
+core is the mark and the glow is what lets you find it. It was wider than the
+core for a while, back when an unlit point had no bloom at all and the dot had
+to carry the whole of its own visibility; drawn bigger now it would simply read
+as a bigger place, which is the claim §3.2 exists to refuse.
 
-An unlit point is unlit. It does **not** turn red — a light that has gone out
-does not burn red, and the earlier red-ring treatment broke the metaphor. The
-planned/fault distinction is communicated on the **cards** and in the point's
-popover (§3.6), not in the colour of the light.
+Both the dot and its bloom are drawn outside the `screen` blend group the lamps
+live in. That blend can only add light: a red bloom composited into it would
+climb toward pink over the amber underneath and stop being red at all.
+
+**An unlit point is red, and it pings.** This reverses the rule that stood here
+before, which was that an unlit point is unlit and must not burn: a light that
+has gone out does not burn red, and an earlier red-ring treatment had broken the
+metaphor. What the metaphor cost was the map's actual job. A grey dot three
+units across, among a hundred and ninety glowing lamps, was the hardest thing on
+the island to find — and it is the only thing anybody opens the page to look
+for. A metaphor that hides the subject is not worth keeping.
+
+The ping does more of the finding than the colour does: at this density nothing
+static competes with that much amber. It is slow, spends most of its cycle at
+nothing, and is offset per place so the island does not beat in time. Under
+`prefers-reduced-motion: reduce` it is not drawn at all, which is why the dot
+under it also grew.
+
+**What this costs.** Red already means `fault` everywhere else — it is what
+separates an arıza from planned work on the badges and the time ranges — so a
+red point now sits under a planned outage too, and the map no longer draws the
+distinction the cards draw. The kind is still named in the point's popover
+(§3.6) and on every card. If the map ever needs that distinction back, it has to
+come from something other than hue.
 
 **Districts carry no power state.** They are the ground the light sits on and
 the thing a reader clicks; an outage is one or more places going dark, and a
@@ -218,18 +238,34 @@ second. They were `--color-dark` too, four shades off the land they sat on and
 invisible in practice; now that no district is named on the map (§3.6) they are
 the only thing saying where one ends, so they have to read.
 
-### 3.5 The one animation
+### 3.5 The one entrance, and the map's own motion
 
 On first paint of the home page, and nowhere else:
 
 1. Points ignite **west to east**, staggered, total duration around 900ms.
-2. Points currently under an outage then fade to dark over 400ms.
+2. Points currently under an outage then cool to dark over 700ms.
 
 This is the single orchestrated moment on the site. Do not add scroll reveals,
-staggered card entrances, or any other entrance animation anywhere.
+staggered card entrances, or any other **entrance** animation anywhere.
 
-Under `prefers-reduced-motion: reduce`, skip the sequence entirely and paint the
-final state immediately.
+**Ambient motion on the map is a separate thing, and it is allowed.** The rule
+above is about arrivals — content performing its way onto the page — and that
+stays banned. What the island does once it is there is not an arrival:
+
+- **The lamps breathe.** Each one on its own period, 4.2 to 7 seconds, its phase
+  derived from its index so no two are in step and there is no visible wave.
+  The amplitude is small enough to read as life and never as flicker.
+- **A dark place pings**, slowly, most of its cycle spent at nothing (§3.3).
+- **A lamp going out ripples**, once, and only on a live change — never on load,
+  where it would fire for every place already dark.
+- **A lamp cools rather than switching.** On is fast and off is slow, and the
+  hot centre goes before the glow does.
+
+Under `prefers-reduced-motion: reduce`, all of it stops: the opening sequence is
+skipped and the final state painted immediately, and the breathing, the ping and
+the ripple are not drawn at all. Everything they were there to make findable has
+to survive without them — which is why the dark places carry a bloom rather than
+relying on their ping.
 
 ### 3.6 Map interaction
 

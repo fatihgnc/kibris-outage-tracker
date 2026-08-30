@@ -188,7 +188,8 @@ select {
  * turns into one undifferentiated smear. The glow circle sits at its group's
  * origin, so scaling it is scaling it about its own centre. */
 @media (max-width: 639px) {
-  .map-glow {
+  .map-glow,
+  .map-out-glow {
     transform: scale(0.74);
   }
 }
@@ -204,20 +205,143 @@ select {
   }
 }
 
+/* Not a linear fade: a filament drops most of the way at once and then takes
+ * its time over the last of it. The stops are the curve, so the same keyframe
+ * serves the core and the filament at their two different durations. */
 @keyframes extinguish {
-  from {
+  0% {
     opacity: 1;
   }
-  to {
+  22% {
+    opacity: 0.5;
+  }
+  55% {
+    opacity: 0.16;
+  }
+  100% {
     opacity: 0;
   }
 }
 
+/* Ambient, not entrance (§3.5). The opening sequence is still the one
+ * orchestrated moment; this is the island refusing to sit perfectly still
+ * afterwards. Each lamp gets its own period and a negative delay, so no two are
+ * ever in step and there is no visible wave. The amplitude is small on purpose:
+ * it should be noticed as life, never as flicker. */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* The dark places, calling. Slow and cold: it has to be findable in a field of
+ * amber without pretending the place is on fire. Most of the cycle is spent at
+ * nothing, so a map with several out does not read as a lightshow. */
+@keyframes pulse {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.8;
+  }
+  72% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.map-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* One shot, where a lamp has just gone out. The ring expands and thins at the
+ * same time, so it reads as something leaving rather than something arriving. */
+@keyframes ripple {
+  from {
+    transform: scale(0.12);
+    opacity: 0.75;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Scaled rather than animating the `r` attribute: `r` only became animatable
+ * through CSS recently and not everywhere, while a transform on a group is as
+ * old as SVG. fill-box keeps the origin on the circle's own centre instead of
+ * the whole frame's. */
+.map-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .map-anim {
+  .map-anim,
+  .map-breathe,
+  .map-ripple,
+  .map-pulse {
     animation: none !important;
     transition: none !important;
   }
+  /* Neither of these has anything to say once it cannot move. The dot they
+   * point at is still drawn, and it is drawn larger than it used to be. */
+  .map-ripple,
+  .map-pulse {
+    display: none;
+  }
+}
+
+/* The scrubber. A hairline track and one lamp for a thumb — it sits directly
+ * under the island and must not compete with it.
+ *
+ * Styled rather than left to `accent-color`, which paints the whole track up to
+ * the thumb: parked at the right-hand end, where it sits whenever the map is
+ * live, that is a solid amber bar the width of the page under a map whose
+ * entire subject is amber light. */
+.map-scrub {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  height: 18px;
+  cursor: pointer;
+}
+.map-scrub::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--color-dark);
+}
+.map-scrub::-moz-range-track {
+  height: 1px;
+  background: var(--color-dark);
+}
+.map-scrub::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 9px;
+  height: 9px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--color-lamp);
+}
+.map-scrub::-moz-range-thumb {
+  width: 9px;
+  height: 9px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-lamp);
+}
+.map-scrub:focus-visible {
+  outline: 1px solid var(--color-lamp);
+  outline-offset: 4px;
 }
 
 /* WCAG 2.2 asks for a 24 by 24 pixel target (2.5.8). The header links and the
