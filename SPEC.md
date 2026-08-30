@@ -246,11 +246,23 @@ by our widening; a record that names the village is evidence about it, and the
 popover has to print the kind, the clock and the source that were actually
 written about that place.
 
-This does not reach `area_keys`. That column is the record of what the
-announcement named, and it is what a settlement page is found by; widening it
-would file a record under nineteen villages the announcement never wrote. The
-map is a reading of the record — and the two disagreeing is the known cost: a
-village the map darkens will say nothing happened on its own page.
+This does not reach `area_keys`. That column stays the record of what the
+announcement named: widening it would file a record under nineteen villages the
+announcement never wrote, and the archive would then assert more than its source
+does.
+
+The **queries** widen instead. A settlement page, and the count that decides
+whether it is published at all, treat a district-scope record as covering every
+settlement in its district — `coversAreaKey` and `countAreaKeys` in
+`lib/geography.ts`, used by the live query and the mock seam alike so the mode
+the pages are built in cannot disagree with the mode they are served in. The
+expansion replaces the record's own keys rather than adding to them: a
+district's name is also a settlement's, and counting both would count that town
+twice.
+
+So the record says what the announcement said, and every reading of it — the
+map, the village page, the threshold — widens the same way. What the map shows
+dark, the village's own page now shows.
 
 ### 3.4 Outline legibility
 

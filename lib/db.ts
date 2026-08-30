@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ArchivedOutage, DistrictId, MonthlyTotal, Outage, SourceRef } from './types';
 import { getAnonClient } from './supabase';
-import { isDistrictId } from './geography';
+import { countAreaKeys, districtOfAreaKey, isDistrictId } from './geography';
 import { bucketMonthlyTotals, nicosiaWallClock } from './time';
 import { dedupeSources } from './sources';
 // The ingest's own Turkish-aware comparison key. `areas` holds the spelling the
@@ -191,15 +191,54 @@ export async function fetchDistrictOutages(
  * index on the column.
  */
 export async function fetchOutagesByAreaKey(key: string, limit = 200): Promise<ArchivedOutage[]> {
-  const { data, error } = await getAnonClient()
+  const client = getAnonClient();
+  const byKey = client
     .from('outages')
     .select(OUTAGE_COLUMNS)
     .contains('area_keys', [key])
     .or(NOT_BAD_DATA)
     .order('starts_at', { ascending: false })
     .limit(limit);
-  if (error) throw new Error(`fetchOutagesByAreaKey: ${error.message}`);
-  return (data as OutageRow[]).map((row) => ({ ...mapOutageRow(row), cancelled: row.cancelled_at !== null }));
+
+  // A district-wide record names only its district, so `area_keys` cannot find
+  // it for the villages it covers (§3.3). The map has always widened it; every
+  // query here took the narrow reading, and a village the island showed dark
+  // said nothing had ever happened on its own page.
+  //
+  // Widened here rather than in `area_keys`, which stays the record of what the
+  // announcement named — filing it under nineteen villages it never wrote would
+  // make the archive assert more than its source does.
+  //
+  // Two queries and a merge rather than one `or` filter: the key is a folded
+  // name and can hold spaces, which PostgREST's array syntax then needs quoted
+  // inside an `and(...)` group. This page is server-rendered and cached, and a
+  // second round trip is worth not hand-escaping a filter string.
+  const district = districtOfAreaKey(key);
+  const wide = district
+    ? client
+        .from('outages')
+        .select(OUTAGE_COLUMNS)
+        .eq('scope', 'district')
+        .eq('district', district)
+        .or(NOT_BAD_DATA)
+        .order('starts_at', { ascending: false })
+        .limit(limit)
+    : null;
+
+  const [narrow, widened] = await Promise.all([byKey, wide]);
+  if (narrow.error) throw new Error(`fetchOutagesByAreaKey: ${narrow.error.message}`);
+  if (widened?.error) throw new Error(`fetchOutagesByAreaKey: ${widened.error.message}`);
+
+  const rows = new Map<string, OutageRow>();
+  for (const row of [...(narrow.data ?? []), ...(widened?.data ?? [])] as OutageRow[]) {
+    // A district-scope record whose district is named by its own areas comes
+    // back from both queries; it is one record either way.
+    rows.set(row.id, row);
+  }
+  return [...rows.values()]
+    .sort((a, b) => Date.parse(b.starts_at) - Date.parse(a.starts_at))
+    .slice(0, limit)
+    .map((row) => ({ ...mapOutageRow(row), cancelled: row.cancelled_at !== null }));
 }
 
 /**
@@ -221,15 +260,11 @@ export async function fetchOutagesByAreaKey(key: string, limit = 200): Promise<A
 export async function fetchAreaKeyCounts(client?: SupabaseClient): Promise<Map<string, number>> {
   const { data, error } = await (client ?? getAnonClient())
     .from('outages')
-    .select('area_keys')
+    .select('area_keys, scope, district')
     .or(NOT_BAD_DATA);
   if (error) throw new Error(`fetchAreaKeyCounts: ${error.message}`);
-  const counts = new Map<string, number>();
-  for (const row of data as { area_keys: string[] }[]) {
-    // The stored array is already deduplicated, so one row counts once per place.
-    for (const key of row.area_keys) counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  return counts;
+  const rows = data as { area_keys: string[]; scope: Outage['scope']; district: DistrictId }[];
+  return countAreaKeys(rows.map((row) => ({ keys: row.area_keys, ...row })));
 }
 
 export type OutageRef = Pick<Outage, 'id' | 'startsAt' | 'district' | 'areas'> & { updatedAt: string };

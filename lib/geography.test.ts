@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { computeMapGeometry } from './geo/build-layout';
-import { DISTRICT_IDS, getMapGeometry, resolveDarkness } from './geography';
+import {
+  DISTRICT_IDS,
+  areaKeysByDistrict,
+  countAreaKeys,
+  coversAreaKey,
+  districtOfAreaKey,
+  getMapGeometry,
+  resolveDarkness,
+} from './geography';
 import placesFile from '../data/places.json';
 import overrides from './geo/settlements.overrides.json';
 
@@ -159,4 +167,52 @@ test('between two district-scope records the earlier one still wins', () => {
     }),
   ]);
   assert.equal(dark.get('Yeşilyurt')?.kind, 'fault');
+});
+
+// A district-scope record names only its district, so the queries that find a
+// settlement by its `area_keys` need this to widen it to the places it covers
+// without widening what the record claims (§3.3).
+test('every settlement has exactly one district key, and none is lost', () => {
+  const grouped = areaKeysByDistrict();
+  const total = [...grouped.values()].reduce((sum, keys) => sum + keys.length, 0);
+  assert.equal(total, getMapGeometry().settlements.length);
+  assert.deepEqual([...grouped.keys()].sort(), [...DISTRICT_IDS].sort());
+});
+
+test('an area key resolves to the district that covers it', () => {
+  // The six names that are a town and a district both: the key is the town's,
+  // and the district it sits in is its own.
+  assert.equal(districtOfAreaKey('lefke'), 'lefke');
+  assert.equal(districtOfAreaKey('girne'), 'girne');
+  // A village, which is the case the widening exists for.
+  assert.equal(districtOfAreaKey('gemikonagi'), 'lefke');
+  // Boğaz is Girne's in data/places.json, though İskele has one too.
+  assert.equal(districtOfAreaKey('bogaz'), 'girne');
+  assert.equal(districtOfAreaKey('yok boyle bir yer'), null);
+});
+
+// The narrow reading is the stored keys. A district-wide record covers the
+// villages it never named — that is what it says happened — and the settlement
+// page, the counts and the map all have to agree about it.
+test('a district-wide record covers a village it never named', () => {
+  const wide = { keys: ['lefke'], scope: 'district' as const, district: 'lefke' as const };
+  assert.equal(coversAreaKey(wide, 'gemikonagi'), true);
+  assert.equal(coversAreaKey(wide, 'lefke'), true);
+  // And nothing outside its district.
+  assert.equal(coversAreaKey(wide, 'lapta'), false);
+
+  const narrow = { keys: ['lefke'], scope: 'places' as const, district: 'lefke' as const };
+  assert.equal(coversAreaKey(narrow, 'gemikonagi'), false);
+  assert.equal(coversAreaKey(narrow, 'lefke'), true);
+});
+
+test('a district-wide record counts once for each settlement, and its town only once', () => {
+  const counts = countAreaKeys([{ keys: ['lefke'], scope: 'district', district: 'lefke' }]);
+  const inLefke = areaKeysByDistrict().get('lefke') ?? [];
+  assert.equal(counts.size, inLefke.length);
+  // The district's name is also a settlement's, so using the expansion as well
+  // as the stored keys would count that town twice.
+  assert.equal(counts.get('lefke'), 1);
+  assert.equal(counts.get('gemikonagi'), 1);
+  assert.equal(counts.get('lapta'), undefined);
 });

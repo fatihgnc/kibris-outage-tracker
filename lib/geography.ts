@@ -1,4 +1,4 @@
-import type { DistrictId, Outage } from './types';
+import type { DistrictId, Outage, OutageScope } from './types';
 // The ingest's own Turkish-aware comparison key, so an area name matches a lamp
 // on exactly the terms it matched a place on the way in. Pure string work, no
 // dependencies — importing it costs the client bundle nothing.
@@ -163,6 +163,79 @@ export function settlementSlugs(): { slug: string; settlement: MapSettlement }[]
   return [...settlementsBySlug()].map(([slug, settlement]) => ({ slug, settlement }));
 }
 
+/**
+ * The `area_keys` value of every settlement, grouped by district.
+ *
+ * A record with `scope: 'district'` names only its district (§3.3), so on its
+ * own it is findable under one key — which for the six district names is the
+ * town of the same name. This is what lets a query widen it to the places it
+ * actually covers, without widening the stored `area_keys` and filing the record
+ * under villages the announcement never wrote.
+ */
+export function areaKeysByDistrict(): ReadonlyMap<DistrictId, string[]> {
+  if (!keysByDistrict) {
+    const grouped = new Map<DistrictId, string[]>();
+    for (const settlement of getMapGeometry().settlements) {
+      const list = grouped.get(settlement.district);
+      if (list) list.push(foldKey(settlement.name));
+      else grouped.set(settlement.district, [foldKey(settlement.name)]);
+    }
+    keysByDistrict = grouped;
+  }
+  return keysByDistrict;
+}
+
+/**
+ * How many records name each place — the number the settlement-page threshold is
+ * read against (lib/places.ts).
+ *
+ * One rule, one place. The live query and the mock seam both used to count
+ * `area_keys` and nothing else, which is the narrow reading of a district-wide
+ * record: the island showed a village dark while its own page said nothing had
+ * ever happened there, and the record did not count towards that page existing.
+ *
+ * A district-wide record counts for every settlement in its district, which is
+ * what it says happened. Its keys are used *instead of* the stored ones rather
+ * than as well as them — a district-scope record names its own district, and
+ * that name is also a settlement, so counting both would count that town twice.
+ */
+export function countAreaKeys(
+  records: readonly { keys: readonly string[]; scope: OutageScope; district: DistrictId }[],
+): Map<string, number> {
+  const byDistrict = areaKeysByDistrict();
+  const counts = new Map<string, number>();
+  for (const record of records) {
+    const keys = record.scope === 'district' ? (byDistrict.get(record.district) ?? []) : record.keys;
+    // Each list is already deduplicated, so one record counts once per place.
+    for (const key of keys) counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/**
+ * Whether a record covers the settlement one `area_keys` value names.
+ *
+ * The narrow reading is the stored keys; a district-wide record covers every
+ * settlement in its district without naming one of them (§3.3). Written once so
+ * the live query, the mock seam and the counts above all answer it the same way.
+ */
+export function coversAreaKey(
+  record: { keys: readonly string[]; scope: OutageScope; district: DistrictId },
+  key: string,
+): boolean {
+  if (record.scope === 'district') return districtOfAreaKey(key) === record.district;
+  return record.keys.includes(key);
+}
+
+/** The district an `area_keys` value belongs to, or null if no settlement has it. */
+export function districtOfAreaKey(key: string): DistrictId | null {
+  for (const [district, keys] of areaKeysByDistrict()) {
+    if (keys.includes(key)) return district;
+  }
+  return null;
+}
+
+let keysByDistrict: Map<DistrictId, string[]> | null = null;
 let slugIndex: Map<string, MapSettlement> | null = null;
 
 function settlementsBySlug(): Map<string, MapSettlement> {

@@ -1,5 +1,6 @@
 import type { ArchivedOutage, DistrictId, MonthlyTotal, Outage } from './types';
 import { getMockLastCheckedAt, getMockMonthlyTotals, getMockOutages } from './mock';
+import { countAreaKeys, coversAreaKey } from './geography';
 import {
   areaKeys,
   fetchAreaKeyCounts,
@@ -74,7 +75,7 @@ export async function getDistrictOutages(
 export async function getOutagesByAreaKey(now: number, key: string): Promise<ArchivedOutage[]> {
   if (mocksEnabled()) {
     return (await getMockOutages(now))
-      .filter((outage) => areaKeys(outage.areas).includes(key))
+      .filter((outage) => coversAreaKey({ keys: areaKeys(outage.areas), ...outage }, key))
       .sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt))
       .map((outage) => ({ ...outage, cancelled: false }));
   }
@@ -85,11 +86,11 @@ export async function getOutagesByAreaKey(now: number, key: string): Promise<Arc
 // page at all (§ settlement pages: a page carrying one outage is thin content).
 export async function getAreaKeyCounts(now: number): Promise<Map<string, number>> {
   if (mocksEnabled()) {
-    const counts = new Map<string, number>();
-    for (const outage of await getMockOutages(now)) {
-      for (const key of areaKeys(outage.areas)) counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return counts;
+    // Through the same rule the live query uses, so the mode the pages are built
+    // in cannot disagree with the mode they are served in.
+    return countAreaKeys(
+      (await getMockOutages(now)).map((outage) => ({ keys: areaKeys(outage.areas), ...outage })),
+    );
   }
   return fetchAreaKeyCounts();
 }
