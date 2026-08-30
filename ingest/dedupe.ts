@@ -123,6 +123,23 @@ export function mergeOutages(existing: Outage, incoming: Outage): Outage {
         : existing.ingestedAt,
     // A source that announced a start time settles the one we had to infer.
     confidence: existing.confidence === 'high' || incoming.confidence === 'high' ? 'high' : 'low',
+    // Widest wins, and symmetrically. Nothing above says what a field with no
+    // rule gets: it inherits `existing`'s through the spread, and inheriting in
+    // silence is how a district-wide reading would be lost the moment a second
+    // outlet's copy of the same announcement happened to be folded in first.
+    //
+    // Two records only reach this at all when they share a district and their
+    // place lists overlap, so the case is one source saying the whole of Lefke
+    // and another listing three of its villages — an outlet abbreviating a
+    // district-wide outage, not a narrower event. `areas` above takes the union
+    // for the same reason.
+    //
+    // Deliberately not decided by `authoritative`. Being the utility's own
+    // announcement says nothing about which reading is right, and an authority
+    // rule would make the answer depend on which record arrived first — dedupe
+    // orders by id, which is a hash, so the same pair could merge differently on
+    // different runs. That is the mistake `startsAt` above already unlearned.
+    scope: existing.scope === 'district' || incoming.scope === 'district' ? 'district' : 'places',
   };
 }
 

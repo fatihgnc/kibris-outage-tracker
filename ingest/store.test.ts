@@ -61,6 +61,7 @@ function outage(name: string, areas: string[], sources: SourceRef[]): Outage {
     publishedAt: isoAt(0),
     ingestedAt: isoAt(1),
     confidence: 'high',
+  scope: 'places',
   };
 }
 
@@ -308,6 +309,9 @@ describe('resolveOpenOutages', () => {
         published_at: startsAt,
         ingested_at: startsAt,
         confidence: 'low',
+    // Written straight to the columns, bypassing toOutageRow, so it has to
+    // say what it means rather than lean on the column default.
+    scope: 'places',
       },
       { onConflict: 'id' },
     );

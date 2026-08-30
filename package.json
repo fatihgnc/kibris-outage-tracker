@@ -11,6 +11,7 @@
     "ingest": "node --import tsx ingest/run.ts",
     "backfill": "node --import tsx ingest/backfill.ts",
     "backfill:area-keys": "node --import tsx scripts/backfill-area-keys.ts",
+    "backfill:scope": "node --import tsx scripts/backfill-scope.ts",
     "audit": "node --import tsx scripts/audit-records.ts",
     "retire": "node --import tsx scripts/retire-records.ts",
     "check:secrets": "node scripts/check-secrets.mjs",

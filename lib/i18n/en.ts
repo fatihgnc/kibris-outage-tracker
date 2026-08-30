@@ -105,6 +105,7 @@ export const en: Dictionary = {
     statusPast: 'ended',
     endUnknown: 'unknown',
     published: 'published {time}',
+    districtWide: 'the whole district',
     cancelled: 'cancelled',
   },
   countdown: {
@@ -159,6 +160,8 @@ export const en: Dictionary = {
   outage: {
     backToDistrict: 'Outages in {district}',
     areas: 'Places affected',
+    districtWide:
+      'The announcement covers the whole of {district} and names no individual places.',
     sources: 'Sources',
     sourceOfficial: 'official announcement',
     sourcePress: 'press',

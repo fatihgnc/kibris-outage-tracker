@@ -49,6 +49,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-1, 17, 0),
       ingestedAt: minutesAfter(at(-1, 17, 0), 10),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: 'f8c4df7fb73e24db753a3fd68be13107',
@@ -62,6 +63,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: rel(-2),
       ingestedAt: minutesAfter(rel(-2), 5),
       confidence: 'high',
+      scope: 'places',
     },
     // Upcoming
     {
@@ -76,6 +78,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-1, 16, 30),
       ingestedAt: minutesAfter(at(-1, 16, 30), 10),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: 'c37dd39ed9c9671ffef5b59f81533766',
@@ -89,6 +92,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-1, 18, 0),
       ingestedAt: minutesAfter(at(-1, 18, 0), 10),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: '05be686d15cff28ce8d3562169021a79',
@@ -102,19 +106,27 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-1, 10, 0),
       ingestedAt: minutesAfter(at(-1, 10, 0), 10),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: '6c5402dcc8e8c7929f9773aaf709fd68',
       utility: 'electricity',
       kind: 'planned',
-      startsAt: at(2, 10, 0),
-      endsAt: at(2, 14, 0),
+      // Active, deliberately: the district-wide reading is a state the map, the
+      // card and the outage page can each be in, and none of them shows it for
+      // a record that has not started.
+      startsAt: rel(-1),
+      endsAt: rel(3),
       district: 'lefke',
-      areas: ['Gemikonağı', 'Doğancı', 'Yeşilyurt'],
+      // The one district-wide record in the set. 'Lefke' is both the town and
+      // the district around it, which is the whole reason `scope` exists: read
+      // narrowly this is one lamp, read as written it is every lamp in Lefke.
+      areas: ['Lefke'],
       sources: [KIBTEK, YENIDUZEN],
       publishedAt: at(-1, 9, 30),
       ingestedAt: minutesAfter(at(-1, 9, 30), 10),
       confidence: 'high',
+      scope: 'district',
     },
     {
       id: 'dea47baf032f3e2e8a81b1af9dcb6260',
@@ -128,6 +140,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-1, 20, 30),
       ingestedAt: minutesAfter(at(-1, 20, 30), 10),
       confidence: 'low',
+      scope: 'places',
     },
     // Past
     {
@@ -142,6 +155,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-1, 18, 30),
       ingestedAt: minutesAfter(at(-1, 18, 30), 5),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: 'aa9d08e0b0a0da1d4e7cacb17f4d5ec5',
@@ -155,6 +169,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-4, 16, 0),
       ingestedAt: minutesAfter(at(-4, 16, 0), 10),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: 'a4ba69f6f06a21301bc7e35489a02906',
@@ -168,6 +183,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-13, 15, 0),
       ingestedAt: minutesAfter(at(-13, 15, 0), 10),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: '153b97aad1f2a8acd58b165282f8cbd2',
@@ -181,6 +197,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-31, 17, 0),
       ingestedAt: minutesAfter(at(-31, 17, 0), 10),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: '05ebc035c265522e7a44680387d130e8',
@@ -194,6 +211,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-45, 13, 30),
       ingestedAt: minutesAfter(at(-45, 13, 30), 5),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: '5071ec31252653675ac54379b72276df',
@@ -207,6 +225,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-69, 16, 0),
       ingestedAt: minutesAfter(at(-69, 16, 0), 10),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: '59e12a86a6320fc9b979951343ab7b9b',
@@ -220,6 +239,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-100, 14, 30),
       ingestedAt: minutesAfter(at(-100, 14, 30), 5),
       confidence: 'low',
+      scope: 'places',
     },
     // Gönyeli three times over three months. A settlement only gets a page once
     // it has a history worth reading (PLACE_PAGE_MIN_RECORDS), and without a
@@ -238,6 +258,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-39, 17, 0),
       ingestedAt: minutesAfter(at(-39, 17, 0), 10),
       confidence: 'high',
+      scope: 'places',
     },
     {
       id: 'a34e4fa8146ead495b5632934de4ad0c',
@@ -251,6 +272,7 @@ export function getMockOutages(now: number): Outage[] {
       publishedAt: at(-77, 20, 0),
       ingestedAt: minutesAfter(at(-77, 20, 0), 5),
       confidence: 'high',
+      scope: 'places',
     },
   ];
   return records;

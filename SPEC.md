@@ -218,13 +218,39 @@ distinction the cards draw. The kind is still named in the point's popover
 (§3.6) and on every card. If the map ever needs that distinction back, it has to
 come from something other than hue.
 
-**Districts carry no power state.** They are the ground the light sits on and
-the thing a reader clicks; an outage is one or more places going dark, and a
-district is not a place. An earlier pass shaded the whole of a district under
-any outage inside it, which said every village in Lefkoşa was out when the
-record named three. Where an outage names only places the map cannot place —
-the handful declared in §3.2 — nothing goes out, and the list below the map is
-where it is read.
+**No district is shaded by inference.** Districts are the ground the light sits
+on and the thing a reader clicks. An early pass shaded the whole of one under any
+outage inside it, which said every village in Lefkoşa was out when the record
+named three — that stays banned. Where an outage names only places the map cannot
+place — the handful declared in §3.2 — nothing goes out, and the list below the
+map is where it is read.
+
+**A district darkens only when the announcement said so.** Every district name is
+also a settlement name: Lefkoşa, Girne, Gazimağusa, Güzelyurt, İskele and Lefke
+are each a town and the district around it. So `areas: ['Lefke']` is two
+different announcements — one lamp or nineteen — and nothing in the record could
+say which. The map took the narrow reading in silence, and showed a single dark
+point under a headline reading "Lefke'de arıza". 11 of 193 stored records were
+ambiguous this way.
+
+The reading is now `scope` on the record, read from the announcement by the
+parser (§10.4), not guessed here: `'places'` means `areas` names the settlements
+that lose power, `'district'` means the announcement said the district was out
+and named no place inside it. On `'district'`, every settlement in that district
+goes dark.
+
+Where a settlement is claimed twice, **a record that names it beats a
+district-wide one whatever the clocks say**, and only between two records of the
+same scope does the earlier start win. A district-wide record reaches a village
+by our widening; a record that names the village is evidence about it, and the
+popover has to print the kind, the clock and the source that were actually
+written about that place.
+
+This does not reach `area_keys`. That column is the record of what the
+announcement named, and it is what a settlement page is found by; widening it
+would file a record under nineteen villages the announcement never wrote. The
+map is a reading of the record — and the two disagreeing is the known cost: a
+village the map darkens will say nothing happened on its own page.
 
 ### 3.4 Outline legibility
 
@@ -1034,6 +1060,17 @@ being deterministic is cheap:
   holds canonical names — which is what lets a lamp on the map match a record at
   all (§3.2). A name the model invents matches nothing and is left out rather
   than reaching the database as a place that does not exist.
+- _Scope_: the model returns whether the announcement named places or a whole
+  district (§3.3), and that reading survives only where the record's own `areas`
+  hold its own district's name. Which district a district-wide reading applies
+  to is ours, like the district itself: an announcement covering Lefke and one
+  village in Güzelyurt is one district-wide record and one place record, not two
+  of either. It is also the guard against a model that saw a district word
+  somewhere in the article and widened the whole announcement on the strength of
+  it — a scope a record cannot act on is not stored as one. The invariant this
+  leaves, which the map relies on: a stored record with `scope: 'district'`
+  always names its own district in `areas`. SQL cannot check it, because the
+  fold is Turkish-specific; the parser and a test do.
 - _Time zones_: the model returns a local date and a wall clock; the conversion
   to UTC goes through the same function the site reads back with.
 - _Named weekdays_: announcements say "perşembe günü" constantly, and the model

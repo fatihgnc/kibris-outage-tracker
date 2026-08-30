@@ -5,14 +5,17 @@ import { DISTRICT_IDS, getMapGeometry, resolveDarkness } from './geography';
 import placesFile from '../data/places.json';
 import overrides from './geo/settlements.overrides.json';
 
-// A lamp needs a kind, a clock and a source to say anything in the popover;
-// only `areas` decides which lamp it is.
+// A lamp needs a kind, a clock and a source to say anything in the popover.
+// `areas` decides which lamp it is — unless `scope` is 'district', when
+// `district` does.
 const outage = (areas: string[], over: Partial<Parameters<typeof resolveDarkness>[0][number]> = {}) => ({
   kind: 'planned' as const,
   startsAt: '2026-08-27T06:00:00.000Z',
   endsAt: '2026-08-27T12:00:00.000Z',
   sources: [{ name: 'Yenidüzen', url: 'https://example.invalid', kind: 'press' as const }],
   confidence: 'high' as const,
+  district: 'lefkosa' as const,
+  scope: 'places' as const,
   areas,
   ...over,
 });
@@ -75,7 +78,9 @@ test('an area named with different diacritics still matches its settlement', () 
 });
 
 test('a lamp that goes out carries what the popover has to say', () => {
-  const dark = resolveDarkness([outage(['Lapta'], { kind: 'fault', endsAt: null })]);
+  const dark = resolveDarkness([
+    outage(['Lapta'], { kind: 'fault', endsAt: null, district: 'girne' }),
+  ]);
   assert.deepEqual(dark.get('Lapta'), {
     kind: 'fault',
     startsAt: '2026-08-27T06:00:00.000Z',
@@ -85,8 +90,9 @@ test('a lamp that goes out carries what the popover has to say', () => {
   });
 });
 
-// Nothing is invented to fill the gap: a district is not a place, and shading
-// the whole of one said a village was out when only its neighbour was.
+// Nothing is invented to fill the gap. A district is shaded only where the
+// announcement itself said so — `scope`, below — never as a guess made from a
+// place name, which is what once said a village was out when its neighbour was.
 test('an outage naming nothing we can place darkens nothing', () => {
   assert.equal(resolveDarkness([outage(['Bilinmeyen Mahalle'])]).size, 0);
 });
@@ -97,4 +103,60 @@ test('where two outages name one place, the one that started first wins', () => 
     outage(['Girne'], { kind: 'fault', startsAt: '2026-08-27T04:00:00.000Z' }),
   ]);
   assert.equal(dark.get('Girne')?.kind, 'fault');
+});
+
+// Every district name is also a settlement name, so 'Lefke' alone cannot say
+// whether one lamp or nineteen have gone out. `scope` is the announcement's own
+// answer, and this is the whole of what it buys.
+test('a district-scope record darkens every settlement in its district', () => {
+  const settlements = getMapGeometry().settlements;
+  const inLefke = settlements.filter((s) => s.district === 'lefke');
+  const dark = resolveDarkness([outage(['Lefke'], { district: 'lefke', scope: 'district' })]);
+  // Counted off the layout rather than written down: the map is generated, and
+  // a hardcoded number would go stale the first time a place is added.
+  assert.equal(dark.size, inLefke.length);
+  for (const s of inLefke) assert.ok(dark.has(s.name), `${s.name} stayed lit`);
+});
+
+test('a district-scope record darkens nothing outside its own district', () => {
+  const dark = resolveDarkness([outage(['Lefke'], { district: 'lefke', scope: 'district' })]);
+  assert.ok(!dark.has('Lapta'));
+  assert.ok(!dark.has('Gönyeli'));
+});
+
+// The reason the two are resolved in separate passes. A district-wide record
+// reaches a village by our widening; a record that names the village is evidence
+// about it, and the popover has to print the clock and the source that were
+// actually written about that place.
+test('a record naming a place beats a district-wide one that started earlier', () => {
+  const dark = resolveDarkness([
+    outage(['Lefke'], {
+      district: 'lefke',
+      scope: 'district',
+      kind: 'fault',
+      endsAt: null,
+      startsAt: '2026-08-27T04:00:00.000Z',
+      sources: [{ name: 'Kıbrıs Postası', url: 'https://example.invalid', kind: 'press' }],
+    }),
+    outage(['Gemikonağı'], { district: 'lefke', startsAt: '2026-08-27T09:00:00.000Z' }),
+  ]);
+  const named = dark.get('Gemikonağı');
+  assert.equal(named?.kind, 'planned');
+  assert.equal(named?.startsAt, '2026-08-27T09:00:00.000Z');
+  assert.equal(named?.source, 'Yenidüzen');
+  // Every other village in the district still has the wide record.
+  assert.equal(dark.get('Yeşilyurt')?.kind, 'fault');
+});
+
+test('between two district-scope records the earlier one still wins', () => {
+  const dark = resolveDarkness([
+    outage(['Lefke'], { district: 'lefke', scope: 'district', startsAt: '2026-08-27T09:00:00.000Z' }),
+    outage(['Lefke'], {
+      district: 'lefke',
+      scope: 'district',
+      kind: 'fault',
+      startsAt: '2026-08-27T04:00:00.000Z',
+    }),
+  ]);
+  assert.equal(dark.get('Yeşilyurt')?.kind, 'fault');
 });

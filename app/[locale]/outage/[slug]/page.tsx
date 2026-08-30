@@ -199,26 +199,37 @@ export default async function OutagePage({ params }: Props) {
 
       <section className="mt-6">
         <h2 className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{dict.outage.areas}</h2>
-        {/* Area names come from parsed announcements, so a bad parse can put a
-          * run-on token here — left to wrap on spaces alone one of those pushes
-          * the page sideways on a phone. */}
-        <ul className="m-0 mt-2 flex list-none flex-wrap gap-x-2 gap-y-1 p-0 text-small">
-          {areas.map(({ name, place }, index) => (
-            <li key={`${name}-${index}`} className="break-words">
-              {place ? (
-                <Link
-                  href={routeHref(locale, 'place', place.slug)}
-                  className="text-text underline decoration-dark underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
-                >
-                  {name}
-                </Link>
-              ) : (
-                <span className="text-muted">{name}</span>
-              )}
-              {index < areas.length - 1 && <span className="text-muted">,</span>}
-            </li>
-          ))}
-        </ul>
+        {/* A district-scope record holds its own district's name in `areas`, so
+          * the list below would be a single link pointing at the town's page —
+          * exactly the claim the record is not making, and the opposite of what
+          * the map now draws. The heading stays; what sits under it becomes the
+          * sentence the announcement actually supports. */}
+        {outage.scope === 'district' ? (
+          <p className="m-0 mt-2 max-w-[60ch] text-small text-muted">
+            {fill(dict.outage.districtWide, { district: districtName })}
+          </p>
+        ) : (
+          /* Area names come from parsed announcements, so a bad parse can put a
+           * run-on token here — left to wrap on spaces alone one of those pushes
+           * the page sideways on a phone. */
+          <ul className="m-0 mt-2 flex list-none flex-wrap gap-x-2 gap-y-1 p-0 text-small">
+            {areas.map(({ name, place }, index) => (
+              <li key={`${name}-${index}`} className="break-words">
+                {place ? (
+                  <Link
+                    href={routeHref(locale, 'place', place.slug)}
+                    className="text-text underline decoration-dark underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
+                  >
+                    {name}
+                  </Link>
+                ) : (
+                  <span className="text-muted">{name}</span>
+                )}
+                {index < areas.length - 1 && <span className="text-muted">,</span>}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="mt-6">

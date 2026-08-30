@@ -100,8 +100,15 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
         </p>
         {/* Area names come from parsed announcements, so a bad parse can put a
           * run-on token here. Left to wrap on spaces alone, one of those widens
-          * the grid column and pushes the whole page sideways on a phone. */}
-        <p className="m-0 break-words text-small text-muted">{outage.areas.join(', ')}</p>
+          * the grid column and pushes the whole page sideways on a phone.
+          *
+          * A district-scope record has its own district's name in `areas`, so
+          * printing the list would put 'Lefke' under the heading 'Lefke' and
+          * read as an outage in the town — the narrow claim the record is
+          * explicitly not making, and the opposite of what the map now draws. */}
+        <p className="m-0 break-words text-small text-muted">
+          {outage.scope === 'district' ? dict.card.districtWide : outage.areas.join(', ')}
+        </p>
       </div>
 
       {/* Two lines, never one: the date and the source read as separate facts,

@@ -64,46 +64,86 @@ export type SettlementOutage = {
 /**
  * Which lamps go out, and why.
  *
- * The map is lit place by place and nothing else: an outage is one or more
- * villages going dark, not a district being shaded. That only works because
- * every name the ingest can match has a lamp — `data/places.json` and
- * `lib/geo/settlements.json` are kept in step by `npm run harvest:coords`, and
- * the test below fails if they drift. Two names have no defensible coordinate
- * and are declared in `settlements.overrides.json`; an outage naming only
- * those lights nothing here and is read from the list under the map instead.
- * Across 82 real archived records both were only ever named alongside a place
- * that does have one, so no outage has yet gone unshown.
+ * The map is lit place by place: an outage is villages going dark, and no
+ * district is ever shaded by inference from a place name — that is the mistake
+ * an early pass made, saying every village in Lefkosa was out when the record
+ * named three. A district darkens only where the announcement itself said the
+ * outage was district-wide, which is `scope` on the record rather than a guess
+ * made here (SS3.3).
  *
- * Where a settlement is named by more than one active outage, the one that
- * started first wins — it is the one that has been dark longest.
+ * Place-by-place only works because every name the ingest can match has a lamp:
+ * `data/places.json` and `lib/geo/settlements.json` are kept in step by
+ * `npm run harvest:coords`, and the test below fails if they drift. Two names
+ * have no defensible coordinate and are declared in
+ * `settlements.overrides.json`; an outage naming only those lights nothing here
+ * and is read from the list under the map instead. Across 82 real archived
+ * records both were only ever named alongside a place that does have one, so no
+ * outage has yet gone unshown.
+ *
+ * Where a settlement is claimed twice, a record that names it beats a
+ * district-wide one whatever the clocks say, and between two of the same scope
+ * the earlier start wins.
  */
 export function resolveDarkness(
-  outages: readonly Pick<Outage, 'kind' | 'startsAt' | 'endsAt' | 'areas' | 'sources' | 'confidence'>[],
+  outages: readonly Pick<
+    Outage,
+    'kind' | 'startsAt' | 'endsAt' | 'district' | 'areas' | 'sources' | 'confidence' | 'scope'
+  >[],
   settlements: readonly MapSettlement[] = getMapGeometry().settlements,
 ): Map<string, SettlementOutage> {
   const byKey = new Map<string, MapSettlement>();
   for (const s of settlements) byKey.set(foldKey(s.name), s);
 
-  const dark = new Map<string, SettlementOutage>();
-  for (const outage of outages) {
-    for (const area of outage.areas) {
-      // Announcements name villages the way people do — 'YENIBOGAZICI' for
-      // Yeniboğaziçi. foldKey is the ingest's own comparison key, so what
-      // matches here is exactly what matched when the record was parsed.
-      const settlement = byKey.get(foldKey(area));
-      if (!settlement) continue;
-      const existing = dark.get(settlement.name);
-      if (existing && Date.parse(existing.startsAt) <= Date.parse(outage.startsAt)) continue;
-      dark.set(settlement.name, {
-        kind: outage.kind,
-        startsAt: outage.startsAt,
-        endsAt: outage.endsAt,
-        source: outage.sources[0]?.name ?? '',
-        confidence: outage.confidence,
-      });
-    }
+  // Built from the `settlements` argument rather than from places.json: the map
+  // is lit from this list, and expanding a district from anything else could
+  // name a settlement that has no lamp to put out.
+  const byDistrict = new Map<DistrictId, MapSettlement[]>();
+  for (const s of settlements) {
+    const list = byDistrict.get(s.district);
+    if (list) list.push(s);
+    else byDistrict.set(s.district, [s]);
   }
-  return dark;
+
+  const targets = (outage: (typeof outages)[number]): MapSettlement[] =>
+    outage.scope === 'district'
+      ? (byDistrict.get(outage.district) ?? [])
+      : // Announcements name villages the way people do — 'YENIBOGAZICI' for
+        // Yenibogazici. foldKey is the ingest's own comparison key, so what
+        // matches here is exactly what matched when the record was parsed.
+        outage.areas
+          .map((area) => byKey.get(foldKey(area)))
+          .filter((settlement) => settlement !== undefined);
+
+  const collect = (subset: readonly (typeof outages)[number][]) => {
+    const dark = new Map<string, SettlementOutage>();
+    for (const outage of subset) {
+      for (const settlement of targets(outage)) {
+        const existing = dark.get(settlement.name);
+        if (existing && Date.parse(existing.startsAt) <= Date.parse(outage.startsAt)) continue;
+        dark.set(settlement.name, {
+          kind: outage.kind,
+          startsAt: outage.startsAt,
+          endsAt: outage.endsAt,
+          source: outage.sources[0]?.name ?? '',
+          confidence: outage.confidence,
+        });
+      }
+    }
+    return dark;
+  };
+
+  // Two passes rather than one comparison. A district-wide record reaches a
+  // settlement by our widening; a record that names it is evidence about it, and
+  // the popover prints a kind, a clock and a source that ought to be the ones
+  // actually written about that place. So the named readings are laid over the
+  // inferred ones outright — otherwise an earlier district-wide fault would show
+  // a village an open-ended 'since 04:00' over its own announced 09:00-13:00.
+  // 'Earliest wins' then decides only between readings of the same kind, which
+  // is the question it was ever answering.
+  return new Map([
+    ...collect(outages.filter((outage) => outage.scope === 'district')),
+    ...collect(outages.filter((outage) => outage.scope !== 'district')),
+  ]);
 }
 
 /**

@@ -25,6 +25,7 @@ export type OutageRow = {
   published_at: string;
   ingested_at: string;
   confidence: Outage['confidence'];
+  scope: Outage['scope'];
   cancelled_at: string | null;
   cancelled_reason: CancellationReason | null;
   updated_at: string;
@@ -41,7 +42,7 @@ export type CancellationReason = 'retracted' | 'bad_data';
 // selects the same rows through `mapOutageRow`, and a second copy of this list
 // would quietly fall behind the next column that gets added.
 export const OUTAGE_COLUMNS =
-  'id, utility, kind, starts_at, ends_at, district, areas, sources, published_at, ingested_at, confidence, cancelled_at, cancelled_reason, updated_at, area_keys';
+  'id, utility, kind, starts_at, ends_at, district, areas, sources, published_at, ingested_at, confidence, cancelled_at, cancelled_reason, updated_at, area_keys, scope';
 
 // A record retired as bad data never described a real announcement, so it is
 // excluded everywhere a reader could reach it. Spelled out rather than written
@@ -68,6 +69,7 @@ export function mapOutageRow(row: OutageRow): Outage {
     publishedAt: row.published_at,
     ingestedAt: row.ingested_at,
     confidence: row.confidence,
+    scope: row.scope,
     updatedAt: row.updated_at,
   };
 }
@@ -90,6 +92,7 @@ export function toOutageRow(outage: Outage) {
     published_at: outage.publishedAt,
     ingested_at: outage.ingestedAt,
     confidence: outage.confidence,
+    scope: outage.scope,
     // Written here rather than computed in SQL: foldKey is Turkish-specific
     // (dotless i, the 'ç/ş/ğ' fold) and a plpgsql imitation of it would drift
     // from the one the ingest matches places with. `updated_at` is the mirror

@@ -17,6 +17,7 @@ const record: Outage = {
   publishedAt: '2026-08-25T14:00:00.000Z',
   ingestedAt: '2026-08-25T14:10:00.000Z',
   confidence: 'high',
+  scope: 'places',
 };
 
 // Gönyeli has a page, Hamitköy does not.

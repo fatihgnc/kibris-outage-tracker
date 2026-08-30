@@ -3,7 +3,10 @@ import { nicosiaWallClock, zonedTimeToUtc } from '../../lib/time';
 import { fingerprint } from '../fingerprint';
 import { extractOutages, WEEKDAYS, type ExtractedOutage, type Weekday } from './llm';
 import { districtsOf, matchPlaces, type PlaceMatch } from './places';
-import { collapseWhitespace } from './text';
+import { collapseWhitespace, foldKey } from './text';
+// districts.ts rather than geography.ts: the district names alone, without
+// map-layout.json and the projection behind it.
+import { DISTRICTS } from '../../lib/districts';
 
 export type RawAnnouncement = {
   source: SourceRef;
@@ -119,6 +122,24 @@ export async function parseAnnouncement(
     // reader filtering by district still sees their own (§10.4).
     for (const district of districtsOf(places)) {
       const areas = places.filter((place) => place.district === district).map((place) => place.name);
+      // The model reads the announcement's scope; which district that reading
+      // applies to is ours, like the district itself. "Lefke bolgesinde ... ve
+      // Guzelyurt'ta Kalkanli" is one district-wide record and one place
+      // record, not two of either, so a district reading survives only where a
+      // record's own areas hold its own district's name. It is also the guard
+      // against the model marking a whole announcement district-wide because it
+      // saw a district word somewhere in it: a scope the record cannot act on is
+      // not stored as one.
+      //
+      // The invariant this establishes, which lib/geography.ts relies on: a
+      // stored record with scope 'district' always names its own district in
+      // `areas`. SQL cannot check it — the fold is Turkish-specific, the same
+      // reason `area_keys` is written by the app — so the parser and a test do.
+      const named = new Set(areas.map(foldKey));
+      const scope =
+        outage.scope === 'district' && named.has(foldKey(DISTRICTS[district].name))
+          ? 'district'
+          : 'places';
       records.push({
         id: fingerprint({ startsAt: schedule.startsAt, endsAt: schedule.endsAt, areas }),
         utility: 'electricity',
@@ -127,6 +148,7 @@ export async function parseAnnouncement(
         endsAt: schedule.endsAt,
         district,
         areas,
+        scope,
         sources: [announcement.source],
         publishedAt: announcement.publishedAt,
         ingestedAt: announcement.fetchedAt,

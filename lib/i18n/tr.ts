@@ -136,6 +136,7 @@ export const tr = {
     statusPast: 'bitti',
     endUnknown: 'belirsiz',
     published: '{time} yayınlandı',
+    districtWide: 'ilçe geneli',
     cancelled: 'iptal edildi',
   },
   countdown: {
@@ -192,6 +193,8 @@ export const tr = {
   outage: {
     backToDistrict: '{district} kesintileri',
     areas: 'Etkilenen yerler',
+    districtWide:
+      'Duyuru {district} genelini kapsıyor; tek tek yerler belirtilmemiş.',
     sources: 'Kaynaklar',
     sourceOfficial: 'resmi duyuru',
     sourcePress: 'haber',

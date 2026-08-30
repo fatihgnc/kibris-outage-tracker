@@ -293,3 +293,59 @@ test('a repair naming nowhere we know is not a resolution', async () => {
   );
   assert.equal(outcome.status, 'failed');
 });
+
+// Every district name is also a settlement name, so the announcement is the only
+// thing that can say which was meant (§10.4).
+test('a district reading survives where the record names its own district', async () => {
+  const outcome = await parseAnnouncement(
+    announcement({ body: 'Lefke bölgesinde elektrik kesintisi yaşanacaktır.' }),
+    respondWith([{ areas: ['Lefke'], scope: 'district' }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.records[0].district, 'lefke');
+  assert.equal(outcome.records[0].scope, 'district');
+});
+
+// The guard against a model that saw a district word somewhere in the article
+// and widened the whole announcement on the strength of it.
+test('a district reading is dropped where the record names no district', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([{ areas: ['Gemikonağı'], scope: 'district' }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.records[0].district, 'lefke');
+  assert.equal(outcome.records[0].scope, 'places');
+});
+
+test('across two districts only the one named as a district is district-scope', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([{ areas: ['Lefke', 'Gönyeli'], scope: 'district' }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  const byDistrict = new Map(outcome.records.map((r) => [r.district, r]));
+  assert.equal(byDistrict.get('lefke')?.scope, 'district');
+  assert.equal(byDistrict.get('lefkosa')?.scope, 'places');
+});
+
+// The property the whole backfill rests on: correcting a record's scope has to
+// update the row it is about, not open a second one beside it.
+test('two records differing only in scope share an id', async () => {
+  const read = async (scope: 'places' | 'district') => {
+    const outcome = await parseAnnouncement(
+      announcement(),
+      respondWith([{ areas: ['Lefke'], scope }]),
+    );
+    assert.equal(outcome.status, 'parsed');
+    if (outcome.status !== 'parsed') throw new Error('unreachable');
+    return outcome.records[0];
+  };
+  const narrow = await read('places');
+  const wide = await read('district');
+  assert.notEqual(narrow.scope, wide.scope);
+  assert.equal(narrow.id, wide.id);
+});

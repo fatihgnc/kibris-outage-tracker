@@ -1,5 +1,15 @@
 export type OutageKind = 'planned' | 'fault' | 'rotating';
 
+/**
+ * What a record's `areas` names.
+ *
+ * Every district name is also a settlement name — Lefkoşa, Girne, Gazimağusa,
+ * Güzelyurt, İskele and Lefke are each a town and the district around it — so
+ * `areas: ['Lefke']` cannot say on its own whether one lamp or nineteen have
+ * gone out. The announcement can, and the parser reads it (§10.4).
+ */
+export type OutageScope = 'places' | 'district';
+
 export type Utility = 'electricity'; // union kept open for future services
 
 export type DistrictId =
@@ -24,6 +34,12 @@ export type Outage = {
   endsAt: string | null; // null = end time unknown, typical for faults
   district: DistrictId;
   areas: string[]; // affected villages / neighbourhoods
+  // What `areas` names. 'places' is the announcement's own list of settlements;
+  // 'district' means it said the whole district was out and named no place
+  // inside it, so `areas` holds the district's name and the map darkens every
+  // settlement in `district`. Not inferrable from `areas` alone — see
+  // OutageScope above.
+  scope: OutageScope;
   sources: SourceRef[]; // one record may be confirmed by several sources
   publishedAt: string; // ISO 8601, when the announcement went out
   ingestedAt: string; // ISO 8601, when this record entered the system

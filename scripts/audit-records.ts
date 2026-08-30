@@ -34,56 +34,23 @@ loadEnvConfig(process.cwd());
 
 import { createClient } from '@supabase/supabase-js';
 import type { SourceRef } from '../lib/types';
-import { politeFetch, type ConditionalCache } from '../ingest/http';
-import { articleDate } from '../ingest/adapters/outlet';
-import { extractArticle } from '../ingest/adapters/feed';
-import { parseAnnouncement } from '../ingest/parse';
 import { foldKey } from '../ingest/parse/text';
+// Shared with backfill-scope.ts: one answer to "what does today's parser make
+// of this article", not two of them that can drift apart.
+import { createRederiver, type Rederived } from './rederive';
 
-type Derived = { district: string; areas: Set<string>; startsAt: string };
-
-// What a source says today: the records today's parser derives from it, and
-// the publication date the page carries now. The date is what separates a
-// record an edit has overtaken from one that was simply wrong.
-type Rederived = { records: Derived[]; publishedAt: string };
-
-const cache: ConditionalCache = new Map();
+const deriveFrom = createRederiver();
+// What each source said, kept only so a failing row can print it back. The
+// reriver memoises its own fetches.
 const derived = new Map<string, Rederived | null>();
-
-// null means the announcement could not be re-derived at all — a dead link, a
-// block, or text today's parser rejects. That is not evidence against the
-// record, so it is reported separately and never counted as a failure.
-async function deriveFrom(source: SourceRef): Promise<Rederived | null> {
-  const hit = derived.get(source.url);
-  if (hit !== undefined) return hit;
-
-  let result: Rederived | null = null;
-  const article = await politeFetch(source.url, cache);
-  if (article.status === 'ok') {
-    const { title, body } = extractArticle(article.body);
-    const publishedAt = articleDate(article.body);
-    if (publishedAt) {
-      const outcome = await parseAnnouncement({ source, title, body, publishedAt, fetchedAt: publishedAt });
-      if (outcome.status === 'parsed') {
-        result = {
-          publishedAt,
-          records: outcome.records.map((record) => ({
-            district: record.district,
-            areas: new Set(record.areas.map(foldKey)),
-            startsAt: record.startsAt,
-          })),
-        };
-      }
-    }
-  }
-  derived.set(source.url, result);
-  return result;
-}
 
 function describe(rederived: Rederived | null): string {
   if (!rederived) return '(could not re-derive)';
   return rederived.records
-    .map((record) => `${record.district}@${record.startsAt.slice(0, 10)}[${[...record.areas].join('|')}]`)
+    .map(
+      (record) =>
+        `${record.district}@${record.startsAt.slice(0, 10)}[${record.areas.map(foldKey).join('|')}]`,
+    )
     .join(' ; ');
 }
 
@@ -117,6 +84,7 @@ async function main() {
 
     for (const source of row.sources as SourceRef[]) {
       const rederived = await deriveFrom(source);
+      derived.set(source.url, rederived);
       if (!rederived) continue;
       readable = true;
       // The page says it was published after we read it, so what stands there
@@ -131,7 +99,8 @@ async function main() {
       for (const record of rederived.records) {
         if (record.district !== row.district) continue;
         if (Date.parse(record.startsAt) !== Date.parse(row.starts_at)) continue;
-        if ([...stored].some((area) => record.areas.has(area))) supported = true;
+        const areas = new Set(record.areas.map(foldKey));
+        if ([...stored].some((area) => areas.has(area))) supported = true;
       }
     }
 

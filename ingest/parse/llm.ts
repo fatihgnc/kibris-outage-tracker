@@ -1,4 +1,4 @@
-import type { OutageKind } from '../../lib/types';
+import type { OutageKind, OutageScope } from '../../lib/types';
 import type { RawAnnouncement } from './index';
 import { envOr } from '../env';
 
@@ -63,6 +63,7 @@ const SCHEMA = {
             'start',
             'end',
             'areas',
+            'scope',
             'cancelled',
             'ongoing',
             'resolved',
@@ -94,8 +95,14 @@ const SCHEMA = {
             areas: {
               type: 'array',
               description:
-                'Settlement, village or neighbourhood names exactly as the announcement writes them, in Turkish. Do not translate or transliterate. Leave out businesses and buildings named only as landmarks.',
+                'Settlement, village or neighbourhood names exactly as the announcement writes them, in Turkish. Do not translate or transliterate. Leave out businesses and buildings named only as landmarks. When "scope" is "district", put the district\'s own name here and nothing else.',
               items: { type: 'string' },
+            },
+            scope: {
+              type: 'string',
+              enum: ['places', 'district'],
+              description:
+                'What "areas" names. Use "places" when the announcement names the settlements, villages or neighbourhoods that lose power — this is almost every announcement. Use "district" only when it says the outage covers a whole district and names no place inside it: "Lefke bölgesinde elektrik kesintisi", "Girne genelinde elektrik kesintisi yaşanmaktadır". Lefkoşa, Girne, Gazimağusa, Güzelyurt, İskele and Lefke are each the name of a town as well as of the district around it, so naming one of them is not by itself a district-wide outage: "Lefke\'de bir trafo arızası" is the town of Lefke and is "places". Naming a district only to say where a village is, is also "places": "Lefke\'nin Cengizköy mevkiinde" is about Cengizköy. If you cannot tell which is meant, answer "places".',
             },
             cancelled: {
               type: 'boolean',
@@ -139,6 +146,9 @@ const SYSTEM_PROMPT = [
   '- A repair article carries two clocks and they must not be swapped: "bugun saat 16.00 siralarinda meydana gelen ariza" is "start", "saat 18.30 itibariyla elektrik verildi" is "restoredAt". The time the power returned is never a start time.',
   '- Planned work states its hours almost without exception. If a clearly scheduled outage gives no hours, return what you can find and leave the rest null rather than estimating.',
   '- "areas" must be the place names the announcement itself uses. Include villages, towns and neighbourhoods; leave out businesses and buildings used only as landmarks.',
+  '- "scope" says how wide the outage is. "places" means the announcement names the settlements, villages or neighbourhoods that go dark, and those are what "areas" holds — this is the normal case. "district" means it says a whole district loses power and names no place inside it: "Lefke bölgesinde elektrik kesintisi", "Girne genelinde elektrik kesintisi yaşanacaktır".',
+  '- Lefkoşa, Girne, Gazimağusa, Güzelyurt, İskele and Lefke are each a town as well as the district around it, and this is the mistake to avoid. An announcement about the town is "places": "Lefke\'de bir trafo arızası nedeniyle elektrik kesintisi" is the town of Lefke. An announcement naming the district only to locate a village inside it is also "places": "Lefke\'nin Cengizköy mevkiinde" is about Cengizköy, and Cengizköy is what goes in "areas". Only the announcement saying the outage covers the district itself is "district".',
+  '- When the two readings are both possible, answer "places". Reading a town as a district darkens every village in it on the map, for people who have power; reading a district as a town leaves the outage exactly as narrow as the announcement was written.',
 ].join('\n');
 
 export type ExtractedOutage = {
@@ -151,6 +161,7 @@ export type ExtractedOutage = {
   start: string | null;
   end: string | null;
   areas: string[];
+  scope: OutageScope;
   cancelled: boolean;
   ongoing: boolean;
 };
@@ -283,7 +294,7 @@ export function validate(raw: string): ExtractedOutage[] | null {
   const out: ExtractedOutage[] = [];
   for (const entry of list) {
     if (typeof entry !== 'object' || entry === null) continue;
-    const { kind, date, weekday, start, end, areas, cancelled, ongoing, resolved, restoredAt } =
+    const { kind, date, weekday, start, end, areas, scope, cancelled, ongoing, resolved, restoredAt } =
       entry as Record<string, unknown>;
     if (kind !== 'planned' && kind !== 'fault' && kind !== 'rotating') continue;
     if (typeof date !== 'string' || !isCalendarDate(date)) continue;
@@ -296,6 +307,12 @@ export function validate(raw: string): ExtractedOutage[] | null {
     if (!Array.isArray(areas)) continue;
     const names = areas.filter((a): a is string => typeof a === 'string' && a.trim().length > 1);
     if (names.length === 0) continue;
+    // A scope that comes back unreadable degrades to the narrow reading rather
+    // than dropping the entry. 'places' is what every record meant before this
+    // field existed, so the cost is a map no wider than it already was, and
+    // losing a whole announcement over a widening hint is the worse trade.
+    // `kind` above drops because it has no safe fallback; this one has one.
+    const reading: OutageScope = scope === 'district' ? 'district' : 'places';
     out.push({
       kind,
       date,
@@ -303,6 +320,7 @@ export function validate(raw: string): ExtractedOutage[] | null {
       start: (start as string | null) ?? null,
       end: (end as string | null) ?? null,
       areas: names,
+      scope: reading,
       cancelled: cancelled === true,
       ongoing: ongoing === true,
       resolved: resolved === true,

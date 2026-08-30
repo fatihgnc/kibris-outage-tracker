@@ -20,6 +20,7 @@ function outage(overrides: Partial<Outage> = {}): Outage {
     publishedAt: '2026-08-22T14:00:00.000Z',
     ingestedAt: '2026-08-22T14:10:00.000Z',
     confidence: 'high',
+  scope: 'places',
     ...overrides,
   };
 }
@@ -75,6 +76,21 @@ test('official field values win over press ones when they conflict', () => {
   const official = outage({ kind: 'fault', sources: [OFFICIAL] });
   assert.equal(mergeOutages(press, official).kind, 'fault');
   assert.equal(mergeOutages(press, official).confidence, 'high');
+});
+
+// One outlet abbreviating a district-wide outage to three of its villages must
+// not narrow the reading the other one gave. Asserted both ways round, because
+// dedupe folds in id order — a hash — so a rule that depended on which record
+// arrived first would give different answers on different runs.
+test('a district-wide reading survives a merge, whichever side it is on', () => {
+  const wide = outage({ scope: 'district', areas: ['Lefkoşa'] });
+  const narrow = outage({ scope: 'places', sources: [PRESS] });
+  assert.equal(mergeOutages(wide, narrow).scope, 'district');
+  assert.equal(mergeOutages(narrow, wide).scope, 'district');
+});
+
+test('two place-scope records stay place-scope', () => {
+  assert.equal(mergeOutages(outage({}), outage({ sources: [PRESS] })).scope, 'places');
 });
 
 // Renumbering a record when a new source widens its area list would make every
