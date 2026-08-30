@@ -11,16 +11,30 @@ import { extractArticle } from './adapters/feed';
 import { articleDate } from './adapters/outlet';
 import { collectSitemapEntries } from './adapters/sitemap';
 import { looksLikeOutage } from './parse/kind';
-import { parseAnnouncement } from './parse';
+import { parseAnnouncement, type Resolution } from './parse';
 import { dedupe } from './dedupe';
-import { queueForReview, storeOutages, type ReviewItem } from './store';
+import {
+  queueForReview,
+  resolveOpenOutages,
+  retractOutages,
+  storeOutages,
+  type ReviewItem,
+} from './store';
 
 // One-off historical walk (§10.8). Six months of history makes the archive and
 // the twelve-month chart meaningful from launch instead of a year from now —
 // and that archive is the thing nobody else has.
 //
-// Runs through the same parser as the live ingest, so a record backfilled
-// today is indistinguishable from one ingested at the time.
+// Runs through the same parser as the live ingest, and now through the same
+// three writes: records are stored, retractions cancel what they name, and a
+// repair report closes the fault it reports (§10.6). It used to do only the
+// first, which left a historical announcement that called work off standing in
+// the archive as work that happened, and every backfilled fault open with no
+// end — and the twelve-month chart sums only records that have one, so the
+// chart this script exists to fill was the thing missing them.
+//
+// What still differs from a run: no IndexNow ping, no ingest_runs row, and no
+// conditional-request cache across invocations. None of those change a record.
 //
 //   npm run backfill -- --per-source 20 --months 6 [--dry-run]
 
@@ -81,6 +95,12 @@ export async function backfill(options: { perSource?: number; dryRun?: boolean; 
   const perSource = options.perSource ?? 60;
   const cache: ConditionalCache = new Map();
   const parsed: Outage[] = [];
+  // An announcement that called work off, or reported a fault repaired, is as
+  // much a part of the archive as one that announced an outage (§10.6) — and
+  // this script's whole claim is that a record backfilled today is
+  // indistinguishable from one ingested at the time. It used to collect neither.
+  const retractions: Outage[] = [];
+  const resolutions: Resolution[] = [];
   const review: ReviewItem[] = [];
   const seen = new Set<string>();
 
@@ -96,7 +116,8 @@ export async function backfill(options: { perSource?: number; dryRun?: boolean; 
 
     let kept = 0;
     let skipped = 0;
-    let unacted = 0;
+    let called = 0;
+    let repaired = 0;
     for (const entry of capped) {
       if (seen.has(entry.url)) continue;
       seen.add(entry.url);
@@ -121,18 +142,11 @@ export async function backfill(options: { perSource?: number; dryRun?: boolean; 
 
       if (outcome.status === 'parsed') {
         parsed.push(...outcome.records);
+        retractions.push(...outcome.retractions);
+        resolutions.push(...outcome.resolutions);
         kept++;
-        // Counted, not acted on. This script stores; it does not retract a
-        // record or close one with a repair report, which the live run does
-        // (§10.6). Until it does, a historical announcement that called work off
-        // leaves the work it cancelled standing in the archive, and a repair
-        // report leaves its fault open with no `endsAt` — which the twelve-month
-        // chart then omits, since it sums only records that have one.
-        //
-        // What it no longer does is store them as outages that happened. They
-        // used to arrive on `records` behind a single per-article flag and were
-        // pushed straight in.
-        unacted += outcome.retractions.length + outcome.resolutions.length;
+        called += outcome.retractions.length;
+        repaired += outcome.resolutions.length;
       } else if (outcome.status === 'failed') {
         review.push({
           source: { name: source.name, url: entry.url },
@@ -145,12 +159,17 @@ ${body}`,
     console.log(
       `[${source.id}] ${kept} parsed, ${skipped} not an outage, ` +
         `${capped.length - kept - skipped} unparsed` +
-        (unacted > 0 ? `, ${unacted} retraction/repair not acted on` : ''),
+        (called > 0 ? `, ${called} retraction(s)` : '') +
+        (repaired > 0 ? `, ${repaired} repair report(s)` : ''),
     );
   }
 
   const collapsed = dedupe(parsed);
-  console.log(`backfill: ${parsed.length} record(s) -> ${collapsed.length} after dedupe, ${review.length} to review`);
+  console.log(
+    `backfill: ${parsed.length} record(s) -> ${collapsed.length} after dedupe; ` +
+      `${retractions.length} retraction(s); ${resolutions.length} repair report(s); ` +
+      `${review.length} to review`,
+  );
 
   if (options.dryRun) {
     // A dry run exists to be read: print what was parsed so the rows can be
@@ -163,6 +182,8 @@ ${body}`,
       );
       console.log(`           ${record.sources[0].url}`);
     }
+    for (const r of retractions) console.log(`  CANCELLED  ${r.district}  ${r.areas.join(', ')}`);
+    for (const r of resolutions) console.log(`  REPAIRED  ${r.district}  ${r.areas.join(', ')}`);
     for (const item of review) {
       console.log(`  REVIEW  ${item.reason}  ${item.source.url}`);
     }
@@ -170,9 +191,20 @@ ${body}`,
   }
 
   const client = createServiceClient();
+  // The same order the live run uses, and for the same reason: everything is
+  // stored first, so a fault announced and then repaired inside one backfill is
+  // closed rather than missed, and a retraction reaches a row that exists.
+  // Ordering by hand matters more here than in a run — six months of
+  // announcements arrive in sitemap order, not in the order they happened.
   const stored = await storeOutages(client, collapsed);
+  const retracted = await retractOutages(client, retractions);
+  const closed = await resolveOpenOutages(client, resolutions);
   const reviewed = await queueForReview(client, review);
-  console.log(`backfill stored: ${stored.created} created, ${stored.updated} updated, ${reviewed} to review`);
+  console.log(
+    `backfill stored: ${stored.created} created, ${stored.updated} updated, ` +
+      `${stored.cancelled + retracted} retracted, ${closed} closed by a repair report, ` +
+      `${reviewed} to review`,
+  );
   return collapsed;
 }
 
