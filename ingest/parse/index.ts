@@ -79,7 +79,13 @@ export async function parseAnnouncement(
   const resolutions: Resolution[] = [];
   const fuzzyPlaces: PlaceMatch[] = [];
   let cancellation = false;
-  let unresolved = 0;
+  // Counted apart, because they call for different things. A run of records
+  // dropped for want of a clock is a parser or a prompt problem; a run dropped
+  // for want of a place is data/places.json. Both used to increment one counter
+  // and the review queue was told 'no known place names found' either way —
+  // which is the field's whole job, answered wrongly.
+  let noPlaces = 0;
+  let noSchedule = 0;
 
   for (const outage of extraction.outages) {
     // A repair report closes a record rather than adding one, and it is read
@@ -88,7 +94,7 @@ export async function parseAnnouncement(
     if (outage.resolved) {
       const repaired = matchPlaces(outage.areas.join(', '));
       if (repaired.length === 0) {
-        unresolved++;
+        noPlaces++;
         continue;
       }
       for (const district of districtsOf(repaired)) {
@@ -103,7 +109,7 @@ export async function parseAnnouncement(
 
     const schedule = toSchedule(outage, announcement.publishedAt);
     if (!schedule) {
-      unresolved++;
+      noSchedule++;
       continue;
     }
 
@@ -112,7 +118,7 @@ export async function parseAnnouncement(
     // rather than reaching the database as a place that does not exist.
     const places = matchPlaces(outage.areas.join(', '));
     if (places.length === 0) {
-      unresolved++;
+      noPlaces++;
       continue;
     }
     fuzzyPlaces.push(...places.filter((place) => place.fuzzy));
@@ -158,13 +164,25 @@ export async function parseAnnouncement(
   }
 
   if (records.length === 0 && resolutions.length === 0) {
-    return {
-      status: 'failed',
-      reason: unresolved > 0 ? 'no known place names found' : 'nothing usable in the extraction',
-      text,
-    };
+    return { status: 'failed', reason: failureReason(noPlaces, noSchedule), text };
   }
   return { status: 'parsed', records, resolutions, cancellation, fuzzyPlaces };
+}
+
+/**
+ * Why nothing came out, in the words the review queue is read with.
+ *
+ * The queue exists to answer "why could this not be read", so the answer has to
+ * distinguish the two ways it fails. Naming both when both happened matters as
+ * much: one announcement can carry a record with no clock and another with no
+ * place we know, and reporting only the second sends the reader looking in the
+ * wrong file.
+ */
+function failureReason(noPlaces: number, noSchedule: number): string {
+  if (noPlaces > 0 && noSchedule > 0) return 'no usable time, and no known place names';
+  if (noSchedule > 0) return 'no usable time in the announcement';
+  if (noPlaces > 0) return 'no known place names found';
+  return 'nothing usable in the extraction';
 }
 
 type Schedule = { startsAt: string; endsAt: string | null; inferredStart: boolean };

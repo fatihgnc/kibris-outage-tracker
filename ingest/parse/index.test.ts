@@ -150,6 +150,34 @@ test('names that match nothing we know are not stored', async () => {
   assert.equal(outcome.reason, 'no known place names found');
 });
 
+// The review queue exists to answer "why could this not be read", so a record
+// dropped for want of a clock must not be reported as a place problem — that
+// sends the next reader to data/places.json over a parser question.
+test('a record with no usable time says so, and does not blame the places', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    // Planned work with no start: the publication-time stand-in is only for a
+    // fault the model reports as ongoing, so there is no schedule to build.
+    respondWith([{ start: null, end: null, ongoing: false }]),
+  );
+  assert.equal(outcome.status, 'failed');
+  if (outcome.status !== 'failed') return;
+  assert.equal(outcome.reason, 'no usable time in the announcement');
+});
+
+test('both failures in one announcement are both named', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([
+      { start: null, end: null, ongoing: false },
+      { areas: ['Bilinmeyen Mahalle'] },
+    ]),
+  );
+  assert.equal(outcome.status, 'failed');
+  if (outcome.status !== 'failed') return;
+  assert.equal(outcome.reason, 'no usable time, and no known place names');
+});
+
 // Announcements say "perşembe günü" constantly, and the model cannot resolve
 // one: asked against a Sunday it answered Tuesday five times out of five, and
 // went on doing so after being told the publication date's weekday outright. It

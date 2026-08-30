@@ -33,8 +33,9 @@ import { loadEnvConfig } from '@next/env';
 loadEnvConfig(process.cwd());
 
 import { createClient } from '@supabase/supabase-js';
-import type { SourceRef } from '../lib/types';
+import type { DistrictId, OutageKind, SourceRef } from '../lib/types';
 import { foldKey } from '../ingest/parse/text';
+import { isSameEvent } from '../ingest/dedupe';
 // Shared with backfill-scope.ts: one answer to "what does today's parser make
 // of this article", not two of them that can drift apart.
 import { createRederiver, type Rederived } from './rederive';
@@ -63,7 +64,7 @@ async function main() {
   const client = createClient(url, key, { auth: { persistSession: false } });
   const { data, error } = await client
     .from('outages')
-    .select('id, starts_at, district, areas, sources, ingested_at, cancelled_reason')
+    .select('id, kind, starts_at, ends_at, district, areas, sources, ingested_at, cancelled_reason')
     // Records already retired as bad data are expected to fail this check —
     // failing it is why they were retired.
     .or('cancelled_reason.is.null,cancelled_reason.neq.bad_data')
@@ -77,7 +78,14 @@ async function main() {
   let unreadable = 0;
 
   for (const row of rows) {
-    const stored = new Set((row.areas as string[]).map(foldKey));
+    // The row in the shape the ingest's own same-event rule reads.
+    const stored = {
+      kind: row.kind as OutageKind,
+      district: row.district as DistrictId,
+      areas: row.areas as string[],
+      startsAt: row.starts_at as string,
+      endsAt: (row.ends_at ?? null) as string | null,
+    };
     let readable = false;
     let supported = false;
     let editedSince = false;
@@ -92,15 +100,22 @@ async function main() {
       // announcements in place and republish under a new slug that the old
       // URL redirects to.
       if (Date.parse(rederived.publishedAt) > Date.parse(row.ingested_at)) editedSince = true;
-      // Supported means some source still puts this district at this instant
-      // with at least one of these places. Outlets abbreviate place lists, so
-      // an overlap is the honest bar; demanding the full set would flag rows
-      // that are merely less complete than the article.
+      // Supported means some source still describes this record, asked through
+      // `isSameEvent` — the rule the ingest folds records together by every run.
+      //
+      // It used to be a second rule written here, and it demanded the same
+      // instant. That is wrong for exactly the records this check matters most
+      // for: an open-ended fault has no announced start, so the announcement's
+      // publication time stands in for one, and where that time came from is not
+      // stable. The live crawl prefers a sitemap's lastmod; `createRederiver`
+      // only ever sees the page's own date. Six minutes between them was enough
+      // to make a correct Girne fault look unsupported.
+      //
+      // Unsupported ids are printed for retire-records.ts, which cancels them as
+      // bad data. A stricter rule here does not fail safe — it retires records
+      // that are fine.
       for (const record of rederived.records) {
-        if (record.district !== row.district) continue;
-        if (Date.parse(record.startsAt) !== Date.parse(row.starts_at)) continue;
-        const areas = new Set(record.areas.map(foldKey));
-        if ([...stored].some((area) => areas.has(area))) supported = true;
+        if (isSameEvent(stored, record)) supported = true;
       }
     }
 
