@@ -23,17 +23,48 @@ function wallClock(ms: number): WallClock {
   return { year: get('year'), month: get('month'), day: get('day'), hour: get('hour'), minute: get('minute') };
 }
 
-// UTC instant whose wall clock in Europe/Nicosia matches the given fields.
+/**
+ * The UTC instant whose wall clock in Europe/Nicosia matches the given fields.
+ *
+ * Guess, read the guess back, correct by the difference. Two passes settle it
+ * for every local time that exists, because the correction is exactly the zone
+ * offset.
+ *
+ * One local time a year does not exist. Cyprus jumps 03:00 to 04:00 on the last
+ * Sunday of March, so 03:30 that night is not an instant and no guess can ever
+ * read back as one. The loop used to run out of tries and return whatever it was
+ * holding — which reads as 02:30, an hour *earlier* than the announcement said,
+ * stored with `confidence: 'high'` and nothing anywhere recording that a guess
+ * had been made. A countdown then ran out an hour before the power went off.
+ *
+ * Resolved forward instead: the first instant after the jump, so 03:30 becomes
+ * 04:30. That is what every mainstream date library does with a gap, and it errs
+ * the safer way for this site — telling a reader the power goes off later than it
+ * does, rather than marking a village dark while it still has power.
+ *
+ * The autumn hour is the opposite case and needs no handling: 03:30 happens
+ * twice, both are real instants, and the search lands on the second.
+ */
 export function zonedTimeToUtc(year: number, month: number, day: number, hour: number, minute = 0): number {
   const want = Date.UTC(year, month - 1, day, hour, minute);
+  const readBack = (instant: number) => {
+    const w = wallClock(instant);
+    return Date.UTC(w.year, w.month - 1, w.day, w.hour, w.minute);
+  };
+
   let guess = want;
   for (let i = 0; i < 3; i++) {
-    const w = wallClock(guess);
-    const got = Date.UTC(w.year, w.month - 1, w.day, w.hour, w.minute);
-    if (got === want) break;
+    const got = readBack(guess);
+    if (got === want) return guess;
     guess += want - got;
   }
-  return guess;
+
+  // No instant reads back as the wall clock asked for, so it is inside a
+  // spring-forward gap. The two instants the search oscillates between sit one
+  // gap apart, on either side of the jump; the later one is the first that
+  // exists, and it is what a reader waiting for the power means.
+  const other = guess + (want - readBack(guess));
+  return Math.max(guess, other);
 }
 
 export function nicosiaWallClock(ms: number): WallClock {

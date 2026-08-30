@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { allPlaces, districtsOf, matchPlaces } from './places';
+import { allPlaces, districtsOf, matchAreas, matchPlaces } from './places';
 
 test('every place carries a canonical name and a valid district', () => {
   const places = allPlaces();
@@ -101,3 +101,55 @@ test('an all-caps list still matches even where a name doubles as a word', () =>
   assert.ok(matches.map((m) => m.name).includes('Ağıllar'));
 });
 
+// The model returns a list, and the list used to be joined with commas before
+// matching — which erased the element boundaries, because the tokenizer strips
+// punctuation. `data/places.json` carries an alias spelled 'Boğaz Girne', so two
+// separate names matched as one place and the second was lost.
+test('two names that each match on their own both survive', () => {
+  const both = ['Boğaz(girne)', 'Girne(girne)'];
+  assert.deepEqual(
+    matchAreas(['Boğaz', 'Girne']).map((p) => `${p.name}(${p.district})`).sort(),
+    [...both].sort(),
+  );
+  // Order-independently: it used to depend on which the model wrote first.
+  assert.deepEqual(
+    matchAreas(['Girne', 'Boğaz']).map((p) => `${p.name}(${p.district})`).sort(),
+    [...both].sort(),
+  );
+});
+
+// And the reason the join cannot simply be dropped: the model splits one name
+// across two elements often enough, and matched apart 'Kaymaklı' is a different
+// village. A wrong place is worse than a missing one.
+test('a name split across two elements is put back together', () => {
+  assert.deepEqual(matchAreas(['Küçük', 'Kaymaklı']).map((p) => p.name), ['Küçük Kaymaklı']);
+  assert.deepEqual(matchAreas(['Lapta', 'Yolu']).map((p) => p.name), ['Lapta Yolu']);
+  assert.deepEqual(matchAreas(['Aşağı', 'Bostancı']).map((p) => p.name), ['Aşağı Bostancı']);
+});
+
+test('joining reaches only its neighbour, and the rest of the list is untouched', () => {
+  assert.deepEqual(
+    matchAreas(['Yukarı', 'Yeşilırmak', 'Gemikonağı']).map((p) => p.name),
+    ['Yukarı Yeşilırmak', 'Gemikonağı'],
+  );
+});
+
+// What makes the rule above sound, stated as a property of the data rather than
+// left as a comment: joining is needed exactly where one half of a two-word name
+// means nothing on its own, and it is harmful exactly where both halves are
+// places. Today that second set has one member. A new name that joins it would
+// silently bring the old bug back, so this fails instead.
+test('only one two-word spelling has both halves matching a place', () => {
+  const spellings = new Set<string>();
+  for (const place of allPlaces()) {
+    spellings.add(place.name);
+    for (const alias of place.aliases) spellings.add(alias);
+  }
+  const ambiguous = [...spellings]
+    .filter((s) => s.trim().split(/\s+/).length === 2)
+    .filter((s) => {
+      const [a, b] = s.trim().split(/\s+/);
+      return matchPlaces(a).length > 0 && matchPlaces(b).length > 0;
+    });
+  assert.deepEqual(ambiguous, ['Boğaz Girne']);
+});

@@ -2,7 +2,7 @@ import type { DistrictId, Outage, SourceRef } from '../../lib/types';
 import { nicosiaWallClock, zonedTimeToUtc } from '../../lib/time';
 import { fingerprint } from '../fingerprint';
 import { extractOutages, WEEKDAYS, type ExtractedOutage, type Weekday } from './llm';
-import { districtsOf, matchPlaces, type PlaceMatch } from './places';
+import { districtsOf, matchAreas, type PlaceMatch } from './places';
 import { collapseWhitespace, foldKey } from './text';
 // districts.ts rather than geography.ts: the district names alone, without
 // map-layout.json and the projection behind it.
@@ -92,7 +92,7 @@ export async function parseAnnouncement(
     // before the schedule: these articles rarely say when the fault began, and
     // demanding a start would throw the repair away with it.
     if (outage.resolved) {
-      const repaired = matchPlaces(outage.areas.join(', '));
+      const repaired = matchAreas(outage.areas);
       if (repaired.length === 0) {
         noPlaces++;
         continue;
@@ -116,7 +116,7 @@ export async function parseAnnouncement(
     // The model is asked for the announcement's own spellings, not for ours.
     // Anything it invents or mangles simply fails to match here and is left out
     // rather than reaching the database as a place that does not exist.
-    const places = matchPlaces(outage.areas.join(', '));
+    const places = matchAreas(outage.areas);
     if (places.length === 0) {
       noPlaces++;
       continue;

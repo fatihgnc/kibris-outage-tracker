@@ -119,6 +119,66 @@ export function matchPlaces(text: string): PlaceMatch[] {
   }
 }
 
+/**
+ * The same, for the list of names the model returns rather than a single string.
+ *
+ * The caller used to join the list with commas and hand that to `matchPlaces`.
+ * The tokenizer strips punctuation, so the commas vanished and the element
+ * boundaries with them — and `data/places.json` holds an alias spelled
+ * `'Boğaz Girne'`, there to tell Girne's Boğaz from İskele's. So
+ * `['Boğaz', 'Girne']` matched that alias across the boundary and came back as
+ * one place: the Girne lamp stayed lit, and because the id is fingerprinted over
+ * `areas`, the same announcement written in the other order produced a second
+ * record with a different id.
+ *
+ * Joining still has to happen, though — the model splits one name across two
+ * elements often enough that `['Küçük', 'Kaymaklı']` is a real case, and matched
+ * apart it yields Kaymaklı, a different village two kilometres away. That is the
+ * worse error: a wrong place rather than a missing one.
+ *
+ * So join only where it is needed. Of the 34 two-word spellings in
+ * `data/places.json`, exactly one — `Boğaz Girne` — has both halves matching a
+ * place on their own; in all 33 others one half matches nothing, which is what
+ * makes the join necessary there and unnecessary here. An element that matched
+ * something needs no help from its neighbour. `places.test.ts` asserts that
+ * count, so adding a name that breaks the rule fails loudly rather than quietly
+ * bringing the old bug back.
+ */
+export function matchAreas(areas: readonly string[]): PlaceMatch[] {
+  const solo = areas.map((area) => matchPlaces(area));
+  const joined = new Map<number, PlaceMatch[]>();
+
+  for (let i = 0; i < areas.length; i++) {
+    if (solo[i].length > 0) continue;
+    // Left first, then right: an announcement writing a name in two pieces puts
+    // the qualifier before the noun ('Küçük Kaymaklı', 'Aşağı Bostancı'), so the
+    // empty element is usually the earlier one and its partner the later.
+    for (const j of [i - 1, i + 1]) {
+      if (j < 0 || j >= areas.length) continue;
+      const pair = i < j ? `${areas[i]} ${areas[j]}` : `${areas[j]} ${areas[i]}`;
+      const matched = matchPlaces(pair);
+      // Only a match that needed both halves is worth taking; one that the
+      // neighbour already found on its own tells us nothing new.
+      if (matched.length === 0) continue;
+      if (matched.every((m) => solo[j].some((s) => s.name === m.name))) continue;
+      joined.set(i, matched);
+      joined.set(j, []);
+      break;
+    }
+  }
+
+  const out: PlaceMatch[] = [];
+  const seen = new Set<string>();
+  for (let i = 0; i < areas.length; i++) {
+    for (const match of joined.get(i) ?? solo[i]) {
+      if (seen.has(match.name)) continue;
+      seen.add(match.name);
+      out.push(match);
+    }
+  }
+  return out;
+}
+
 // Splits on everything that is not a Turkish letter or digit, and drops the
 // apostrophe suffixes announcements attach to place names.
 function tokenize(text: string): { text: string }[] {
