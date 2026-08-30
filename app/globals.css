@@ -301,49 +301,6 @@ select {
   }
 }
 
-/* The scrubber. A hairline track and one lamp for a thumb — it sits directly
- * under the island and must not compete with it.
- *
- * Styled rather than left to `accent-color`, which paints the whole track up to
- * the thumb: parked at the right-hand end, where it sits whenever the map is
- * live, that is a solid amber bar the width of the page under a map whose
- * entire subject is amber light. */
-.map-scrub {
-  appearance: none;
-  -webkit-appearance: none;
-  background: transparent;
-  height: 18px;
-  cursor: pointer;
-}
-.map-scrub::-webkit-slider-runnable-track {
-  height: 1px;
-  background: var(--color-dark);
-}
-.map-scrub::-moz-range-track {
-  height: 1px;
-  background: var(--color-dark);
-}
-.map-scrub::-webkit-slider-thumb {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 9px;
-  height: 9px;
-  margin-top: -4px;
-  border-radius: 50%;
-  background: var(--color-lamp);
-}
-.map-scrub::-moz-range-thumb {
-  width: 9px;
-  height: 9px;
-  border: none;
-  border-radius: 50%;
-  background: var(--color-lamp);
-}
-.map-scrub:focus-visible {
-  outline: 1px solid var(--color-lamp);
-  outline-offset: 4px;
-}
-
 /* WCAG 2.2 asks for a 24 by 24 pixel target (2.5.8). The header links and the
  * language switch are 13 and 14 pixel type, so their boxes come out at 18 and
  * 22 pixels tall — fine for a mouse, thin for a thumb. The catchment is grown

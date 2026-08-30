@@ -81,10 +81,6 @@ export const en: Dictionary = {
     pointAria: '{name} — {status}, open {district}',
     districtAria: 'open the {district} district',
     backToday: 'was out earlier today',
-    timelineLabel: 'the last 24 hours',
-    timelineNow: 'now',
-    timelineAria: 'Scrub through the last 24 hours',
-    timelineReset: 'back to now',
   },
   filter: {
     ariaLabel: 'Filter by district',

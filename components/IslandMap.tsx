@@ -35,17 +35,6 @@ export type LampOutage = {
   source: string;
 };
 
-/**
- * One stretch of darkness inside the scrubber's window, as milliseconds. The
- * timeline is built from these rather than from the records: a record is per
- * district and per announcement, and what the map draws is per place.
- */
-export type DarkSpan = {
-  name: string;
-  from: number;
-  to: number;
-};
-
 export type Props = {
   viewBox: string;
   width: number;
@@ -54,15 +43,10 @@ export type Props = {
   districts: MapDistrict[];
   settlements: MapSettlement[];
   outages: Record<string, LampOutage>;
-  /** Places that went dark inside the window and have their power back. */
+  /** Places that went dark earlier today and have their power back. */
   embers: string[];
-  /** Every stretch of darkness in the window, for the timeline. */
-  spans: DarkSpan[];
-  /** The server's clock, so the timeline's right-hand end is not the browser's. */
-  now: number;
-  /** The hour on the island, 0–23. The map's night is the island's, not the reader's. */
+  /** The hour on the island, 0-23. The map's night is the island's, not the reader's. */
   hour: number;
-  timeZone: string;
   locale: Locale;
   strings: {
     ariaLabel: string;
@@ -72,10 +56,6 @@ export type Props = {
     pointAria: string; // {name} {status} {district}
     districtAria: string; // {district}
     backToday: string;
-    timelineLabel: string;
-    timelineNow: string;
-    timelineAria: string;
-    timelineReset: string;
   };
 };
 
@@ -98,11 +78,6 @@ const HOVER_RADIUS = 14;
 // event rather than a handful of separate ones. Three is where the language on
 // the page changes too — one district is named, several are counted.
 const EVENT_DISTRICTS = 3;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-// One minute per step: fine enough that an outage's edges land where they
-// belong, coarse enough that the slider is not 86,400 positions wide.
-const SCRUB_STEP_MS = 60 * 1000;
 
 /**
  * A lamp's own breathing period and phase, from its index alone.
@@ -150,10 +125,7 @@ export default function IslandMap({
   settlements,
   outages,
   embers,
-  spans,
-  now,
   hour,
-  timeZone,
   locale,
   strings,
 }: Props) {
@@ -175,29 +147,8 @@ export default function IslandMap({
     return () => clearTimeout(timer);
   }, []);
 
-  // The timeline's position, or null for live. Null and `now` are not the same
-  // state: at `now` the map is a reading of the present and says so, and the
-  // reader has to be able to get back to it from anywhere on the slider.
-  const [scrubbedTo, setScrubbedTo] = useState<number | null>(null);
-  const scrubbing = scrubbedTo !== null;
-  const at = scrubbedTo ?? now;
-
-  // What is dark, live or at the scrubbed instant. The live set is the one the
-  // server resolved; the timeline's is rebuilt from the spans, so a place lit
-  // now and dark an hour ago is dark an hour ago on the map.
-  const darkNames = useMemo(() => {
-    if (!scrubbing) return new Set(Object.keys(outages));
-    const set = new Set<string>();
-    for (const span of spans) if (span.from <= at && at <= span.to) set.add(span.name);
-    return set;
-  }, [scrubbing, outages, spans, at]);
-
-  const emberNames = useMemo(
-    // While scrubbing the map is showing a past instant, and 'earlier today'
-    // would be measured from the wrong end of the day.
-    () => (scrubbing ? new Set<string>() : new Set(embers)),
-    [scrubbing, embers],
-  );
+  const darkNames = useMemo(() => new Set(Object.keys(outages)), [outages]);
+  const emberNames = useMemo(() => new Set(embers), [embers]);
 
   const isOut = (name: string) => darkNames.has(name);
 
@@ -216,7 +167,7 @@ export default function IslandMap({
   useEffect(() => {
     const previous = seen.current;
     seen.current = new Set(darkNames);
-    if (!previous || scrubbing) return;
+    if (!previous) return;
     const fresh = settlements.filter((s) => darkNames.has(s.name) && !previous.has(s.name));
     if (fresh.length === 0) return;
     const stamp = Date.now();
@@ -226,7 +177,7 @@ export default function IslandMap({
       RIPPLE_MS,
     );
     return () => clearTimeout(timer);
-  }, [darkNames, settlements, scrubbing]);
+  }, [darkNames, settlements]);
 
   // The order is longitude, straight from the coordinates — the settlements
   // arrive from lib/geography already sorted west to east.
@@ -261,10 +212,7 @@ export default function IslandMap({
   // neighbour's.
   const byHitOrder = [...districts].sort((a, b) => b.area - a.area);
 
-  // The details behind a dark lamp describe the live record. While the timeline
-  // is away from now they are about a different moment than the one on screen,
-  // so the popover falls back to the name and the state alone.
-  const activeOutage = active && !scrubbing ? outages[active.name] : undefined;
+  const activeOutage = active ? outages[active.name] : undefined;
   const activeEmber = Boolean(active && emberNames.has(active.name));
   const readout = active
     ? fillTemplate(strings.pointAria, {
@@ -279,12 +227,6 @@ export default function IslandMap({
   const popoverBelow = active ? active.y / height < 0.28 : false;
 
   const sky = skyOf(hour);
-  const clock = new Intl.DateTimeFormat(locale, {
-    timeZone,
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  });
 
   return (
     <div>
@@ -822,47 +764,6 @@ export default function IslandMap({
           </div>
         )}
       </div>
-
-      {/* The timeline. The archive is the thing this site has that nothing else
-       * does, and until now none of it reached the map — the island only ever
-       * showed the instant the page was loaded. Dragging replays the last day
-       * over the same lamps.
-       *
-       * Only rendered when there is something to replay. On a quiet day an
-       * empty slider is a control that does nothing, which is worse than no
-       * control at all. */}
-      {spans.length > 0 && (
-        <div className="mx-auto flex w-full max-w-[1060px] items-center gap-3 px-5 pt-3 font-mono text-meta text-muted">
-          <span className="whitespace-nowrap">{strings.timelineLabel}</span>
-          <input
-            type="range"
-            className="map-scrub min-w-0 flex-1"
-            min={now - DAY_MS}
-            max={now}
-            step={SCRUB_STEP_MS}
-            value={at}
-            aria-label={strings.timelineAria}
-            onChange={(e) => {
-              const value = Number(e.target.value);
-              // Sliding to the far right is asking for the present, not for a
-              // reading of it that happens to be a minute old.
-              setScrubbedTo(value >= now - SCRUB_STEP_MS ? null : value);
-            }}
-          />
-          {scrubbing ? (
-            <button
-              type="button"
-              onClick={() => setScrubbedTo(null)}
-              className="whitespace-nowrap border-none bg-transparent p-0 font-mono text-meta text-lamp underline decoration-transparent underline-offset-[3px] hover:decoration-current"
-              title={strings.timelineReset}
-            >
-              {clock.format(at)}
-            </button>
-          ) : (
-            <span className="whitespace-nowrap text-text">{strings.timelineNow}</span>
-          )}
-        </div>
-      )}
 
       <p aria-live="polite" className="m-0 min-h-[18px] pt-1 font-mono text-meta text-muted">
         {readout ?? strings.hint}

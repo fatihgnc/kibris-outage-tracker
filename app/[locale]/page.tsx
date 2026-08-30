@@ -11,7 +11,6 @@ import {
   formatTimeRange,
   islandHour,
   readEndOf,
-  TIME_ZONE,
 } from '@/lib/time';
 import { DISTRICTS, getMapGeometry, isDistrictId, resolveDarkness } from '@/lib/geography';
 import type { DistrictId, Outage } from '@/lib/types';
@@ -101,26 +100,19 @@ export default async function HomePage({ params, searchParams }: Props) {
     ]),
   );
 
-  // The map's timeline (§3.8). `getOutages` already reaches thirty days back,
-  // so the day behind us is in hand and costs no extra query. One entry per
-  // place per record, because a record is per district and the map is per
-  // place — and clamped at `now`, since the right-hand end of the slider is the
-  // present and an assumed end can sit past it.
+  // Places the day took out and gave back (§3.3). Not the same question as the
+  // map's live state, and nothing else on the page answers it: the cards are a
+  // list, and only the island can say where the day's outages were.
+  // `getOutages` already reaches thirty days back, so the day behind us is in
+  // hand and this costs no extra query.
   const dayAgo = now - 24 * 60 * 60 * 1000;
-  const spans = outages
-    .filter((o) => readEndOf(o) >= dayAgo && Date.parse(o.startsAt) <= now)
-    .flatMap((o) =>
-      [...resolveDarkness([o], geometry.settlements).keys()].map((name) => ({
-        name,
-        from: Date.parse(o.startsAt),
-        to: Math.min(readEndOf(o), now),
-      })),
-    );
-
-  // Places the day took out and gave back. Not the same question as the map's
-  // live state, and nothing else on the page answers it: the cards are a list,
-  // and only the island can say where the day's outages were.
-  const embers = [...new Set(spans.map((s) => s.name))].filter((name) => !lampOutages[name]);
+  const embers = [
+    ...new Set(
+      outages
+        .filter((o) => readEndOf(o) >= dayAgo && Date.parse(o.startsAt) <= now)
+        .flatMap((o) => [...resolveDarkness([o], geometry.settlements).keys()]),
+    ),
+  ].filter((name) => !lampOutages[name]);
 
   const listTitle = selectedDistrict
     ? fill(dict.list.titleDistrict, { district: DISTRICTS[selectedDistrict].name })
@@ -204,10 +196,7 @@ export default async function HomePage({ params, searchParams }: Props) {
           settlements={geometry.settlements}
           outages={lampOutages}
           embers={embers}
-          spans={spans}
-          now={now}
           hour={islandHour(now)}
-          timeZone={TIME_ZONE}
           locale={locale}
           strings={{
             ariaLabel: dict.map.ariaLabel,
@@ -217,10 +206,6 @@ export default async function HomePage({ params, searchParams }: Props) {
             pointAria: dict.map.pointAria,
             districtAria: dict.map.districtAria,
             backToday: dict.map.backToday,
-            timelineLabel: dict.map.timelineLabel,
-            timelineNow: dict.map.timelineNow,
-            timelineAria: dict.map.timelineAria,
-            timelineReset: dict.map.timelineReset,
           }}
         />
       </section>
