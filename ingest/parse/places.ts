@@ -23,7 +23,17 @@ const PLACES_PATH = fileURLToPath(new URL('../../data/places.json', import.meta.
 
 // Fuzzy matching only rescues near-misses (a dropped letter, a typo). Below
 // this it is safer to send the announcement to review than to guess a village.
-const FUZZY_THRESHOLD = 0.9;
+/**
+ * How close a token has to be to a spelling before a typo is read as that place.
+ *
+ * Exported so `places.test.ts` can hold the margin open: what keeps a fuzzy
+ * match from landing on the *wrong* village is not this number on its own, it is
+ * that no two distinct places in `data/places.json` are this similar. That is a
+ * property of the data, it is true today by one character, and adding one name
+ * could end it silently — a fuzzy match is written to `areas` under the
+ * canonical spelling, indistinguishable from one that was read.
+ */
+export const FUZZY_THRESHOLD = 0.9;
 const MIN_FUZZY_LENGTH = 5;
 
 // A settlement is a proper noun and announcements write it that way, in title

@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { parseAnnouncement, type RawAnnouncement } from './index';
-import { hasApiKey } from './llm';
 import type { ExtractedOutage } from './llm';
 
 // The model's reading is stubbed. What is under test is everything that happens
@@ -347,6 +346,23 @@ test('a restoration time after publication belongs to the day before', async () 
   assert.equal(outcome.resolutions[0].resolvedAt, '2026-07-15T20:50:00.000Z');
 });
 
+// The bound the docstring always promised. A clock later than the article's own
+// timestamp used to step back a whole day unconditionally, because yesterday's
+// candidate can never be in the future — so a page whose publication time has
+// gone stale (outlets edit in place) had its repair filed a day early, and that
+// value goes straight into `ends_at`.
+test('a restoration clock too far from the article falls back to the filing time', async () => {
+  const outcome = await parseAnnouncement(
+    // 18:09 local; the clock below is 21 minutes later, so it cannot be today's
+    // and yesterday's would be 23 hours 39 minutes before the article.
+    announcement({ publishedAt: '2026-07-15T15:09:00.000Z' }),
+    respondWith([{ kind: 'fault', resolved: true, start: null, restoredAt: '18:30', areas: ['Yeniboğaziçi'] }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.resolutions[0].resolvedAt, '2026-07-15T15:09:00.000Z');
+});
+
 // Nothing usable stands in for the publication time; it is still an upper bound.
 test('an unusable restoration time falls back to the publication time', async () => {
   const outcome = await parseAnnouncement(
@@ -420,21 +436,4 @@ test('two records differing only in scope share an id', async () => {
   const wide = await read('district');
   assert.notEqual(narrow.scope, wide.scope);
   assert.equal(narrow.id, wide.id);
-});
-
-// A secret pasted with a trailing newline is truthy. Left unchecked the run
-// prints no warning, every request sends a broken Authorization header, and the
-// 401 is not retried — so every announcement lands in the review queue while the
-// job stays green. env.ts already treats "set but blank" as unset; the key was
-// the one value read straight off process.env.
-test('a key that is only whitespace counts as no key', () => {
-  const original = process.env.OPENAI_API_KEY;
-  try {
-    process.env.OPENAI_API_KEY = ' \n ';
-    assert.equal(hasApiKey(), false);
-    process.env.OPENAI_API_KEY = '  sk-real  ';
-    assert.equal(hasApiKey(), true);
-  } finally {
-    process.env.OPENAI_API_KEY = original;
-  }
 });

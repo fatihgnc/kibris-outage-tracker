@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { allPlaces, districtsOf, matchAreas, matchPlaces } from './places';
+import { FUZZY_THRESHOLD, allPlaces, districtsOf, matchAreas, matchPlaces } from './places';
+import { foldKey, similarity } from './text';
 
 test('every place carries a canonical name and a valid district', () => {
   const places = allPlaces();
@@ -152,4 +153,35 @@ test('only one two-word spelling has both halves matching a place', () => {
       return matchPlaces(a).length > 0 && matchPlaces(b).length > 0;
     });
   assert.deepEqual(ambiguous, ['Boğaz Girne']);
+});
+
+// A fuzzy match is written to `areas` under the canonical spelling, so nothing
+// downstream can tell a typo that was corrected from a name that was read. What
+// keeps it from landing on the wrong village is not the threshold on its own,
+// it is that no two distinct places are that similar — a property of
+// data/places.json, true today by about one character. Adding one name could end
+// it in silence, so it fails here instead.
+test('no two distinct places are close enough for a typo to reach the wrong one', () => {
+  const spellings: { key: string; place: string }[] = [];
+  for (const place of allPlaces()) {
+    for (const spelling of [place.name, ...place.aliases]) {
+      spellings.push({ key: foldKey(spelling), place: place.name });
+    }
+  }
+
+  let worst = { score: 0, a: '', b: '' };
+  for (let i = 0; i < spellings.length; i++) {
+    for (let j = i + 1; j < spellings.length; j++) {
+      if (spellings[i].place === spellings[j].place) continue;
+      const score = similarity(spellings[i].key, spellings[j].key);
+      if (score > worst.score) worst = { score, a: spellings[i].key, b: spellings[j].key };
+    }
+  }
+
+  assert.ok(
+    worst.score < FUZZY_THRESHOLD,
+    `"${worst.a}" and "${worst.b}" are ${worst.score.toFixed(3)} similar, at or above the ` +
+      `${FUZZY_THRESHOLD} threshold: a typo in one would be corrected to the other and stored ` +
+      'as if it had been read.',
+  );
 });

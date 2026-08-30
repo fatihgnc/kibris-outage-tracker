@@ -1,6 +1,7 @@
 import type { OutageKind, OutageScope } from '../../lib/types';
 import type { RawAnnouncement } from './index';
 import { envOr } from '../env';
+import { nicosiaWallClock } from '../../lib/time';
 
 // The parser (§10.4).
 //
@@ -95,7 +96,7 @@ const SCHEMA = {
             areas: {
               type: 'array',
               description:
-                'Settlement, village or neighbourhood names exactly as the announcement writes them, in Turkish. Do not translate or transliterate. Leave out businesses and buildings named only as landmarks. When "scope" is "district", put the district\'s own name here and nothing else.',
+                'Settlement, village or neighbourhood names exactly as the announcement writes them, in Turkish. Do not translate or transliterate. Leave out anything that is not a settlement: businesses and buildings named as landmarks, and roads, junctions and directions. \"Lefkoşa–Girne ana yolu Boğaz Kavşağı\" is where the work is, not somewhere that loses power — it names three places in two districts and the outage is in none of them. Give the settlement instead. When "scope" is "district", put the district\'s own name here and nothing else.',
               items: { type: 'string' },
             },
             scope: {
@@ -145,7 +146,7 @@ const SYSTEM_PROMPT = [
   '- Never invent a time. When a fault is already in progress and no start is stated, set "start" to null and "ongoing" to true.',
   '- A repair article carries two clocks and they must not be swapped: "bugun saat 16.00 siralarinda meydana gelen ariza" is "start", "saat 18.30 itibariyla elektrik verildi" is "restoredAt". The time the power returned is never a start time.',
   '- Planned work states its hours almost without exception. If a clearly scheduled outage gives no hours, return what you can find and leave the rest null rather than estimating.',
-  '- "areas" must be the place names the announcement itself uses. Include villages, towns and neighbourhoods; leave out businesses and buildings used only as landmarks.',
+  '- \"areas\" must be the place names the announcement itself uses. Include villages, towns and neighbourhoods. Leave out anything that is not a settlement: businesses and buildings used as landmarks, and roads, junctions and directions. A road name carries the settlements it runs between and they are not the ones losing power — in "09.30 ile 12.30 arasında Boğazköy köy içi, Lefkoşa–Girne ana yolu Boğaz Kavşağı bölgelerine elektrik verilemeyecek" the answer is Boğazköy.',
   '- "scope" says how wide the outage is, and it is a question about what loses power, not about which words the article happens to contain. "places" means the announcement lists the settlements, villages or neighbourhoods that go dark, and those are what "areas" holds. "district" means it states the extent as a district or region: "Lefke bölgesinde elektrik kesintisi", "Güzelyurt ve Lefke bölgelerine elektrik verilemiyor", "Girne genelinde elektrik kesintisi yaşanacaktır" — and then "areas" holds the district names.',
   '- A place named as the CAUSE of the outage does not make it "places". "Güneşköy-Cengizköy trafo merkezleri arasındaki yüksek gerilim hattında direkler devrildi; Güzelyurt ve Lefke bölgelerine elektrik verilemiyor" is "district": the damage is at Güneşköy and Cengizköy, the extent is the two districts, and "areas" is Güzelyurt and Lefke. Ask what the announcement says is without power, not which names it mentions.',
   '- Lefkoşa, Girne, Gazimağusa, Güzelyurt, İskele and Lefke are each a town as well as the district around it, and this is the mistake to avoid in the other direction. An announcement about the town is "places": "Lefke\'de bir trafo arızası nedeniyle elektrik kesintisi" is the town of Lefke. An announcement naming a district only to locate a village inside it is also "places": "Lefke\'nin Cengizköy mevkiinde" is about Cengizköy, and Cengizköy is what goes in "areas".',
@@ -214,7 +215,14 @@ export async function extractOutages(
   // model answered Tuesday for a Thursday, five times out of five. Calendar
   // arithmetic is not what it is good at and not what it is here for; naming the
   // day turns the question into counting forward from a known one.
-  const published = announcement.publishedAt.slice(0, 10);
+  // Nicosia's calendar day, not UTC's — the same day `dateOfNext` counts from in
+  // parse/index.ts. They used to differ: this sliced the ISO string, which is
+  // UTC, so for anything published between 21:00Z and midnight the model was
+  // told one date and our own weekday arithmetic used the next. An announcement
+  // saying "bugün" and one saying "pazartesi günü" then landed on different days
+  // from the same article.
+  const local = nicosiaWallClock(Date.parse(announcement.publishedAt));
+  const published = `${local.year}-${String(local.month).padStart(2, '0')}-${String(local.day).padStart(2, '0')}`;
   const weekday = new Date(`${published}T12:00:00Z`).toLocaleDateString('en-GB', {
     weekday: 'long',
     timeZone: 'UTC',

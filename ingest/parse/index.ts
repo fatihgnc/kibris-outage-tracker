@@ -284,6 +284,20 @@ function dateOfNext(weekday: Weekday, publishedAt: string): string {
  * evening before, so the day steps back — and anything still in the future
  * after that is not a time to trust, leaving the publication time to stand.
  */
+/**
+ * How far before its article a restoration clock is still believable.
+ *
+ * A repair is reported once it has happened and not long after: the same
+ * evening, or the small hours the article was filed in. Past half a day the
+ * clock is more likely to belong to a publication time that has gone stale —
+ * outlets edit these announcements in place, so a page first published at 08:00
+ * and updated at 19:55 to add "saat 18.30 itibarıyla elektrik verildi" still
+ * carries the 08:00 date. Without a bound the step below reads that as 18:30
+ * *yesterday*, a day of darkness nobody sat through, written straight into
+ * `ends_at`.
+ */
+const RESTORATION_LOOKBACK_MS = 12 * 60 * 60 * 1000;
+
 function restoredAt(outage: ExtractedOutage, publishedAt: string): string {
   if (!outage.restoredAt) return publishedAt;
   const published = Date.parse(publishedAt);
@@ -291,7 +305,14 @@ function restoredAt(outage: ExtractedOutage, publishedAt: string): string {
   const midnight = Date.UTC(local.year, local.month - 1, local.day);
   for (const day of [midnight, midnight - 86400000]) {
     const iso = toIso(new Date(day).toISOString().slice(0, 10), outage.restoredAt);
-    if (iso && Date.parse(iso) <= published) return iso;
+    if (!iso) continue;
+    const at = Date.parse(iso);
+    // Before the article, and not so far before that the article cannot be
+    // reporting it. The second half is what the docstring above always promised
+    // and the code never did: yesterday's candidate is a whole day earlier at
+    // the same clock, so it can never be in the future, so the fallback was
+    // unreachable and every unplaceable clock became yesterday's.
+    if (at <= published && published - at <= RESTORATION_LOOKBACK_MS) return iso;
   }
   return publishedAt;
 }

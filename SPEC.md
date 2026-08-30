@@ -409,6 +409,7 @@ export type Outage = {
   publishedAt: string; // ISO 8601, when the announcement went out
   ingestedAt: string; // ISO 8601, when this record entered the system
   confidence: 'high' | 'low'; // 'low' = start inferred from publish time, see §10.4
+  scope: 'places' | 'district'; // what `areas` names, see §3.3
 };
 
 export type Settlement = {
@@ -1219,7 +1220,9 @@ Two mechanisms, and the difference between them matters.
   report can now reach six days back.
 - **The repair report, which is a fact.** A follow-up article saying the fault is
   fixed — "arıza giderildi", "elektrikler yeniden verildi" — closes the record
-  for real, with `endsAt` set to the article's publication time. That is an
+  for real, with `endsAt` set to the restoration clock the article names, falling
+  back to its publication time when it names none, or names one that cannot be
+  placed within half a day of the article. That is an
   upper bound: the power was back at or before it, which overstates the outage
   slightly and never understates it, the right direction for an archive of how
   long places were dark.

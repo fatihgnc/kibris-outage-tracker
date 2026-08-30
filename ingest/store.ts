@@ -270,7 +270,8 @@ function articleHash(announcement: RawAnnouncement): string {
  * end we will ever get, and writing it turns an assumption into a fact — the
  * display bound in `NO_END_ASSUMED_OVER_MS` stops being what decides the record.
  *
- * The repair time is the article's publication, which is an upper bound: the
+ * The repair time is the clock the article names, or its publication time when
+ * it names none (parse/index.ts `restoredAt`). Either way an upper bound: the
  * power was back at or before it. That overstates the outage slightly and never
  * understates it, which is the right direction for an archive of how long places
  * were dark.
