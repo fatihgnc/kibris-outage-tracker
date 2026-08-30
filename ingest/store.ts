@@ -24,14 +24,24 @@ export type StoreResult = {
 // deliberately does not expose to the frontend.
 type StoredOutage = Outage & { cancelled: boolean };
 
-// Loads the stored records a batch could plausibly duplicate: same districts,
-// within a day of the batch's time span.
+/**
+ * Loads the stored records a batch could plausibly duplicate: same districts,
+ * within the widest reach the merge itself has.
+ *
+ * Derived from that reach rather than written down beside it. It was a flat day,
+ * which held every tolerance `isSameEvent` used at the time — and then the
+ * continuation window grew past it, which would have made the new rule
+ * unreachable without a single test failing: a record the merge would have
+ * folded in was simply never offered to it.
+ */
+const CANDIDATE_WINDOW_MS = Math.max(NO_END_ASSUMED_OVER_MS, 86400000);
+
 async function loadCandidates(client: SupabaseClient, records: Outage[]): Promise<StoredOutage[]> {
   if (records.length === 0) return [];
   const districts = [...new Set(records.map((record) => record.district))];
   const times = records.map((record) => Date.parse(record.startsAt));
-  const from = new Date(Math.min(...times) - 86400000).toISOString();
-  const to = new Date(Math.max(...times) + 86400000).toISOString();
+  const from = new Date(Math.min(...times) - CANDIDATE_WINDOW_MS).toISOString();
+  const to = new Date(Math.max(...times) + CANDIDATE_WINDOW_MS).toISOString();
 
   const { data, error } = await client
     .from('outages')

@@ -1179,6 +1179,22 @@ The same outage arrives from several sources. Collapse rather than duplicate.
   open-ended faults in the same district with overlapping places. Two genuinely
   separate faults in the same villages within six hours would merge; that is the
   rarer error, and one card that starts slightly early beats five for one event.
+- **An announcement that says the outage was already running reaches back
+  further still** — as far as `NO_END_ASSUMED_OVER_MS`, the same window the
+  display uses to decide how long an unclosed fault is still running, because it
+  is the same question. A fault that outlives the news cycle is written about
+  again: "Lefke'nin 24 saati aşkın süredir elektriksiz olduğu" is the outage
+  announced the previous lunchtime, but its stand-in start is a day later and six
+  hours cannot reach. The model reads that from the article (`continuation`,
+  §10.4) and it is never stored — it is a fact about an announcement, spent in
+  the merge. Opening the window only where the announcement asks for it is what
+  keeps two genuinely separate faults three days apart from merging on a rule
+  neither of them invoked.
+- The candidate rows a batch is compared against are loaded within **the widest
+  reach the merge itself has**, derived from it rather than written down beside
+  it. That bound was a flat day, which held every tolerance above until this one
+  grew past it — and a merge rule that is never offered its candidate fails
+  silently, with no test to fail.
 - When two open-ended faults merge, the **earliest** start wins outright — ahead
   of the official-source rule that settles the other fields. Being the utility's
   own announcement says nothing about when a fault began; it confirms one after

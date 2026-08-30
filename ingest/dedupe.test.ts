@@ -93,6 +93,38 @@ test('two place-scope records stay place-scope', () => {
   assert.equal(mergeOutages(outage({}), outage({ sources: [PRESS] })).scope, 'places');
 });
 
+// A fault that outlives the news cycle is reported again, and the second article
+// has the publication time stood in for a start it never gave — so the two sit a
+// day apart and used to be filed as two faults. The window opens only where the
+// announcement says the outage was already under way.
+test('a follow-up on a running fault merges with the record it continues', () => {
+  const openFault = { kind: 'fault' as const, endsAt: null };
+  const first = outage({ ...openFault, startsAt: '2026-08-29T09:29:00.000Z' });
+  const followUp = outage({
+    ...openFault,
+    startsAt: '2026-08-30T12:20:00.000Z', // 26 hours later
+    continuation: true,
+    sources: [PRESS],
+  });
+  assert.equal(isSameEvent(first, followUp), true);
+  assert.equal(isSameEvent(followUp, first), true);
+  // The record keeps the start it was announced with, not the follow-up's.
+  assert.equal(mergeOutages(first, followUp).startsAt, '2026-08-29T09:29:00.000Z');
+});
+
+// Without that word from the announcement the rule stays where it was: two open
+// faults a day apart in one district are two faults.
+test('two open faults a day apart do not merge on their own', () => {
+  const openFault = { kind: 'fault' as const, endsAt: null };
+  assert.equal(
+    isSameEvent(
+      outage({ ...openFault, startsAt: '2026-08-29T09:29:00.000Z' }),
+      outage({ ...openFault, startsAt: '2026-08-30T12:20:00.000Z' }),
+    ),
+    false,
+  );
+});
+
 // Renumbering a record when a new source widens its area list would make every
 // run write a fresh row instead of updating the existing one.
 test('merging keeps the existing id so re-running stays idempotent', () => {

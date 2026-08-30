@@ -1,5 +1,6 @@
 import type { Outage, SourceRef } from '../lib/types';
 import { foldKey } from './parse/text';
+import { NO_END_ASSUMED_OVER_MS } from '../lib/time';
 import { dedupeSources } from '../lib/sources';
 
 // With five adapters a single outage typically arrives four or five times.
@@ -26,7 +27,10 @@ const OPEN_FAULT_TOLERANCE_MS = 6 * 60 * 60 * 1000;
  * scripts — asks this question through the same function the ingest does. A
  * second definition of 'the same event' is a second definition that drifts.
  */
-export type EventShape = Pick<Outage, 'district' | 'areas' | 'startsAt' | 'endsAt' | 'kind'>;
+export type EventShape = Pick<
+  Outage,
+  'district' | 'areas' | 'startsAt' | 'endsAt' | 'kind' | 'continuation'
+>;
 
 function areaKeys(outage: EventShape): Set<string> {
   return new Set(outage.areas.map(foldKey));
@@ -48,7 +52,21 @@ function bothOpenEndedFaults(a: EventShape, b: EventShape): boolean {
 
 function withinTolerance(a: EventShape, b: EventShape): boolean {
   const startDelta = Math.abs(Date.parse(a.startsAt) - Date.parse(b.startsAt));
-  if (bothOpenEndedFaults(a, b)) return startDelta <= OPEN_FAULT_TOLERANCE_MS;
+  if (bothOpenEndedFaults(a, b)) {
+    // Six hours holds a day's first coverage of one fault. It does not hold a
+    // fault that outlives the news cycle: KIB-TEK's chairman saying "Lefke has
+    // been without power for over twenty-four hours" is the same outage as the
+    // one announced the previous lunchtime, but the stand-in starts are 23 hours
+    // apart, so it was filed as a second fault and both sat on the home page.
+    //
+    // The wider window is the one the display already uses to decide how long an
+    // unclosed fault is still running — the same question, so the same number.
+    // It opens only where the announcement itself says the outage was already
+    // under way, so two genuinely separate faults three days apart do not merge
+    // on a rule that neither of them asked for.
+    const reachesBack = a.continuation === true || b.continuation === true;
+    return startDelta <= (reachesBack ? NO_END_ASSUMED_OVER_MS : OPEN_FAULT_TOLERANCE_MS);
+  }
   if (startDelta > TIME_TOLERANCE_MS) return false;
   if (a.endsAt === null || b.endsAt === null) return a.endsAt === b.endsAt;
   return Math.abs(Date.parse(a.endsAt) - Date.parse(b.endsAt)) <= TIME_TOLERANCE_MS;

@@ -171,6 +171,9 @@ export async function parseAnnouncement(
         publishedAt: announcement.publishedAt,
         ingestedAt: announcement.fetchedAt,
         confidence: schedule.inferredStart ? 'low' : 'high',
+        // Not stored. It is a fact about the announcement, and it is spent in
+        // the merge below — see lib/types.ts.
+        continuation: outage.continuation,
       });
     }
   }

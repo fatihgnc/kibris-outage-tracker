@@ -44,6 +44,18 @@ export type Outage = {
   publishedAt: string; // ISO 8601, when the announcement went out
   ingestedAt: string; // ISO 8601, when this record entered the system
   confidence: 'high' | 'low'; // 'low' = start inferred from publish time
+  /**
+   * True when the announcement reported an outage that had already been running
+   * before it was written — "dün başlayan", "24 saati aşkın süredir".
+   *
+   * Read from the article, used only while merging, and deliberately never
+   * stored: it is a fact about an announcement, not about the outage. A fault
+   * with no announced end has the article's publication time stood in for its
+   * start, so a follow-up filed a day later looks like a second fault — this is
+   * what tells `isSameEvent` to reach back further for that one record without
+   * loosening the rule for every other pair.
+   */
+  continuation?: boolean;
   // ISO 8601, last write to the stored row. Set by a database trigger, never
   // by the ingest — so a record that has only ever existed in memory (mocks,
   // a batch mid-parse) does not have one. Callers that need a timestamp for a

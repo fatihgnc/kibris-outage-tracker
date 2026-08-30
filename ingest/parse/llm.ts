@@ -67,6 +67,7 @@ const SCHEMA = {
             'scope',
             'cancelled',
             'ongoing',
+            'continuation',
             'resolved',
             'restoredAt',
           ],
@@ -120,6 +121,11 @@ const SCHEMA = {
               description:
                 'true when this article reports that the fault has been REPAIRED and the power is back — "arıza giderildi", "elektrikler yeniden verildi", "normale döndü". Not the same as an article about works that are still going on: "arızanın giderilmesi için çalışmalar devam ediyor" is still an outage, not a repair.',
             },
+            continuation: {
+              type: 'boolean',
+              description:
+                'true when the announcement reports an outage that was already running before this article was written — it refers back rather than announcing something new: "dün başlayan arıza", "24 saati aşkın süredir elektrik verilemiyor", "önceki gün meydana gelen". false for an announcement of an outage that starts today or later, and false for the first article to report a fault. Being about a fault that is still not fixed is not enough on its own: the first report of a fault in progress is also still running, and it is not a continuation.',
+            },
             restoredAt: {
               type: ['string', 'null'],
               description:
@@ -143,6 +149,7 @@ const SYSTEM_PROMPT = [
   '- Resolve "bugün" and "yarın" against the publication date you are given. "bugün" IS the publication date.',
   '- When the announcement names a WEEKDAY ("perşembe günü"), put it in "weekday" and do not try to work the date out — resolving a weekday is a subtraction that is done afterwards, not by you. Fill "date" as well, with what the announcement says if it gives one and your best effort otherwise: a date that already falls on the named weekday is taken as read, and one that does not is replaced by counting from the publication date.',
   '- "date" is the day the outage STARTS. An announcement reading "bugün saat 23.00 ile yarın saat 02.00 arasında" starts today at 23:00 and ends tomorrow at 02:00: date is the publication date, start is 23:00, end is 02:00. Do not move the date forward because the window crosses midnight.',
+  '- "continuation" separates an article reporting an outage that was already under way from one announcing a new one. "Lefke\'nin 24 saati aşkın süredir elektriksiz olduğunu belirtti" is a continuation: the outage began before this article was written. The first report of the same fault, written on the day it happened, is not — a fault still running is not by itself a continuation. Neither is a planned outage announced for tomorrow.',
   '- Never invent a time. When a fault is already in progress and no start is stated, set "start" to null and "ongoing" to true.',
   '- A repair article carries two clocks and they must not be swapped: "bugun saat 16.00 siralarinda meydana gelen ariza" is "start", "saat 18.30 itibariyla elektrik verildi" is "restoredAt". The time the power returned is never a start time.',
   '- Planned work states its hours almost without exception. If a clearly scheduled outage gives no hours, return what you can find and leave the rest null rather than estimating.',
@@ -166,6 +173,7 @@ export type ExtractedOutage = {
   scope: OutageScope;
   cancelled: boolean;
   ongoing: boolean;
+  continuation: boolean;
 };
 
 export const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
@@ -320,8 +328,20 @@ export function validate(raw: string): ExtractedOutage[] | null {
   const out: ExtractedOutage[] = [];
   for (const entry of list) {
     if (typeof entry !== 'object' || entry === null) continue;
-    const { kind, date, weekday, start, end, areas, scope, cancelled, ongoing, resolved, restoredAt } =
-      entry as Record<string, unknown>;
+    const {
+      kind,
+      date,
+      weekday,
+      start,
+      end,
+      areas,
+      scope,
+      cancelled,
+      ongoing,
+      continuation,
+      resolved,
+      restoredAt,
+    } = entry as Record<string, unknown>;
     if (kind !== 'planned' && kind !== 'fault' && kind !== 'rotating') continue;
     if (typeof date !== 'string' || !isCalendarDate(date)) continue;
     if (weekday !== null && !WEEKDAYS.includes(weekday as Weekday)) continue;
@@ -349,6 +369,7 @@ export function validate(raw: string): ExtractedOutage[] | null {
       scope: reading,
       cancelled: cancelled === true,
       ongoing: ongoing === true,
+      continuation: continuation === true,
       resolved: resolved === true,
       restoredAt: restored,
     });
