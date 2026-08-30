@@ -81,6 +81,7 @@ export const en: Dictionary = {
     pointAria: '{name} — {status}, open {district}',
     districtAria: 'open the {district} district',
     backToday: 'was out earlier today',
+    legendLead: 'Every point on the map is one settlement.',
   },
   filter: {
     ariaLabel: 'Filter by district',

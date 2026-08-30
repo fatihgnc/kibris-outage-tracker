@@ -15,6 +15,7 @@ import {
 import { DISTRICTS, getMapGeometry, isDistrictId, resolveDarkness } from '@/lib/geography';
 import type { DistrictId, Outage } from '@/lib/types';
 import IslandMap from '@/components/IslandMap';
+import MapLegend from '@/components/MapLegend';
 import DistrictFilter from '@/components/DistrictFilter';
 import OutageCard from '@/components/OutageCard';
 import Countdown from '@/components/Countdown';
@@ -184,6 +185,18 @@ export default async function HomePage({ params, searchParams }: Props) {
             </>
           )}
         </p>
+      </section>
+
+      {/* What a point is, and what its colour means — above the map rather
+        * than below it, because it is the reader's first look at two hundred
+        * unlabelled dots that needs the sentence, not their second. */}
+      <section className="pt-4">
+        <MapLegend
+          lead={dict.map.legendLead}
+          powerOn={dict.map.powerOn}
+          powerOut={dict.map.powerOut}
+          backToday={dict.map.backToday}
+        />
       </section>
 
       <section className="pt-1">

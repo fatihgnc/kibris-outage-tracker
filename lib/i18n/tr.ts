@@ -112,6 +112,7 @@ export const tr = {
     pointAria: '{name} — {status}, {district} sayfasına git',
     districtAria: '{district} bölgesinin kesinti sayfasını aç',
     backToday: 'bugün bir ara kesilmişti',
+    legendLead: 'Haritadaki her nokta bir yerleşim yerini gösteriyor.',
   },
   filter: {
     ariaLabel: 'Bölge filtresi',
