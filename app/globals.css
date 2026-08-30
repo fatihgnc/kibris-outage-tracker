@@ -5,7 +5,7 @@
  * Surfaced to Tailwind (bg-night, text-lamp, border-dark, ...) via @theme.
  */
 @theme {
-  --color-night: #1e1e1e;
+  --color-night: #181818;
   --color-lamp: #f5c86b;
   --color-dark: #2a3446;
   --color-fault: #e5573f;
