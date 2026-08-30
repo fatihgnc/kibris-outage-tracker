@@ -24,8 +24,8 @@ test('an outage with no announced end does not stay active forever', () => {
   assert.equal(deriveStatus(o, at(start) + NO_END_ASSUMED_OVER_MS + 1000), 'past');
 });
 
-test('the assumed end is twenty-four hours', () => {
-  assert.equal(NO_END_ASSUMED_OVER_MS, 24 * 60 * 60 * 1000);
+test('the assumed end is seventy-two hours', () => {
+  assert.equal(NO_END_ASSUMED_OVER_MS, 72 * 60 * 60 * 1000);
 });
 
 // The assumption is only ever a reading of the record. A repair report writes a
@@ -35,7 +35,7 @@ test('a real end wins over the assumption, in both directions', () => {
   const closedEarly = outage(start, '2026-08-26T08:00:00.000Z');
   assert.equal(deriveStatus(closedEarly, at(start) + 3 * 60 * 60 * 1000), 'past');
 
-  const ranLong = outage(start, '2026-08-27T18:00:00.000Z');
+  const ranLong = outage(start, '2026-08-30T06:00:00.000Z');
   assert.equal(deriveStatus(ranLong, at(start) + NO_END_ASSUMED_OVER_MS + 1000), 'active');
 });
 

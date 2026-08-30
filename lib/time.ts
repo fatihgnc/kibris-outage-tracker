@@ -50,20 +50,28 @@ export function nicosiaWallClock(ms: number): WallClock {
  * That was survivable while open-ended records were 2 of 82. It stopped being
  * survivable the moment the parser started catching faults on purpose.
  *
- * Twenty-four hours, up from twelve. Both directions of error are real — assume
- * too early and the map says the power is back when it is not; too late and it
- * holds a village dark that is fine.
+ * Seventy-two hours. It was twelve, then twenty-four, and the honest reason for
+ * the number is not a belief about how long faults last.
  *
- * Twelve was reasoned from planned work, which runs two to six hours. Faults do
- * not: on 29 August three of them, Lefke and Girne and Güzelyurt, went out at
- * 12:29 with no announced end and were still out when the assumption retired all
- * three at 00:29 — and the home page, with nothing left active, then said the
- * island was entirely lit. That is the worse failure of the two. An unclosed
- * fault held a day too long is a card that overstays; a live one dropped is the
- * site asserting, in its own voice, something that is not true.
+ * Both directions of error are real — assume too early and the map says the
+ * power is back when it is not; too late and it holds a village dark that is
+ * fine — but they are not equally bad. An unclosed fault held too long is a card
+ * that overstays, and a reader can see the hours on it. A live one dropped
+ * leaves the home page saying "the island is entirely lit" in its own voice,
+ * with nothing on the page to argue with.
  *
- * A day is still a bound, not a belief: nothing here says a fault runs that long,
- * only that we will not call it over on our own before then.
+ * That second failure has now happened twice over the same three records. On 29
+ * August Lefke, Girne and Güzelyurt went out at 12:29 with no announced end;
+ * twelve hours retired them at 00:29 while the power was still off, and
+ * twenty-four hours retired them again at 12:29 the next day, still off.
+ *
+ * So the number is a backstop, and it is compensating for something else. The
+ * thing that is supposed to close these records is a repair report (§10.6), and
+ * that path is not reaching them: the crawl's URL filter only passes an article
+ * whose address contains 'elektrik' or 'enerji-veril', so 'ariza-giderildi' and
+ * 'normale-dondu' never get fetched at all, whatever the body filter would have
+ * made of them. Widen this constant and the site stops lying for longer; fix
+ * that filter and the constant stops being what decides.
  *
  * Deliberately not written to `endsAt`. That field means "the announced end",
  * and filling it with a guess would make an assumption indistinguishable from
@@ -71,7 +79,7 @@ export function nicosiaWallClock(ms: number): WallClock {
  * it is bounded. A real end still arrives two ways: the utility announcing one,
  * or a follow-up article reporting the fault fixed (§10.6).
  */
-export const NO_END_ASSUMED_OVER_MS = 24 * 60 * 60 * 1000;
+export const NO_END_ASSUMED_OVER_MS = 72 * 60 * 60 * 1000;
 
 /**
  * When a record is read as being over: the announced end, or the assumption
