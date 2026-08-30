@@ -228,7 +228,33 @@ test('a retraction is reported as one', async () => {
   const outcome = await parseAnnouncement(announcement(), respondWith([{ cancelled: true }]));
   assert.equal(outcome.status, 'parsed');
   if (outcome.status !== 'parsed') return;
-  assert.equal(outcome.cancellation, true);
+  assert.equal(outcome.records.length, 0);
+  assert.equal(outcome.retractions.length, 1);
+  assert.deepEqual(outcome.retractions[0].areas, ['Gönyeli']);
+});
+
+// One article can call off Thursday's work and announce Saturday's in the same
+// breath. A single flag for the whole announcement sent both to retractOutages:
+// the new outage was never stored, and anything stored that resembled it was
+// cancelled as well.
+test('an article that cancels one outage and announces another does both', async () => {
+  const outcome = await parseAnnouncement(
+    announcement(),
+    respondWith([
+      { cancelled: true, areas: ['Gönyeli'] },
+      { areas: ['Lapta'], date: '2026-08-29' },
+    ]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  assert.deepEqual(
+    outcome.retractions.map((r) => r.areas),
+    [['Gönyeli']],
+  );
+  assert.deepEqual(
+    outcome.records.map((r) => r.areas),
+    [['Lapta']],
+  );
 });
 
 // An API failure is not a parse result. It has to reach the review queue with

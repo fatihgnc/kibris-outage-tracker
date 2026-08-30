@@ -96,6 +96,7 @@ export async function backfill(options: { perSource?: number; dryRun?: boolean; 
 
     let kept = 0;
     let skipped = 0;
+    let unacted = 0;
     for (const entry of capped) {
       if (seen.has(entry.url)) continue;
       seen.add(entry.url);
@@ -121,6 +122,17 @@ export async function backfill(options: { perSource?: number; dryRun?: boolean; 
       if (outcome.status === 'parsed') {
         parsed.push(...outcome.records);
         kept++;
+        // Counted, not acted on. This script stores; it does not retract a
+        // record or close one with a repair report, which the live run does
+        // (§10.6). Until it does, a historical announcement that called work off
+        // leaves the work it cancelled standing in the archive, and a repair
+        // report leaves its fault open with no `endsAt` — which the twelve-month
+        // chart then omits, since it sums only records that have one.
+        //
+        // What it no longer does is store them as outages that happened. They
+        // used to arrive on `records` behind a single per-article flag and were
+        // pushed straight in.
+        unacted += outcome.retractions.length + outcome.resolutions.length;
       } else if (outcome.status === 'failed') {
         review.push({
           source: { name: source.name, url: entry.url },
@@ -130,7 +142,11 @@ ${body}`,
         });
       }
     }
-    console.log(`[${source.id}] ${kept} parsed, ${skipped} not an outage, ${capped.length - kept - skipped} unparsed`);
+    console.log(
+      `[${source.id}] ${kept} parsed, ${skipped} not an outage, ` +
+        `${capped.length - kept - skipped} unparsed` +
+        (unacted > 0 ? `, ${unacted} retraction/repair not acted on` : ''),
+    );
   }
 
   const collapsed = dedupe(parsed);

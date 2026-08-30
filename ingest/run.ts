@@ -118,7 +118,12 @@ export async function ingest(options: IngestOptions = {}) {
     for (const place of outcome.fuzzyPlaces) {
       console.warn(`[fuzzy] "${place.matchedText}" matched ${place.name} (${announcement.source.url})`);
     }
-    (outcome.cancellation ? retractions : parsed).push(...outcome.records);
+    // Both lists, from the same article. One announcement can call off Thursday's
+    // work and announce Saturday's in the same breath, and routing all of it by a
+    // single flag lost the new outage and cancelled anything already stored that
+    // resembled it.
+    parsed.push(...outcome.records);
+    retractions.push(...outcome.retractions);
     resolutions.push(...outcome.resolutions);
   }
 

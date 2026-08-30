@@ -36,8 +36,18 @@ export type ParseOutcome =
   | {
       status: 'parsed';
       records: Outage[];
+      /**
+       * The outages this announcement retracts, if any (§10.6).
+       *
+       * Apart from `records` rather than a flag beside them, because one article
+       * can do both. "Thursday's work in Gönyeli is cancelled; it will now be
+       * done on Saturday" is a retraction and a new outage, and a single boolean
+       * sent every record it produced to `retractOutages` — so the Saturday work
+       * was never stored, and anything already stored that looked like it was
+       * cancelled too.
+       */
+      retractions: Outage[];
       resolutions: Resolution[];
-      cancellation: boolean;
       fuzzyPlaces: PlaceMatch[];
     }
   | { status: 'skipped'; reason: string }
@@ -78,7 +88,7 @@ export async function parseAnnouncement(
   const records: Outage[] = [];
   const resolutions: Resolution[] = [];
   const fuzzyPlaces: PlaceMatch[] = [];
-  let cancellation = false;
+  const retractions: Outage[] = [];
   // Counted apart, because they call for different things. A run of records
   // dropped for want of a clock is a parser or a prompt problem; a run dropped
   // for want of a place is data/places.json. Both used to increment one counter
@@ -122,7 +132,6 @@ export async function parseAnnouncement(
       continue;
     }
     fuzzyPlaces.push(...places.filter((place) => place.fuzzy));
-    if (outage.cancelled) cancellation = true;
 
     // An announcement spanning districts becomes one record per district, so a
     // reader filtering by district still sees their own (§10.4).
@@ -146,7 +155,10 @@ export async function parseAnnouncement(
         outage.scope === 'district' && named.has(foldKey(DISTRICTS[district].name))
           ? 'district'
           : 'places';
-      records.push({
+      // A retraction names an outage in order to call it off, so it produces a
+      // record shaped like the one it cancels — that shape is what
+      // `retractOutages` matches the stored row by. It goes on the other list.
+      (outage.cancelled ? retractions : records).push({
         id: fingerprint({ startsAt: schedule.startsAt, endsAt: schedule.endsAt, areas }),
         utility: 'electricity',
         kind: outage.kind,
@@ -163,10 +175,10 @@ export async function parseAnnouncement(
     }
   }
 
-  if (records.length === 0 && resolutions.length === 0) {
+  if (records.length === 0 && retractions.length === 0 && resolutions.length === 0) {
     return { status: 'failed', reason: failureReason(noPlaces, noSchedule), text };
   }
-  return { status: 'parsed', records, resolutions, cancellation, fuzzyPlaces };
+  return { status: 'parsed', records, retractions, resolutions, fuzzyPlaces };
 }
 
 /**
