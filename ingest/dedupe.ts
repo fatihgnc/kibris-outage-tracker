@@ -20,7 +20,15 @@ const TIME_TOLERANCE_MS = 15 * 60 * 1000;
 // served by one card that starts slightly early than by five for one broken line.
 const OPEN_FAULT_TOLERANCE_MS = 6 * 60 * 60 * 1000;
 
-function areaKeys(outage: Outage): Set<string> {
+/**
+ * The four fields that decide whether two records describe one event. Taken as a
+ * `Pick` rather than a whole Outage so a caller with a stored row — the backfill
+ * scripts — asks this question through the same function the ingest does. A
+ * second definition of 'the same event' is a second definition that drifts.
+ */
+export type EventShape = Pick<Outage, 'district' | 'areas' | 'startsAt' | 'endsAt' | 'kind'>;
+
+function areaKeys(outage: EventShape): Set<string> {
   return new Set(outage.areas.map(foldKey));
 }
 
@@ -34,11 +42,11 @@ function overlaps(a: Set<string>, b: Set<string>): boolean {
   return false;
 }
 
-function bothOpenEndedFaults(a: Outage, b: Outage): boolean {
+function bothOpenEndedFaults(a: EventShape, b: EventShape): boolean {
   return a.endsAt === null && b.endsAt === null && a.kind === 'fault' && b.kind === 'fault';
 }
 
-function withinTolerance(a: Outage, b: Outage): boolean {
+function withinTolerance(a: EventShape, b: EventShape): boolean {
   const startDelta = Math.abs(Date.parse(a.startsAt) - Date.parse(b.startsAt));
   if (bothOpenEndedFaults(a, b)) return startDelta <= OPEN_FAULT_TOLERANCE_MS;
   if (startDelta > TIME_TOLERANCE_MS) return false;
@@ -49,7 +57,7 @@ function withinTolerance(a: Outage, b: Outage): boolean {
 // Two records describe the same event when they are in the same district and
 // either their place sets nest (one outlet abbreviated the list) at exactly
 // matching times, or their times are within tolerance and the places overlap.
-export function isSameEvent(a: Outage, b: Outage): boolean {
+export function isSameEvent(a: EventShape, b: EventShape): boolean {
   if (a.district !== b.district) return false;
   const aAreas = areaKeys(a);
   const bAreas = areaKeys(b);

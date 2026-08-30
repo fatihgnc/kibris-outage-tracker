@@ -21,8 +21,10 @@
 //   →  derived wider than stored: the write set
 //   ~  a source has been republished since we read it, so today's text is no
 //      evidence about this record. Printed with its URLs, never written.
-//   ?  no source could be re-derived: a dead link, a block, or text today's
-//      parser rejects. Printed, never written.
+//   ?  either no source could be re-derived — a dead link, a block, or text
+//      today's parser rejects — or they read and none of them describes this
+//      record. Said apart, because they call for different things. Printed,
+//      never written.
 //
 //   npm run backfill:scope              # preview
 //   npm run backfill:scope -- --confirm # writes
@@ -36,14 +38,17 @@ import { loadEnvConfig } from '@next/env';
 loadEnvConfig(process.cwd());
 
 import { createClient } from '@supabase/supabase-js';
-import type { DistrictId, OutageScope, SourceRef } from '../lib/types';
+import type { DistrictId, OutageKind, OutageScope, SourceRef } from '../lib/types';
 import { DISTRICTS } from '../lib/districts';
 import { foldKey } from '../ingest/parse/text';
+import { isSameEvent } from '../ingest/dedupe';
 import { createRederiver } from './rederive';
 
 type Row = {
   id: string;
+  kind: OutageKind;
   starts_at: string;
+  ends_at: string | null;
   district: DistrictId;
   areas: string[];
   sources: SourceRef[];
@@ -86,7 +91,7 @@ async function main() {
   const client = createClient(url, key, { auth: { persistSession: false } });
   const { data, error } = await client
     .from('outages')
-    .select('id, starts_at, district, areas, sources, ingested_at, scope')
+    .select('id, kind, starts_at, ends_at, district, areas, sources, ingested_at, scope')
     // A record retired as bad data never described a real announcement, so
     // there is nothing about it to re-read.
     .or('cancelled_reason.is.null,cancelled_reason.neq.bad_data')
@@ -105,21 +110,34 @@ async function main() {
 
   for (const row of candidates) {
     const label = `${row.starts_at.slice(0, 10)} ${row.district} ${row.areas.join(', ')}`;
+    // The row in the shape the ingest's own same-event rule reads.
+    const stored = {
+      kind: row.kind,
+      district: row.district,
+      areas: row.areas,
+      startsAt: row.starts_at,
+      endsAt: row.ends_at,
+    };
     let derivedScope: OutageScope | null = null;
     let editedSince = false;
+    let readable = false;
 
     for (const source of row.sources) {
       const rederived = await rederive(source);
       if (!rederived) continue;
+      readable = true;
       if (Date.parse(rederived.publishedAt) > Date.parse(row.ingested_at)) editedSince = true;
-      // Matched the way audit-records.ts matches: same district, the same
-      // instant, and at least one place in common. Outlets abbreviate place
-      // lists, so an overlap is the honest bar.
-      const stored = new Set(row.areas.map(foldKey));
+      // Matched with `isSameEvent`, the rule the ingest already folds records
+      // together by, rather than a second one written here.
+      //
+      // It was a second one, and it demanded the same instant. These records are
+      // open-ended faults whose start is the announcement's publication time
+      // stood in for one, and where that time came from is not stable: the
+      // stored Girne record started 12:29, from a sitemap's lastmod, while the
+      // page itself says 12:23. Six minutes, and the record fell out of its own
+      // backfill reported as unreadable.
       for (const record of rederived.records) {
-        if (record.district !== row.district) continue;
-        if (Date.parse(record.startsAt) !== Date.parse(row.starts_at)) continue;
-        if (!record.areas.map(foldKey).some((area) => stored.has(area))) continue;
+        if (!isSameEvent(stored, record)) continue;
         // Widest wins across sources, for the same reason mergeOutages does it:
         // one outlet abbreviating a district-wide announcement to a few of its
         // villages must not narrow what another one wrote in full.
@@ -130,7 +148,15 @@ async function main() {
 
     if (derivedScope === null) {
       unreadable++;
-      console.log(`? ${label} — no source could be re-derived`);
+      // Two different failures, said apart. Conflating them cost an afternoon:
+      // a record whose sources read perfectly well was reported as unreadable
+      // because nothing in them matched it, and the article was never the
+      // problem.
+      console.log(
+        readable
+          ? `? ${label} — sources read, none of them describes this record`
+          : `? ${label} — no source could be re-derived`,
+      );
       for (const source of row.sources) console.log(`    ${source.url}`);
       continue;
     }
