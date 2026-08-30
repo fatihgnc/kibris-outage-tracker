@@ -80,7 +80,7 @@ const SCHEMA = {
               type: ['string', 'null'],
               enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', null],
               description:
-                'The weekday the announcement names for the outage, in English, if it names one — "perşembe günü" is thursday. null when it gives a date or a relative word instead. Report what it says; the date is worked out from this.',
+                'The weekday the announcement names for the outage, in English, if it names one — "perşembe günü" is thursday. Report it whenever the announcement says one, including where it also gives a date ("27 Ağustos Perşembe günü" is both). null only when no weekday is named at all. Report what it says; the day is worked out from this and the date together.',
             },
             start: {
               type: ['string', 'null'],
@@ -140,7 +140,7 @@ const SYSTEM_PROMPT = [
   '- An article reporting that a fault has been FIXED is not nothing: return the outage it is about, with "resolved" true and the places it names, so the record can be closed. Leave "start" null unless the article says when it began.',
   '- One entry per distinct outage. An announcement listing many villages under one time window is ONE outage with many areas, not one per village.',
   '- Resolve "bugün" and "yarın" against the publication date you are given. "bugün" IS the publication date.',
-  '- When the announcement names a WEEKDAY instead ("perşembe günü"), put it in "weekday" and do not try to work the date out — the date is computed from it afterwards. Still fill "date" with your best effort; it is ignored when "weekday" is set.',
+  '- When the announcement names a WEEKDAY ("perşembe günü"), put it in "weekday" and do not try to work the date out — resolving a weekday is a subtraction that is done afterwards, not by you. Fill "date" as well, with what the announcement says if it gives one and your best effort otherwise: a date that already falls on the named weekday is taken as read, and one that does not is replaced by counting from the publication date.',
   '- "date" is the day the outage STARTS. An announcement reading "bugün saat 23.00 ile yarın saat 02.00 arasında" starts today at 23:00 and ends tomorrow at 02:00: date is the publication date, start is 23:00, end is 02:00. Do not move the date forward because the window crosses midnight.',
   '- Never invent a time. When a fault is already in progress and no start is stated, set "start" to null and "ongoing" to true.',
   '- A repair article carries two clocks and they must not be swapped: "bugun saat 16.00 siralarinda meydana gelen ariza" is "start", "saat 18.30 itibariyla elektrik verildi" is "restoredAt". The time the power returned is never a start time.',
@@ -174,8 +174,25 @@ export type ExtractionResult =
   | { status: 'ok'; outages: ExtractedOutage[] }
   | { status: 'error'; reason: string };
 
+/**
+ * The key, or null — where "set to whitespace" counts as not set.
+ *
+ * `envOr` already treats an empty or blank override as absent, and its own
+ * comment says the same reasoning applies to every value read from the
+ * environment. The key was the one read straight off `process.env`, and it is
+ * the value that can fail most quietly: a secret pasted with a trailing newline
+ * is truthy, so run.ts prints no warning, every request goes out with a broken
+ * Authorization header, and the 401 is classified non-retryable — so every
+ * announcement in every run lands in the review queue while the job stays green.
+ * That is the exact shape env.ts was written to describe.
+ */
+function apiKey(): string | null {
+  const key = process.env.OPENAI_API_KEY?.trim();
+  return key ? key : null;
+}
+
 export function hasApiKey(): boolean {
-  return Boolean(process.env.OPENAI_API_KEY);
+  return apiKey() !== null;
 }
 
 /**
@@ -189,7 +206,7 @@ export async function extractOutages(
   announcement: RawAnnouncement,
   fetchImpl: typeof fetch = fetch,
 ): Promise<ExtractionResult> {
-  const key = process.env.OPENAI_API_KEY;
+  const key = apiKey();
   if (!key) return { status: 'error', reason: 'no OPENAI_API_KEY configured' };
 
   // The weekday is given rather than left to be worked out. Announcements say

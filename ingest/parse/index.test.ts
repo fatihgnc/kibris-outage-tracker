@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { parseAnnouncement, type RawAnnouncement } from './index';
+import { hasApiKey } from './llm';
 import type { ExtractedOutage } from './llm';
 
 // The model's reading is stubbed. What is under test is everything that happens
@@ -191,6 +192,23 @@ test('a named weekday is counted from the publication date, not by the model', a
   );
   assert.equal(outcome.status, 'parsed');
   if (outcome.status !== 'parsed') return;
+  assert.equal(outcome.records[0].startsAt, '2026-08-27T06:00:00.000Z');
+});
+
+// The other half of the same rule. Announcements carry both a date and a weekday
+// often enough ("27 Ağustos Perşembe günü"), and `date` is required by the
+// schema so the model always fills something. Overriding it unconditionally sent
+// work announced a fortnight out to the coming Thursday instead — dateOfNext
+// only ever looks forward within one week.
+test('a date that already falls on the named weekday is kept', async () => {
+  // 2026-08-13 and 2026-08-27 are both Thursdays, two weeks apart.
+  const outcome = await parseAnnouncement(
+    announcement({ publishedAt: '2026-08-13T14:00:00.000Z' }),
+    respondWith([{ weekday: 'thursday', date: '2026-08-27' }]),
+  );
+  assert.equal(outcome.status, 'parsed');
+  if (outcome.status !== 'parsed') return;
+  // Not 2026-08-13, which is the Thursday the old rule counted to.
   assert.equal(outcome.records[0].startsAt, '2026-08-27T06:00:00.000Z');
 });
 
@@ -402,4 +420,21 @@ test('two records differing only in scope share an id', async () => {
   const wide = await read('district');
   assert.notEqual(narrow.scope, wide.scope);
   assert.equal(narrow.id, wide.id);
+});
+
+// A secret pasted with a trailing newline is truthy. Left unchecked the run
+// prints no warning, every request sends a broken Authorization header, and the
+// 401 is not retried — so every announcement lands in the review queue while the
+// job stays green. env.ts already treats "set but blank" as unset; the key was
+// the one value read straight off process.env.
+test('a key that is only whitespace counts as no key', () => {
+  const original = process.env.OPENAI_API_KEY;
+  try {
+    process.env.OPENAI_API_KEY = ' \n ';
+    assert.equal(hasApiKey(), false);
+    process.env.OPENAI_API_KEY = '  sk-real  ';
+    assert.equal(hasApiKey(), true);
+  } finally {
+    process.env.OPENAI_API_KEY = original;
+  }
 });

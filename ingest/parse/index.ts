@@ -213,7 +213,21 @@ function toSchedule(outage: ExtractedOutage, publishedAt: string): Schedule | nu
     return { startsAt: publishedAt, endsAt: null, inferredStart: true };
   }
 
-  const date = outage.weekday ? dateOfNext(outage.weekday, publishedAt) : outage.date;
+  // A named weekday is counted here rather than trusted from the model — but
+  // only where the two disagree. An announcement can carry both ("27 Ağustos
+  // Perşembe günü"), and `date` is required by the schema so the model always
+  // fills something; a filled date that already falls on the named weekday is as
+  // good as one read off the page, whether it was read or guessed.
+  //
+  // Overriding it unconditionally is what this used to do, and `dateOfNext` only
+  // ever looks forward within one week — so work announced a fortnight ahead was
+  // filed on the coming instance of that weekday, up to three weeks early, with
+  // nothing marking it. Where they disagree the weekday still wins: the model
+  // reports the day it read, and resolving one is a subtraction it gets wrong.
+  const date =
+    outage.weekday && weekdayOfDate(outage.date) !== outage.weekday
+      ? dateOfNext(outage.weekday, publishedAt)
+      : outage.date;
   const startsAt = toIso(date, outage.start);
   if (!startsAt) return null;
   let endsAt = outage.end ? toIso(date, outage.end) : null;
@@ -235,6 +249,15 @@ function toSchedule(outage: ExtractedOutage, publishedAt: string): Schedule | nu
  * "On or after", not "after": KIB-TEK publishes on the Wednesday that the work
  * is "perşembe günü", and one published on the day itself says it too (§10.4).
  */
+/** The weekday a YYYY-MM-DD falls on, or null if it is not a date. */
+function weekdayOfDate(date: string): Weekday | null {
+  // Midday, so no zone shift can move the day.
+  const ms = Date.parse(`${date}T12:00:00Z`);
+  if (Number.isNaN(ms)) return null;
+  // getUTCDay is Sunday-first; WEEKDAYS is Monday-first.
+  return WEEKDAYS[(new Date(ms).getUTCDay() + 6) % 7];
+}
+
 function dateOfNext(weekday: Weekday, publishedAt: string): string {
   // Nicosia's calendar day, not UTC's — an announcement published at 01:00 local
   // is on the day the reader thinks it is.
