@@ -305,16 +305,25 @@ export default function IslandMap({
           {/* The hour, on the water: warm from whichever side the sun is on
            * near either end of the day, and nothing at all the rest of the
            * time. Far below the threshold where it would read as a colour — the
-           * island is still drawn on the same night the page is. */}
+           * island is still drawn on the same night the page is.
+           *
+           * Clipped to the island. Laid over the full sea rect it tinted the
+           * whole full-bleed frame away from --color-night, which is exactly
+           * the site's own background — the frame's edges then banded against
+           * the page above and below it, the "box" this comment already
+           * worried about. Clipping keeps the open sea pixel-identical to the
+           * page and puts the wash only on the land it is meant to warm. */}
           {sky.warmth > 0 && (
-            <rect
-              x="-100%"
-              y="-100%"
-              width="300%"
-              height="300%"
-              fill="url(#map-sky)"
-              opacity={sky.warmth}
-            />
+            <g clipPath="url(#map-island-clip)">
+              <rect
+                x="0"
+                y="0"
+                width={width}
+                height={height}
+                fill="url(#map-sky)"
+                opacity={sky.warmth}
+              />
+            </g>
           )}
 
           {/* Depth: a faint bloom off the coast into the water, and two wider
