@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
@@ -12,15 +11,14 @@ import {
   islandHour,
   readEndOf,
 } from '@/lib/time';
-import { DISTRICTS, getMapGeometry, isDistrictId, resolveDarkness } from '@/lib/geography';
-import type { DistrictId, Outage } from '@/lib/types';
+import { DISTRICT_IDS, DISTRICTS, getMapGeometry, resolveDarkness } from '@/lib/geography';
+import type { Outage } from '@/lib/types';
 import IslandMap from '@/components/IslandMap';
 import MapLegend from '@/components/MapLegend';
-import DistrictFilter from '@/components/DistrictFilter';
+import HomeOutages from '@/components/HomeOutages';
 import OutageCard from '@/components/OutageCard';
 import Countdown from '@/components/Countdown';
 import AdSlot from '@/components/AdSlot';
-import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 import { pageMetadata } from '@/lib/seo';
 import { faqJsonLd, itemListJsonLd, siteJsonLd } from '@/lib/jsonld';
 import { routeHref } from '@/lib/routes';
@@ -34,7 +32,6 @@ const FIRST_BLOCK = 6;
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ district?: string | string[] }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -45,27 +42,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return pageMetadata({ locale, dict: await getDictionary(locale) });
 }
 
-export default async function HomePage({ params, searchParams }: Props) {
+export default async function HomePage({ params }: Props) {
   const { locale: rawLocale } = await params;
   if (!isLocale(rawLocale)) notFound();
   const locale: Locale = rawLocale;
   const dict = await getDictionary(locale);
 
-  const { district: districtRaw } = await searchParams;
-  const selectedDistrict: DistrictId | null =
-    typeof districtRaw === 'string' && isDistrictId(districtRaw) ? districtRaw : null;
-
   const now = await getNow();
-  const [outages, freshness, cookieStore] = await Promise.all([getOutages(now), getFreshness(now), cookies()]);
-  const consent = readConsent(cookieStore.get(CONSENT_COOKIE)?.value);
+  const [outages, freshness] = await Promise.all([getOutages(now), getFreshness(now)]);
 
   const byStart = (a: Outage, b: Outage) => Date.parse(a.startsAt) - Date.parse(b.startsAt);
   const active = outages.filter((o) => deriveStatus(o, now) === 'active').sort(byStart);
   const upcoming = outages.filter((o) => deriveStatus(o, now) === 'upcoming').sort(byStart);
   const activeDistricts = new Set(active.map((o) => o.district));
 
-  const inSelected = (o: Outage) => !selectedDistrict || o.district === selectedDistrict;
-  const list = [...active.filter(inSelected), ...upcoming.filter(inSelected)];
+  // The full list, every district. The ?district narrowing is applied in the
+  // browser (components/HomeOutages.tsx) — the page is cached and shared, so
+  // the server no longer reads the query string.
+  const list = [...active, ...upcoming];
 
   const numberFormat = new Intl.NumberFormat(locale);
   const heroTitle =
@@ -115,9 +109,9 @@ export default async function HomePage({ params, searchParams }: Props) {
     ),
   ].filter((name) => !lampOutages[name]);
 
-  const listTitle = selectedDistrict
-    ? fill(dict.list.titleDistrict, { district: DISTRICTS[selectedDistrict].name })
-    : dict.list.titleAll;
+  // The structured list always describes the whole island: the canonical URL
+  // points past the query string, so the filtered variants are the same page.
+  const listTitle = dict.list.titleAll;
 
   // `getOutages` already reaches thirty days back — the records are in hand, so
   // this section costs no extra query. It exists because on a quiet day the page
@@ -223,59 +217,37 @@ export default async function HomePage({ params, searchParams }: Props) {
         />
       </section>
 
-      <section className="pt-5">
-        <DistrictFilter dict={dict} selected={selectedDistrict} basePath={routeHref(locale)} />
-      </section>
-
-      <section className="pt-3">
-        <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{listTitle}</h2>
-          <span className="font-mono text-meta text-muted">
-            {fill(dict.list.sorted, { count: numberFormat.format(list.length) })}
-          </span>
-        </div>
-        {list.length > 0 ? (
-          <>
-            <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
-              {list.slice(0, FIRST_BLOCK).map((outage) => (
-                <li key={outage.id}>
-                  <OutageCard
-                    outage={outage}
-                    status={deriveStatus(outage, now)}
-                    locale={locale}
-                    dict={dict}
-                    now={now}
-                  />
-                </li>
-              ))}
-            </ul>
-            {list.length > FIRST_BLOCK && (
-              <>
-                {/* After the first block of cards, never before one, and never
-                 * while the data is stale (§11.3). */}
-                <AdSlot
-                  slot="home-mid"
-                  label={dict.ad.label}
-                  consent={consent}
-                  suppressed={freshness.stale}
-                />
-                <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
-                  {list.slice(FIRST_BLOCK).map((outage) => (
-                    <li key={outage.id}>
-                      <OutageCard
-                        outage={outage}
-                        status={deriveStatus(outage, now)}
-                        locale={locale}
-                        dict={dict}
-                        now={now}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </>
-        ) : (
+      <HomeOutages
+        basePath={routeHref(locale)}
+        locale={locale}
+        firstBlock={FIRST_BLOCK}
+        districts={DISTRICT_IDS.map((id) => ({ id, name: DISTRICTS[id].name }))}
+        strings={{
+          titleAll: dict.list.titleAll,
+          titleDistrict: dict.list.titleDistrict,
+          sorted: dict.list.sorted,
+          filterAriaLabel: dict.filter.ariaLabel,
+          filterAll: dict.filter.all,
+        }}
+        items={list.map((outage) => ({
+          id: outage.id,
+          district: outage.district,
+          node: (
+            <OutageCard
+              outage={outage}
+              status={deriveStatus(outage, now)}
+              locale={locale}
+              dict={dict}
+              now={now}
+            />
+          ),
+        }))}
+        adSlot={
+          // After the first block of cards, never before one, and never
+          // while the data is stale (§11.3).
+          <AdSlot slot="home-mid" label={dict.ad.label} suppressed={freshness.stale} />
+        }
+        emptyNode={
           <div className="flex flex-col gap-2 rounded-[4px] border border-dark px-5 py-6">
             <p className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{dict.list.empty}</p>
             <p className="m-0 font-mono text-meta text-muted">
@@ -284,8 +256,8 @@ export default async function HomePage({ params, searchParams }: Props) {
                 : dict.statusBar.neverChecked}
             </p>
           </div>
-        )}
-      </section>
+        }
+      />
 
       {recent.length > 0 && (
         <section className="pt-9">

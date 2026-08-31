@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, IBM_Plex_Mono, Public_Sans } from 'next/font/google';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 import { Analytics } from '@vercel/analytics/next';
 import { notFound } from 'next/navigation';
 import '../globals.css';
@@ -13,7 +12,7 @@ import { formatYear } from '@/lib/time';
 import StatusBar from '@/components/StatusBar';
 import NavLinks from '@/components/NavLinks';
 import ConsentBanner from '@/components/ConsentBanner';
-import { adsConfigured, CONSENT_COOKIE, readConsent } from '@/lib/consent';
+import { adsConfigured } from '@/lib/consent';
 import { routeHref } from '@/lib/routes';
 
 // Latin Extended so Turkish characters (ı, İ, ş, ğ, ü, ö, ç) render correctly.
@@ -35,9 +34,12 @@ const plexMono = IBM_Plex_Mono({
   display: 'swap',
 });
 
-// Every view depends on the current time, so nothing is prerendered with a
-// frozen "now".
-export const dynamic = 'force-dynamic';
+// Every view depends on the current time, but a "now" up to a minute old
+// changes nothing a reader can see: statuses move on announced clock times,
+// the countdown corrects itself after hydration, and the ingest that feeds
+// the data runs on a ten-minute cron. A minute of shared cache is the
+// difference between every reader paying a full render and almost none.
+export const revalidate = 60;
 
 export const viewport: Viewport = {
   themeColor: '#0b1220',
@@ -88,8 +90,7 @@ export default async function LocaleLayout({
   const locale: Locale = raw;
   const dict = await getDictionary(locale);
   const now = await getNow();
-  const [outages, freshness, cookieStore] = await Promise.all([getOutages(now), getFreshness(now), cookies()]);
-  const consent = readConsent(cookieStore.get(CONSENT_COOKIE)?.value);
+  const [outages, freshness] = await Promise.all([getOutages(now), getFreshness(now)]);
 
   return (
     <html lang={locale} className={`${fraunces.variable} ${publicSans.variable} ${plexMono.variable}`}>
@@ -154,11 +155,12 @@ export default async function LocaleLayout({
 
         {/* Asked once, and only when there is something to ask about: with no
           * ad network configured nothing sets an advertising cookie, so the
-          * banner would be consent theatre. A refusal is never re-prompted
+          * banner would be consent theatre. Whether the question is still
+          * open is the banner's own to decide — it reads the cookie in the
+          * browser, because this page is cached and shared and the HTML
+          * cannot carry one reader's answer. A refusal is never re-prompted
           * (§11.6). */}
-        {adsConfigured() && consent === 'unanswered' && (
-          <ConsentBanner locale={locale} strings={dict.consent} />
-        )}
+        {adsConfigured() && <ConsentBanner locale={locale} strings={dict.consent} />}
 
         {/* Cookieless page counts: no identifier is stored on the device, so it
           * sits outside the consent question above (§11.6), which guards the

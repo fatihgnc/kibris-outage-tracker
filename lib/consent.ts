@@ -17,6 +17,19 @@ export function readConsent(value: string | undefined): ConsentState {
 }
 
 /**
+ * The choice as the browser knows it. Client-only — the pages are served from
+ * cache and shared between readers, so the server never sees this cookie any
+ * more; everything that depends on it reads it here, after hydration.
+ */
+export function readConsentCookie(): ConsentState {
+  const value = document.cookie
+    .split('; ')
+    .find((part) => part.startsWith(`${CONSENT_COOKIE}=`))
+    ?.slice(CONSENT_COOKIE.length + 1);
+  return readConsent(value);
+}
+
+/**
  * Whether advertising is actually configured.
  *
  * Without a network client id `AdSlot` renders nothing at all, so no

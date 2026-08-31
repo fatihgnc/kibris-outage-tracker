@@ -17,8 +17,17 @@ type Props = {
 export default function Countdown({ targetIso, pattern, units, initialNow }: Props) {
   const [now, setNow] = useState(initialNow);
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60000);
-    return () => clearInterval(id);
+    const tick = () => setNow(Date.now());
+    // The injected time keeps the first client render identical to the server
+    // render — but the page is served from cache, so that clock can be up to
+    // a minute behind. The first tick runs as soon as hydration is done, not
+    // a minute later, so the real clock takes over immediately.
+    const catchUp = setTimeout(tick, 0);
+    const id = setInterval(tick, 60000);
+    return () => {
+      clearTimeout(catchUp);
+      clearInterval(id);
+    };
   }, []);
   const text = fill(pattern, { duration: formatDuration(Date.parse(targetIso) - now, units) });
   // Reserve the initial width so a tick never shifts the layout around it —

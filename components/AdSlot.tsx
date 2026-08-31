@@ -1,5 +1,4 @@
-import Script from 'next/script';
-import type { ConsentState } from '@/lib/consent';
+import AdLoader from './AdLoader';
 
 // The three placements from §11.3. All below the fold, all in-content.
 export type AdSlotName = 'home-mid' | 'district-mid' | 'guide-in-article' | 'archive-foot';
@@ -16,7 +15,6 @@ const RESERVED_HEIGHT: Record<AdSlotName, string> = {
 type Props = {
   slot: AdSlotName;
   label: string;
-  consent: ConsentState;
   // Suppressed on views where the reader is already poorly served: errors,
   // empty states, and anything showing a stale-data warning (§11.3).
   suppressed?: boolean;
@@ -33,7 +31,7 @@ const SLOT_IDS: Partial<Record<AdSlotName, string | undefined>> = {
 // A single component for every placement — no ad markup is duplicated across
 // pages (§11.4). It can render either a network unit or, later, a static local
 // sponsor card from config (§11.8), without any page needing to change.
-export default function AdSlot({ slot, label, consent, suppressed = false }: Props) {
+export default function AdSlot({ slot, label, suppressed = false }: Props) {
   // Nothing renders while running on mocks, so development and screenshots stay
   // clean (§11.4).
   const usingMocks = process.env.USE_MOCKS === 'true';
@@ -57,14 +55,9 @@ export default function AdSlot({ slot, label, consent, suppressed = false }: Pro
           data-full-width-responsive="true"
         />
       </div>
-      {/* lazyOnload: never blocks first paint, hydration, or the map render. */}
-      <Script
-        id={`adsbygoogle-${slot}`}
-        strategy="lazyOnload"
-        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${CLIENT_ID}`}
-        crossOrigin="anonymous"
-        data-npa={consent === 'granted' ? '0' : '1'}
-      />
+      {/* Consent, and with it the network script, is the reader's own — it
+       * loads client-side so the cached page stays the same for everyone. */}
+      <AdLoader slot={slot} clientId={CLIENT_ID} />
     </aside>
   );
 }

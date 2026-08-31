@@ -1,25 +1,30 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getAreaKeyCounts, getFreshness, getMonthlyTotals, getNow, getOutages } from '@/lib/data';
 import { deriveStatus, formatClock } from '@/lib/time';
-import { DISTRICTS, getMapGeometry, isDistrictId } from '@/lib/geography';
+import { DISTRICT_IDS, DISTRICTS, getMapGeometry, isDistrictId } from '@/lib/geography';
 import type { Outage } from '@/lib/types';
 import IslandMapMini from '@/components/IslandMapMini';
 import OutageCard from '@/components/OutageCard';
 import HistoryChart from '@/components/HistoryChart';
 import AdSlot from '@/components/AdSlot';
 import { eligiblePlaces } from '@/lib/places';
-import { CONSENT_COOKIE, readConsent } from '@/lib/consent';
 import { pageMetadata } from '@/lib/seo';
 import { breadcrumbJsonLd } from '@/lib/jsonld';
 import { routeHref } from '@/lib/routes';
 import JsonLd from '@/components/JsonLd';
 
 type Props = { params: Promise<{ locale: string; id: string }> };
+
+// Six districts, both locales: a short, closed list, so every district page
+// is prerendered and revalidates on the layout's clock instead of making its
+// first reader wait for a render.
+export function generateStaticParams() {
+  return DISTRICT_IDS.map((id) => ({ id }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, id } = await params;
@@ -42,14 +47,12 @@ export default async function DistrictPage({ params }: Props) {
   const dict = await getDictionary(locale);
 
   const now = await getNow();
-  const [outages, totals, freshness, cookieStore, areaCounts] = await Promise.all([
+  const [outages, totals, freshness, areaCounts] = await Promise.all([
     getOutages(now),
     getMonthlyTotals(id, now),
     getFreshness(now),
-    cookies(),
     getAreaKeyCounts(now),
   ]);
-  const consent = readConsent(cookieStore.get(CONSENT_COOKIE)?.value);
 
   const byStart = (a: Outage, b: Outage) => Date.parse(a.startsAt) - Date.parse(b.startsAt);
   const districtOutages = outages.filter((o) => o.district === id);
@@ -152,7 +155,7 @@ export default async function DistrictPage({ params }: Props) {
 
       {/* Between "upcoming" and the history chart — never between "now" and
        * "upcoming", and never while the data is stale (§11.3). */}
-      <AdSlot slot="district-mid" label={dict.ad.label} consent={consent} suppressed={freshness.stale} />
+      <AdSlot slot="district-mid" label={dict.ad.label} suppressed={freshness.stale} />
 
       <section className="pt-7">
         <div className="mb-3.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">

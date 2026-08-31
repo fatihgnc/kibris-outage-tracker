@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { CONSENT_COOKIE, CONSENT_MAX_AGE_SECONDS, type ConsentChoice } from '@/lib/consent';
+import { useConsentState } from './useConsentState';
 import type { Locale } from '@/lib/i18n/config';
 import { routeHref } from '@/lib/routes';
 
@@ -16,9 +17,14 @@ type Props = {
 // to consent UI too. "Reject" is one click and as prominent as "Accept": no
 // pre-ticked boxes, no cookie wall, no second screen.
 //
-// Rendered only when the choice is still unanswered, so a refusal is never
-// re-prompted.
+// Shown only while the choice is still unanswered, so a refusal is never
+// re-prompted. The cookie is read here, after hydration, not on the server:
+// the pages are cached and shared between readers, so the HTML cannot carry
+// anyone's answer. While the choice is still unknown, nothing renders — a
+// banner that flashes at someone who refused is a re-prompt in all but name.
 export default function ConsentBanner({ locale, strings }: Props) {
+  const consent = useConsentState();
+  // The cookie write below is invisible to the hook — this mirrors it.
   const [answered, setAnswered] = useState(false);
 
   const answer = (choice: ConsentChoice) => {
@@ -26,7 +32,7 @@ export default function ConsentBanner({ locale, strings }: Props) {
     setAnswered(true);
   };
 
-  if (answered) return null;
+  if (answered || consent !== 'unanswered') return null;
 
   return (
     <div

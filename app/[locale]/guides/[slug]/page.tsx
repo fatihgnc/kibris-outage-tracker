@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getGuide } from '@/lib/content';
 import { GUIDE_SLUGS, guideHref, isGuideSlug, routeHref } from '@/lib/routes';
-import { readConsent, CONSENT_COOKIE } from '@/lib/consent';
 import AdSlot from '@/components/AdSlot';
 import JsonLd from '@/components/JsonLd';
 import { pageMetadata } from '@/lib/seo';
@@ -41,7 +39,6 @@ export default async function GuidePage({ params }: Props) {
   const guide = await getGuide(slug, locale);
   if (!guide) notFound();
 
-  const consent = readConsent((await cookies()).get(CONSENT_COOKIE)?.value);
   const updated = guide.updated
     ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
         Date.parse(guide.updated),
@@ -90,7 +87,7 @@ export default async function GuidePage({ params }: Props) {
 
       {restSections.length > 0 && (
         <>
-          <AdSlot slot="guide-in-article" label={dict.ad.label} consent={consent} />
+          <AdSlot slot="guide-in-article" label={dict.ad.label} />
           <div className="prose" dangerouslySetInnerHTML={{ __html: restSections.join('') }} />
         </>
       )}
