@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { ArchivedOutage, DistrictId, MonthlyTotal, Outage } from './types';
 import { getMockLastCheckedAt, getMockMonthlyTotals, getMockOutages } from './mock';
 import { countAreaKeys, coversAreaKey } from './geography';
@@ -24,27 +25,33 @@ const mocksEnabled = () => process.env.USE_MOCKS === 'true';
 // The single injected "now": components read the clock once per request
 // through the seam and pass the value down, so server and client agree and
 // rendering stays testable.
-export async function getNow(): Promise<number> {
+//
+// Every reader below is wrapped in React's cache(), which memoises per
+// request. Without it the layout and the page each read the clock — two
+// different milliseconds — and then ask Supabase the same questions through
+// two different URLs, so nothing deduplicates and every view pays the seam's
+// queries twice.
+export const getNow = cache(async (): Promise<number> => {
   return Date.now();
-}
+});
 
 // Active and upcoming outages, plus the recent past the home page needs.
-export async function getOutages(now: number): Promise<Outage[]> {
+export const getOutages = cache(async (now: number): Promise<Outage[]> => {
   if (mocksEnabled()) return getMockOutages(now);
   return fetchLiveOutages(now);
-}
+});
 
 // Finished outages for the archive. Retracted records stay here, marked
 // cancelled, because the archive's value depends on history staying intact.
-export async function getArchivedOutages(now: number): Promise<ArchivedOutage[]> {
+export const getArchivedOutages = cache(async (now: number): Promise<ArchivedOutage[]> => {
   // The mocks describe a healthy day; none of them is a retraction.
   if (mocksEnabled()) return (await getMockOutages(now)).map((outage) => ({ ...outage, cancelled: false }));
   return fetchArchivedOutages(now);
-}
+});
 
 // One outage, by the leading characters of its id — see lib/slug.ts for why
 // the readable half of the URL is not what identifies it.
-export async function getOutageByIdPrefix(now: number, prefix: string): Promise<ArchivedOutage | null> {
+export const getOutageByIdPrefix = cache(async (now: number, prefix: string): Promise<ArchivedOutage | null> => {
   if (mocksEnabled()) {
     const match = (await getMockOutages(now)).filter((outage) => outage.id.startsWith(prefix));
     // Same rule as the database path: an ambiguous prefix names no record
@@ -52,14 +59,14 @@ export async function getOutageByIdPrefix(now: number, prefix: string): Promise<
     return match.length === 1 ? { ...match[0], cancelled: false } : null;
   }
   return fetchOutageByIdPrefix(prefix);
-}
+});
 
 // The rest of one district, for the cross-links at the foot of an outage page.
-export async function getDistrictOutages(
+export const getDistrictOutages = cache(async (
   now: number,
   district: DistrictId,
   limit = 12,
-): Promise<ArchivedOutage[]> {
+): Promise<ArchivedOutage[]> => {
   if (mocksEnabled()) {
     return (await getMockOutages(now))
       .filter((outage) => outage.district === district)
@@ -68,11 +75,11 @@ export async function getDistrictOutages(
       .map((outage) => ({ ...outage, cancelled: false }));
   }
   return fetchDistrictOutages(district, limit);
-}
+});
 
 // Every record naming one settlement, newest first. `key` is a folded place
 // name (lib/slug.ts `placeSlug` without the hyphens), never a display name.
-export async function getOutagesByAreaKey(now: number, key: string): Promise<ArchivedOutage[]> {
+export const getOutagesByAreaKey = cache(async (now: number, key: string): Promise<ArchivedOutage[]> => {
   if (mocksEnabled()) {
     return (await getMockOutages(now))
       .filter((outage) => coversAreaKey({ keys: areaKeys(outage.areas), ...outage }, key))
@@ -80,11 +87,11 @@ export async function getOutagesByAreaKey(now: number, key: string): Promise<Arc
       .map((outage) => ({ ...outage, cancelled: false }));
   }
   return fetchOutagesByAreaKey(key);
-}
+});
 
 // How many records name each place — what decides whether a settlement has a
 // page at all (§ settlement pages: a page carrying one outage is thin content).
-export async function getAreaKeyCounts(now: number): Promise<Map<string, number>> {
+export const getAreaKeyCounts = cache(async (now: number): Promise<Map<string, number>> => {
   if (mocksEnabled()) {
     // Through the same rule the live query uses, so the mode the pages are built
     // in cannot disagree with the mode they are served in.
@@ -93,10 +100,10 @@ export async function getAreaKeyCounts(now: number): Promise<Map<string, number>
     );
   }
   return fetchAreaKeyCounts();
-}
+});
 
 // Just enough of each record to build its address and its sitemap lastmod.
-export async function getOutageRefs(now: number, since: string): Promise<OutageRef[]> {
+export const getOutageRefs = cache(async (now: number, since: string): Promise<OutageRef[]> => {
   if (mocksEnabled()) {
     return (await getMockOutages(now))
       .filter((outage) => outage.startsAt >= since)
@@ -109,12 +116,12 @@ export async function getOutageRefs(now: number, since: string): Promise<OutageR
       }));
   }
   return fetchOutageRefs(since);
-}
+});
 
-export async function getMonthlyTotals(district: DistrictId, now: number): Promise<MonthlyTotal[]> {
+export const getMonthlyTotals = cache(async (district: DistrictId, now: number): Promise<MonthlyTotal[]> => {
   if (mocksEnabled()) return getMockMonthlyTotals(district, now);
   return fetchMonthlyTotals(district, now);
-}
+});
 
 // Data freshness (§10.7). `lastCheckedAt` is the start of the most recent
 // successful ingest run, never a hardcoded value. When that run is older than
@@ -140,9 +147,9 @@ export type Freshness = {
   stale: boolean;
 };
 
-export async function getFreshness(now: number): Promise<Freshness> {
+export const getFreshness = cache(async (now: number): Promise<Freshness> => {
   const lastCheckedAt = mocksEnabled() ? getMockLastCheckedAt(now) : await fetchLastSuccessfulRunAt();
   // Never having run is as stale as it gets.
   const stale = lastCheckedAt === null || now - Date.parse(lastCheckedAt) > STALE_AFTER_MS;
   return { lastCheckedAt, stale };
-}
+});
