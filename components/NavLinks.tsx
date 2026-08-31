@@ -21,7 +21,13 @@ export default function NavLinks({ locale, homeLabel, archiveLabel, guidesLabel 
   const section = (key: RouteKey) => linkClass(here?.key === key);
 
   return (
-    <nav className="flex gap-4">
+    // Full-width below sm, so on a phone the nav always takes the second
+    // line. The header used to let the fonts decide: with the fallback face
+    // everything fit beside the brand, and when Fraunces arrived a few
+    // pixels wider the nav wrapped and shoved the whole page down — the one
+    // real layout shift on the site. The viewport makes this call now; a
+    // font arriving can no longer move anything.
+    <nav className="flex w-full gap-4 sm:w-auto">
       <Link href={routeHref(locale)} className={linkClass(here !== null && here.key === null)}>
         {homeLabel}
       </Link>
