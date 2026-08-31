@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Public_Sans } from 'next/font/google';
 import Link from 'next/link';
 import { preload } from 'react-dom';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { notFound } from 'next/navigation';
 import '../globals.css';
 import { isLocale, locales, type Locale } from '@/lib/i18n/config';
@@ -188,6 +189,7 @@ export default async function LocaleLayout({
           * sits outside the consent question above (§11.6), which guards the
           * advertising cookies only. */}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
