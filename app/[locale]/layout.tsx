@@ -30,11 +30,16 @@ const publicSans = Public_Sans({
   variable: '--font-public-sans',
   display: 'swap',
 });
+// `optional`, not `swap`: the widest text block on the page is a mono line,
+// and with swap its late repaint was what the LCP clock stamped — the page
+// looked ready at 1.3s and scored 2.8. With optional the first uncached view
+// keeps the metric-adjusted system mono and every later view has Plex; the
+// display face above stays swap, because the headings are the identity.
 const plexMono = IBM_Plex_Mono({
   subsets: ['latin', 'latin-ext'],
   weight: ['400', '500'],
   variable: '--font-plex-mono',
-  display: 'swap',
+  display: 'optional',
 });
 
 // Every view depends on the current time, but a "now" up to a minute old
