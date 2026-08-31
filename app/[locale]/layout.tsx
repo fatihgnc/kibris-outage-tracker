@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces, IBM_Plex_Mono, Public_Sans } from 'next/font/google';
+import { IBM_Plex_Mono, Public_Sans } from 'next/font/google';
 import Link from 'next/link';
+import { preload } from 'react-dom';
 import { Analytics } from '@vercel/analytics/next';
 import { notFound } from 'next/navigation';
 import '../globals.css';
@@ -16,14 +17,16 @@ import { adsConfigured } from '@/lib/consent';
 import { routeHref } from '@/lib/routes';
 
 // Latin Extended so Turkish characters (ı, İ, ş, ğ, ü, ö, ç) render correctly.
-const fraunces = Fraunces({
-  subsets: ['latin', 'latin-ext'],
-  axes: ['opsz'],
-  variable: '--font-fraunces',
-  display: 'swap',
-});
+// Weights are pinned to what the CSS actually asks for — Public Sans never
+// renders outside 400 — because the axes a page never uses are still bytes on
+// its critical path: the full variable weight range roughly doubled the
+// family, and the font swap was what the largest text on the page waited for.
+// Fraunces (600 only, optical size axis kept) is self-hosted in globals.css,
+// where next/font cannot follow: it refuses to pin a weight and keep an axis
+// at the same time.
 const publicSans = Public_Sans({
   subsets: ['latin', 'latin-ext'],
+  weight: '400',
   variable: '--font-public-sans',
   display: 'swap',
 });
@@ -92,8 +95,22 @@ export default async function LocaleLayout({
   const now = await getNow();
   const [outages, freshness] = await Promise.all([getOutages(now), getFreshness(now)]);
 
+  // Self-hosted files sit outside next/font, so its automatic preload does
+  // too. Both subsets: every heading needs latin, and a Turkish page dips
+  // into latin-ext by its second word.
+  preload('/fonts/fraunces-600-opsz-latin.woff2', {
+    as: 'font',
+    type: 'font/woff2',
+    crossOrigin: 'anonymous',
+  });
+  preload('/fonts/fraunces-600-opsz-latin-ext.woff2', {
+    as: 'font',
+    type: 'font/woff2',
+    crossOrigin: 'anonymous',
+  });
+
   return (
-    <html lang={locale} className={`${fraunces.variable} ${publicSans.variable} ${plexMono.variable}`}>
+    <html lang={locale} className={`${publicSans.variable} ${plexMono.variable}`}>
       <body className="flex min-h-screen flex-col">
         <StatusBar locale={locale} dict={dict} outages={outages} now={now} freshness={freshness} />
 
