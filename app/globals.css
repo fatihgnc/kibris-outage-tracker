@@ -322,6 +322,17 @@ select {
   transform-origin: center;
 }
 
+/* The island's animations run only while someone can see them. IslandMap
+ * sets this class when the map has been scrolled out of the viewport —
+ * paused, not removed, so each lamp's breath resumes mid-cycle where it left
+ * off instead of every lamp restarting in sync. */
+.map-offstage .map-anim,
+.map-offstage .map-breathe,
+.map-offstage .map-ripple,
+.map-offstage .map-pulse {
+  animation-play-state: paused !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .map-anim,
   .map-breathe,

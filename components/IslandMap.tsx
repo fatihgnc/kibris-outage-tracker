@@ -147,6 +147,20 @@ export default function IslandMap({
     return () => clearTimeout(timer);
   }, []);
 
+  // Two hundred lamps breathing forever is real main-thread work on a phone,
+  // and most of a visit is spent below the map, reading the list. When the
+  // island has been scrolled out of the viewport its animations are paused
+  // (globals.css `.map-offstage`) — paused, not removed, so each lamp's
+  // breath resumes mid-cycle exactly where it left off.
+  const [offstage, setOffstage] = useState(false);
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setOffstage(!entry.isIntersecting));
+    observer.observe(svg);
+    return () => observer.disconnect();
+  }, []);
+
   const darkNames = useMemo(() => new Set(Object.keys(outages)), [outages]);
   const emberNames = useMemo(() => new Set(embers), [embers]);
 
@@ -229,7 +243,7 @@ export default function IslandMap({
   const sky = skyOf(hour);
 
   return (
-    <div>
+    <div className={offstage ? 'map-offstage' : undefined}>
       {/* The frame carries the aspect ratio so the labels can be positioned in
        * percentages of it.
        *
