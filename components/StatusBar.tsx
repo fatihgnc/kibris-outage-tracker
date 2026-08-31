@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import type { Outage } from '@/lib/types';
 import type { Dictionary } from '@/lib/i18n/dictionaries';
 import { fill } from '@/lib/i18n/dictionaries';
@@ -64,9 +63,11 @@ export default function StatusBar({ locale, dict, outages, now, freshness }: Pro
           <span aria-hidden="true" className="font-mono text-meta text-muted">
             ·
           </span>
-          <Suspense fallback={null}>
-            <LocaleSwitcher locale={locale} labels={dict.switcher} />
-          </Suspense>
+          {/* No Suspense: the switcher renders into the cached HTML like any
+            * other markup. Behind a fallback it appeared only after
+            * hydration, and its arrival re-wrapped this row on a phone —
+            * the page's one real layout shift. */}
+          <LocaleSwitcher locale={locale} labels={dict.switcher} />
         </div>
       </div>
 
