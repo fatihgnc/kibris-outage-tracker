@@ -133,10 +133,11 @@ export const tr = {
   card: {
     statusActive: 'şu an kesinti var',
     statusUpcoming: 'yaklaşıyor',
-    statusPast: 'bitti',
+    statusPast: 'doğrulanmadı',
+    statusPastInfo: '72 saat içinde onarıldığına dair haber bulunamadığı için kesintinin bittiği varsayıldı.',
+    assumedEnd: 'tahmini bitiş {time}',
     endedAt: 'bitti · {time}',
     endUnknown: 'belirsiz',
-    published: '{time} yayınlandı',
     districtWide: 'ilçe geneli',
     cancelled: 'iptal edildi',
   },

@@ -3,7 +3,7 @@ import type { Outage, OutageStatus } from '@/lib/types';
 import type { Dictionary } from '@/lib/i18n/dictionaries';
 import { fill } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
-import { formatDateTimeShort, formatDayLabel, formatTimeRange } from '@/lib/time';
+import { formatDateTimeShort, formatDayLabel, formatTimeRange, readEndOf } from '@/lib/time';
 import { DISTRICTS } from '@/lib/geography';
 import { outageSlug } from '@/lib/slug';
 import { routeHref } from '@/lib/routes';
@@ -39,6 +39,10 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
   // One name only: the card is a summary, and the full list is on the outage's
   // own page. `sources[0]` is the most authoritative — official sources sort
   // first (ingest/dedupe.ts).
+  // Only the 72h-backstop reading of 'past' — a fault with no announced end
+  // that the site has stopped calling active — gets the info icon. A real
+  // announced end (`endedAt`, above) is not an assumption and needs no caveat.
+  const unconfirmedPast = status === 'past' && !cancelled && !outage.endsAt;
   const source = outage.sources[0];
   const units = { day: dict.time.day, hour: dict.time.hour, minute: dict.time.minute };
   const countdown = compact
@@ -64,7 +68,19 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
     <article className="flex h-full flex-col gap-2 rounded-[4px] border border-dark bg-night px-4 pb-2.5 pt-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <KindBadge kind={outage.kind} dict={dict} />
-        <span className="font-mono text-meta text-muted">{cancelled ? dict.card.cancelled : statusText}</span>
+        <span className="flex items-center gap-1 font-mono text-meta text-muted">
+          {cancelled ? dict.card.cancelled : statusText}
+          {unconfirmedPast && (
+            <span
+              tabIndex={0}
+              title={dict.card.statusPastInfo}
+              aria-label={dict.card.statusPastInfo}
+              className="inline-flex h-3.5 w-3.5 shrink-0 cursor-help items-center justify-center rounded-full border border-muted text-[9px] leading-none"
+            >
+              i
+            </span>
+          )}
+        </span>
       </div>
 
       <div className="flex flex-col gap-0.5">
@@ -93,6 +109,14 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
               <Countdown targetIso={countdown.target} pattern={countdown.pattern} units={units} initialNow={now} />
             </span>
           )}
+          {unconfirmedPast && (
+            <span>
+              {' · '}
+              {fill(dict.card.assumedEnd, {
+                time: formatDateTimeShort(new Date(readEndOf(outage)).toISOString(), locale),
+              })}
+            </span>
+          )}
         </p>
       </div>
 
@@ -113,11 +137,7 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
         </p>
       </div>
 
-      {/* Two lines, never one: the date and the source read as separate facts,
-        * and a wrapping row put them side by side or stacked depending on the
-        * column width. The source goes last — it is what the reader leaves on. */}
       <div className="mt-auto flex flex-col items-start gap-0.5 font-mono text-meta text-muted">
-        <span>{fill(dict.card.published, { time: formatDateTimeShort(outage.publishedAt, locale) })}</span>
         <a
           href={source.url}
           target="_blank"
