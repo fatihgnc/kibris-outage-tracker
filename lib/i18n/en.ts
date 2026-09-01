@@ -103,6 +103,7 @@ export const en: Dictionary = {
     statusActive: 'outage in progress',
     statusUpcoming: 'coming up',
     statusPast: 'ended',
+    endedAt: 'ended {time}',
     endUnknown: 'unknown',
     published: 'published {time}',
     districtWide: 'the whole district',

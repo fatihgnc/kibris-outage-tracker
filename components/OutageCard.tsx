@@ -33,7 +33,9 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
       ? dict.card.statusActive
       : status === 'upcoming'
         ? dict.card.statusUpcoming
-        : dict.card.statusPast;
+        : outage.endsAt
+          ? fill(dict.card.endedAt, { time: formatDateTimeShort(outage.endsAt, locale) })
+          : dict.card.statusPast;
   // One name only: the card is a summary, and the full list is on the outage's
   // own page. `sources[0]` is the most authoritative — official sources sort
   // first (ingest/dedupe.ts).

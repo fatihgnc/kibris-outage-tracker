@@ -134,6 +134,7 @@ export const tr = {
     statusActive: 'şu an kesinti var',
     statusUpcoming: 'yaklaşıyor',
     statusPast: 'bitti',
+    endedAt: 'bitti · {time}',
     endUnknown: 'belirsiz',
     published: '{time} yayınlandı',
     districtWide: 'ilçe geneli',
