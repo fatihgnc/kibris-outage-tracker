@@ -280,6 +280,12 @@ export const tr = {
     active: '{kind} sürüyor',
     next: 'sıradaki: {time}',
   },
+  share: {
+    // The native share sheet where there is one (a phone), the clipboard
+    // where there is not; the second word is the clipboard's receipt.
+    button: 'paylaş',
+    copied: 'bağlantı kopyalandı',
+  },
   footer: {
     disclaimer:
       'Buradaki bilgiler resmi duyurulardan otomatik derlenir. Çalışmalar erken bitebilir, uzayabilir veya iptal olabilir. Her saati tahmin olarak değerlendirin; kesin bilgi için KIB-TEK duyurularına bakın.',

@@ -18,6 +18,8 @@ import JsonLd from '@/components/JsonLd';
 import KindBadge from '@/components/KindBadge';
 import Countdown from '@/components/Countdown';
 import OutageCard from '@/components/OutageCard';
+import ShareButton from '@/components/ShareButton';
+import { resolveSiteUrl } from '@/lib/site';
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -161,6 +163,12 @@ export default async function OutagePage({ params }: Props) {
                   ? dict.card.statusUpcoming
                   : dict.card.statusPast}
           </span>
+          <ShareButton
+            title={title}
+            url={new URL(path, resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL)).toString()}
+            labels={dict.share}
+            className="ml-auto"
+          />
         </div>
 
         <h1 className="opsz-120 m-0 mt-2 max-w-[24ch] text-pretty font-display text-display font-semibold tracking-[-0.02em] text-text">

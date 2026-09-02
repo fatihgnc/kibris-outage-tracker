@@ -3,12 +3,14 @@ import type { Outage, OutageStatus } from '@/lib/types';
 import type { Dictionary } from '@/lib/i18n/dictionaries';
 import { fill } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
-import { formatDateTimeShort, formatDayLabel, formatTimeRange, readEndOf } from '@/lib/time';
+import { formatDateLong, formatDateTimeShort, formatDayLabel, formatTimeRange, readEndOf } from '@/lib/time';
 import { DISTRICTS } from '@/lib/geography';
 import { outageSlug } from '@/lib/slug';
 import { routeHref } from '@/lib/routes';
 import KindBadge from './KindBadge';
 import Countdown from './Countdown';
+import ShareButton from './ShareButton';
+import { resolveSiteUrl } from '@/lib/site';
 
 type Props = {
   outage: Outage;
@@ -68,6 +70,9 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
   // rather than as a link to a 404.
   const slug = outageSlug(outage);
   const href = slug && routeHref(locale, 'outage', slug);
+  // Absolute, from the configured site rather than the browser's origin: the
+  // link is going to be pasted into a message, and it has to open here.
+  const shareUrl = href && new URL(href, resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL)).toString();
 
   return (
     <article className="flex h-full flex-col gap-2 rounded-[4px] border border-dark bg-night px-4 pb-2.5 pt-3">
@@ -155,6 +160,16 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
           >
             {dict.emergency.label} {dict.emergency.number}
           </a>
+        )}
+        {/* Word of an outage travels by message here. The full card is what
+          * gets shared, so the archive variant does without. */}
+        {!compact && shareUrl && (
+          <ShareButton
+            title={dict.meta.outageTitle(DISTRICTS[outage.district].name, formatDateLong(outage.startsAt, locale))}
+            url={shareUrl}
+            labels={dict.share}
+            className="ml-auto"
+          />
         )}
       </div>
     </article>

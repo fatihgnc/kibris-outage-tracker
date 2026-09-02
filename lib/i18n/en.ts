@@ -226,6 +226,10 @@ export const en: Dictionary = {
     active: '{kind} in progress',
     next: 'next: {time}',
   },
+  share: {
+    button: 'share',
+    copied: 'link copied',
+  },
   footer: {
     disclaimer:
       'The information here is compiled automatically from official announcements. Work can finish early, run long, or be cancelled — read every time as an estimate. For definitive information, check the KIB-TEK announcements.',
