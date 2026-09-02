@@ -16,6 +16,8 @@ import { pageMetadata } from '@/lib/seo';
 import { breadcrumbJsonLd } from '@/lib/jsonld';
 import { routeHref } from '@/lib/routes';
 import JsonLd from '@/components/JsonLd';
+import { feedPath } from '@/lib/feeds';
+import { resolveSiteUrl } from '@/lib/site';
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -31,13 +33,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isLocale(locale) || !isDistrictId(id)) return {};
   const dict = await getDictionary(locale);
   const name = DISTRICTS[id].name;
-  return pageMetadata({
+  const base = pageMetadata({
     locale,
     dict,
     href: (l) => routeHref(l, 'district', id),
     title: dict.meta.districtTitle(name),
     description: dict.meta.districtDescription(name),
   });
+  // The feed, discoverable from the page's head as well as its body.
+  const site = resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
+  return {
+    ...base,
+    alternates: {
+      ...base.alternates,
+      types: { 'application/rss+xml': new URL(feedPath(id, 'rss'), site).toString() },
+    },
+  };
 }
 
 export default async function DistrictPage({ params }: Props) {
@@ -151,6 +162,24 @@ export default async function DistrictPage({ params }: Props) {
           ) : (
             <p className="m-0 font-mono text-meta text-muted">{dict.district.noUpcoming}</p>
           )}
+          {/* Under the schedule, because that is what these carry: the
+            * calendar holds announced work, the feed every record. */}
+          <p className="m-0 mt-3 font-mono text-meta text-muted">
+            {dict.district.follow}{' '}
+            <a
+              href={feedPath(id, 'calendar')}
+              className="text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
+            >
+              {dict.district.calendar}
+            </a>
+            {' · '}
+            <a
+              href={feedPath(id, 'rss')}
+              className="text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
+            >
+              {dict.district.rss}
+            </a>
+          </p>
         </section>
       </div>
 

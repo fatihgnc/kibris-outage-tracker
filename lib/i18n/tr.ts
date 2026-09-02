@@ -202,6 +202,11 @@ export const tr = {
     noUpcoming: 'planlanmış bir çalışma duyurulmadı',
     miniCaption: '{district} bölgesi, ada üzerinde',
     miniAria: '{district} bölgesinin ada üzerindeki konumu',
+    // Two ways to follow the district without visiting: announced work on
+    // the phone's own calendar, and a feed for a newsroom or a village office.
+    follow: 'Takip et:',
+    calendar: 'takvime ekle (.ics)',
+    rss: 'RSS',
     places: 'Bu bölgedeki yerler',
     placesLead: 'Kesinti geçmişi biriken yerleşimler:',
   },
