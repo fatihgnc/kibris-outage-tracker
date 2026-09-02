@@ -116,6 +116,13 @@ export const tr = {
     backToday: 'bugün bir ara kesilmişti',
     legendLead: 'Haritadaki her nokta bir yerleşim yerini gösteriyor.',
   },
+  search: {
+    // 'Is the power out where I live' — asked by name, because a reader
+    // knows their village and not which of two hundred dots it is.
+    label: 'Yer ara',
+    placeholder: 'köy ya da mahalle adı',
+    empty: 'Bu adla bir yer bulunamadı.',
+  },
   filter: {
     ariaLabel: 'Bölge filtresi',
     all: 'Tüm ada',

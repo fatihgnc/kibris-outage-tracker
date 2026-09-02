@@ -83,6 +83,11 @@ export const en: Dictionary = {
     backToday: 'was out earlier today',
     legendLead: 'Every point on the map is one settlement.',
   },
+  search: {
+    label: 'Find a place',
+    placeholder: 'village or neighbourhood',
+    empty: 'No place by that name.',
+  },
   filter: {
     ariaLabel: 'Filter by district',
     all: 'Whole island',

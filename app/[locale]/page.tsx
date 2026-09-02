@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
-import { getFreshness, getNow, getOutages } from '@/lib/data';
+import { getAreaKeyCounts, getFreshness, getNow, getOutages } from '@/lib/data';
 import {
   deriveStatus,
   formatClock,
@@ -11,12 +11,14 @@ import {
   islandHour,
   readEndOf,
 } from '@/lib/time';
-import { DISTRICT_IDS, DISTRICTS, getMapGeometry, resolveDarkness } from '@/lib/geography';
+import { DISTRICT_IDS, DISTRICTS, getMapGeometry, resolveDarkness, settlementSlugs } from '@/lib/geography';
+import { eligiblePlaces } from '@/lib/places';
 import type { Outage } from '@/lib/types';
 import IslandMap from '@/components/IslandMap';
 import MapLegend from '@/components/MapLegend';
 import HomeOutages from '@/components/HomeOutages';
 import DistrictList from '@/components/DistrictList';
+import PlaceSearch from '@/components/PlaceSearch';
 import OutageCard from '@/components/OutageCard';
 import Countdown from '@/components/Countdown';
 import AdSlot from '@/components/AdSlot';
@@ -50,7 +52,11 @@ export default async function HomePage({ params }: Props) {
   const dict = await getDictionary(locale);
 
   const now = await getNow();
-  const [outages, freshness] = await Promise.all([getOutages(now), getFreshness(now)]);
+  const [outages, freshness, areaCounts] = await Promise.all([
+    getOutages(now),
+    getFreshness(now),
+    getAreaKeyCounts(now),
+  ]);
 
   const byStart = (a: Outage, b: Outage) => Date.parse(a.startsAt) - Date.parse(b.startsAt);
   const active = outages.filter((o) => deriveStatus(o, now) === 'active').sort(byStart);
@@ -95,6 +101,20 @@ export default async function HomePage({ params }: Props) {
       { kind: dict.kind[o.kind], when: formatTimeRange(o, locale, dict), source: o.source },
     ]),
   );
+
+  // Every place on the map, for the search box: its name, whether it is out
+  // right now, and where a match should lead — its own page where it has one
+  // (lib/places.ts decides), its district's otherwise.
+  const withPage = new Set(eligiblePlaces(areaCounts).map((place) => place.slug));
+  const searchPlaces = settlementSlugs()
+    .map(({ slug, settlement }) => ({
+      name: settlement.name,
+      district: settlement.district,
+      slug,
+      hasPage: withPage.has(slug),
+      out: Boolean(lampOutages[settlement.name]),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
 
   // Places the day took out and gave back (§3.3). Not the same question as the
   // map's live state, and nothing else on the page answers it: the cards are a
@@ -197,6 +217,21 @@ export default async function HomePage({ params }: Props) {
             </>
           )}
         </p>
+      </section>
+
+      <section className="pt-5">
+        <PlaceSearch
+          places={searchPlaces}
+          locale={locale}
+          districtNames={Object.fromEntries(DISTRICT_IDS.map((id) => [id, DISTRICTS[id].name]))}
+          strings={{
+            label: dict.search.label,
+            placeholder: dict.search.placeholder,
+            empty: dict.search.empty,
+            powerOn: dict.map.powerOn,
+            powerOut: dict.map.powerOut,
+          }}
+        />
       </section>
 
       {/* What a point is, and what its colour means — above the map rather
