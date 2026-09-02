@@ -77,7 +77,9 @@ export const tr = {
     label: 'reklam',
   },
   statusBar: {
-    allClear: 'Bilinen kesinti yok, ada aydınlık.',
+    // Short: this shares a line with the update stamp and the switcher, and
+    // at 360px the longer sentence took three lines of a sticky bar.
+    allClear: 'Bilinen kesinti yok.',
     oneActive: (district: string) => `${locative(district)} kesinti sürüyor`,
     manyActive: '{count} bölgede kesinti sürüyor',
     checked: 'son güncelleme {time}',

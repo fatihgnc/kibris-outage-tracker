@@ -39,7 +39,7 @@ export default function StatusBar({ locale, dict, outages, now, freshness }: Pro
   return (
     <div className="sticky top-0 z-10 border-b border-dark bg-night">
       <div className="mx-auto flex w-full max-w-[1060px] items-center justify-between gap-3 px-5 py-2">
-        <p className="m-0 flex min-w-0 items-center gap-2 text-small text-text">
+        <p className="m-0 flex min-w-0 items-center gap-2 text-meta text-text sm:text-small">
           <span aria-hidden className={`h-2 w-2 flex-none rounded-full ${dotColor}`} />
           <span>{text}</span>
         </p>

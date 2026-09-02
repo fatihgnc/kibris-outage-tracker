@@ -53,7 +53,7 @@ export const en: Dictionary = {
     label: 'advertisement',
   },
   statusBar: {
-    allClear: 'No known outages — the island is lit.',
+    allClear: 'No known outages.',
     oneActive: (district: string) => `Outage in progress in ${district}`,
     manyActive: 'Outages in progress in {count} districts',
     checked: 'last updated {time}',
