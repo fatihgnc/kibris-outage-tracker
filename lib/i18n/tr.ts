@@ -124,7 +124,8 @@ export const tr = {
     titleAll: 'Aktif ve yaklaşan kesintiler',
     titleDistrict: '{district} için kesintiler',
     sorted: 'zamana göre sıralı · {count} kayıt',
-    empty: 'Şu anda bilinen bir kesinti yok.',
+    // No full stop: it shares a mono line with the check time.
+    empty: 'şu anda bilinen kesinti yok',
     checkedAsOf: 'duyurular {time} itibarıyla kontrol edildi',
   },
   kind: {

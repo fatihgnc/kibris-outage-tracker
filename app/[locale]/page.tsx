@@ -264,16 +264,11 @@ export default async function HomePage({ params }: Props) {
           // while the data is stale (§11.3).
           <AdSlot slot="home-mid" label={dict.ad.label} suppressed={freshness.stale} />
         }
-        emptyNode={
-          <div className="flex flex-col gap-2 rounded-[4px] border border-dark px-5 py-6">
-            <p className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{dict.list.empty}</p>
-            <p className="m-0 font-mono text-meta text-muted">
-              {freshness.lastCheckedAt
-                ? fill(dict.list.checkedAsOf, { time: formatClock(freshness.lastCheckedAt, locale) })
-                : dict.statusBar.neverChecked}
-            </p>
-          </div>
-        }
+        emptyLine={`${dict.list.empty} · ${
+          freshness.lastCheckedAt
+            ? fill(dict.list.checkedAsOf, { time: formatClock(freshness.lastCheckedAt, locale) })
+            : dict.statusBar.neverChecked
+        }`}
       />
 
       {recent.length > 0 && (

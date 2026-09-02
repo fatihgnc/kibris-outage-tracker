@@ -29,7 +29,10 @@ type Props = {
   locale: string;
   firstBlock: number;
   adSlot: ReactNode;
-  emptyNode: ReactNode;
+  // One mono line — 'no known outages · checked as of 05:50'. A quiet day is
+  // the ordinary day, and the page above already says the island is lit; a
+  // box repeating it in display type was the third statement of one fact.
+  emptyLine: string;
 };
 
 const GRID = 'm-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3';
@@ -49,7 +52,7 @@ export default function HomeOutages({
   locale,
   firstBlock,
   adSlot,
-  emptyNode,
+  emptyLine,
 }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -87,18 +90,27 @@ export default function HomeOutages({
   const title = districtName ? fill(strings.titleDistrict, { district: districtName }) : strings.titleAll;
   const count = new Intl.NumberFormat(locale).format(visible.length);
 
+  // Nothing to narrow: the chips filter this list, and on a quiet day they
+  // would filter nothing. The district pages are reached from the map and the
+  // district list further down.
+  const nothingAtAll = items.length === 0;
+
   return (
     <>
-      <section className="pt-5">
-        <FilterChips ariaLabel={strings.filterAriaLabel} chips={chips} onSelect={choose} />
-      </section>
+      {!nothingAtAll && (
+        <section className="pt-5">
+          <FilterChips ariaLabel={strings.filterAriaLabel} chips={chips} onSelect={choose} />
+        </section>
+      )}
 
-      <section className="pt-3">
+      <section className={nothingAtAll ? 'pt-6' : 'pt-3'}>
         <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h2 className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{title}</h2>
-          <span className="font-mono text-meta text-muted">{fill(strings.sorted, { count })}</span>
+          <span className="font-mono text-meta text-muted">
+            {visible.length > 0 ? fill(strings.sorted, { count }) : emptyLine}
+          </span>
         </div>
-        {visible.length > 0 ? (
+        {visible.length > 0 && (
           <>
             <ul className={GRID}>
               {visible.slice(0, firstBlock).map((item) => (
@@ -117,8 +129,6 @@ export default function HomeOutages({
               </>
             )}
           </>
-        ) : (
-          emptyNode
         )}
       </section>
     </>

@@ -91,7 +91,7 @@ export const en: Dictionary = {
     titleAll: 'Active and upcoming outages',
     titleDistrict: 'Outages for {district}',
     sorted: 'sorted by time · {count} records',
-    empty: 'No known outages right now.',
+    empty: 'no known outages right now',
     checkedAsOf: 'announcements checked as of {time}',
   },
   kind: {
