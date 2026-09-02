@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Outage, OutageStatus } from '@/lib/types';
+import type { Sibling } from '@/lib/events';
 import type { Dictionary } from '@/lib/i18n/dictionaries';
 import { fill } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
@@ -24,9 +25,21 @@ type Props = {
   // to say so on the card — an unmarked retraction reads as an outage that
   // happened, which is the opposite of the truth.
   cancelled?: boolean;
+  // The other districts this announcement was filed under (lib/events.ts),
+  // each with its own end — or none.
+  siblings?: Sibling[];
 };
 
-export default function OutageCard({ outage, status, locale, dict, now, compact = false, cancelled = false }: Props) {
+export default function OutageCard({
+  outage,
+  status,
+  locale,
+  dict,
+  now,
+  compact = false,
+  cancelled = false,
+  siblings = [],
+}: Props) {
   // A cancelled outage did not happen, so its hours must not read as fact:
   // they are struck through and drop to the muted colour.
   const timeColor = cancelled ? 'text-muted line-through' : outage.kind === 'fault' ? 'text-fault' : 'text-lamp';
@@ -139,6 +152,25 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
         <p className="m-0 break-words text-small text-muted">
           {outage.scope === 'district' ? dict.card.districtWide : outage.areas.join(', ')}
         </p>
+        {/* The same fault, as filed for the neighbouring districts, with what
+          * is known of each: a repair reported in one is the best news the
+          * others have. */}
+        {siblings.length > 0 && (
+          <p className="m-0 break-words font-mono text-meta text-muted">
+            {fill(dict.card.sameEvent, {
+              list: siblings
+                .map(
+                  (sibling) =>
+                    `${DISTRICTS[sibling.district].name} (${
+                      sibling.endsAt
+                        ? fill(dict.card.endedAt, { time: formatDateTimeShort(sibling.endsAt, locale) })
+                        : dict.card.statusPast
+                    })`,
+                )
+                .join(' · '),
+            })}
+          </p>
+        )}
       </div>
 
       <div className="mt-auto flex flex-wrap items-baseline gap-x-3 gap-y-0.5 font-mono text-meta text-muted">

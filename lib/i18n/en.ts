@@ -113,6 +113,7 @@ export const en: Dictionary = {
     endedAt: 'ended {time}',
     endUnknown: 'unknown',
     districtWide: 'the whole district',
+    sameEvent: 'same event: {list}',
     cancelled: 'cancelled',
   },
   emergency: {

@@ -14,6 +14,7 @@ import { pageMetadata } from '@/lib/seo';
 import { breadcrumbJsonLd, itemListJsonLd } from '@/lib/jsonld';
 import { routeHref } from '@/lib/routes';
 import { addressable } from '@/lib/slug';
+import { groupSiblings } from '@/lib/events';
 import JsonLd from '@/components/JsonLd';
 
 type Props = {
@@ -62,13 +63,20 @@ export default async function ArchivePage({ params, searchParams }: Props) {
       (!selectedMonth || monthKey(o.startsAt) === selectedMonth),
   );
 
+  // One announcement filed under several districts is one card, led by its
+  // latest reading (lib/events.ts) — except under a district filter, where
+  // the reader asked for that district's records and gets each as filed.
+  const cards = selectedDistrict
+    ? filtered.map((record) => ({ lead: record, siblings: [] }))
+    : groupSiblings(filtered);
+
   // Flat chronological list, grouped by month.
-  const groups: { month: string; records: ArchivedOutage[] }[] = [];
-  for (const outage of filtered) {
-    const key = monthKey(outage.startsAt);
+  const groups: { month: string; records: typeof cards }[] = [];
+  for (const card of cards) {
+    const key = monthKey(card.lead.startsAt);
     const group = groups.find((g) => g.month === key);
-    if (group) group.records.push(outage);
-    else groups.push({ month: key, records: [outage] });
+    if (group) group.records.push(card);
+    else groups.push({ month: key, records: [card] });
   }
 
   const numberFormat = new Intl.NumberFormat(locale);
@@ -138,16 +146,17 @@ export default async function ArchivePage({ params, searchParams }: Props) {
                   {formatMonthYear(group.month, locale)}
                 </h2>
                 <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
-                  {group.records.map((outage) => (
-                    <li key={outage.id}>
+                  {group.records.map(({ lead, siblings }) => (
+                    <li key={lead.id}>
                       <OutageCard
-                        outage={outage}
+                        outage={lead}
                         status="past"
                         locale={locale}
                         dict={dict}
                         now={now}
                         compact
-                        cancelled={outage.cancelled}
+                        cancelled={lead.cancelled}
+                        siblings={siblings}
                       />
                     </li>
                   ))}

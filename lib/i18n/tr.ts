@@ -154,6 +154,9 @@ export const tr = {
     endedAt: 'bitti · {time}',
     endUnknown: 'belirsiz',
     districtWide: 'ilçe geneli',
+    // One announcement filed per district: the other districts it covered,
+    // each with its own state, on the one card that stands for the event.
+    sameEvent: 'aynı olay: {list}',
     cancelled: 'iptal edildi',
   },
   // KIB-TEK's fault line, island-wide, around the clock. The number is data

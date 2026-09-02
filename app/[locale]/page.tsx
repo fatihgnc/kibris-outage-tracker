@@ -26,6 +26,7 @@ import { pageMetadata } from '@/lib/seo';
 import { faqJsonLd, itemListJsonLd, siteJsonLd } from '@/lib/jsonld';
 import { routeHref } from '@/lib/routes';
 import { addressable } from '@/lib/slug';
+import { groupSiblings } from '@/lib/events';
 import Link from 'next/link';
 import JsonLd from '@/components/JsonLd';
 
@@ -63,10 +64,21 @@ export default async function HomePage({ params }: Props) {
   const upcoming = outages.filter((o) => deriveStatus(o, now) === 'upcoming').sort(byStart);
   const activeDistricts = new Set(active.map((o) => o.district));
 
+  // The cards. One announcement filed under several districts is one card
+  // (lib/events.ts), led by its latest reading; the headline, the map and
+  // the district list above and below still count every record, because a
+  // district is out whichever card says so.
+  const cards = groupSiblings(outages);
+  const statusOf = (card: (typeof cards)[number]) => deriveStatus(card.lead, now);
+  const byLeadStart = (a: (typeof cards)[number], b: (typeof cards)[number]) =>
+    Date.parse(a.lead.startsAt) - Date.parse(b.lead.startsAt);
   // The full list, every district. The ?district narrowing is applied in the
   // browser (components/HomeOutages.tsx) — the page is cached and shared, so
   // the server no longer reads the query string.
-  const list = [...active, ...upcoming];
+  const list = [
+    ...cards.filter((card) => statusOf(card) === 'active').sort(byLeadStart),
+    ...cards.filter((card) => statusOf(card) === 'upcoming').sort(byLeadStart),
+  ];
 
   const numberFormat = new Intl.NumberFormat(locale);
   const heroTitle =
@@ -138,9 +150,9 @@ export default async function HomePage({ params }: Props) {
   // this section costs no extra query. It exists because on a quiet day the page
   // above it is one sentence, a map and a row of chips: nothing for a reader who
   // arrived asking what has been happening, and nothing for a crawler either.
-  const recent = outages
-    .filter((o) => deriveStatus(o, now) === 'past')
-    .sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt))
+  const recent = cards
+    .filter((card) => statusOf(card) === 'past')
+    .sort((a, b) => -byLeadStart(a, b))
     .slice(0, 6);
 
   return (
@@ -150,7 +162,7 @@ export default async function HomePage({ params }: Props) {
         <JsonLd
           data={itemListJsonLd(
             listTitle,
-            addressable(list).map(({ record, slug }) => ({
+            addressable(list.map((card) => card.lead)).map(({ record, slug }) => ({
               name: dict.meta.outageTitle(
                 DISTRICTS[record.district].name,
                 formatDateLong(record.startsAt, locale),
@@ -284,16 +296,17 @@ export default async function HomePage({ params }: Props) {
           filterAriaLabel: dict.filter.ariaLabel,
           filterAll: dict.filter.all,
         }}
-        items={list.map((outage) => ({
-          id: outage.id,
-          district: outage.district,
+        items={list.map(({ lead, siblings }) => ({
+          id: lead.id,
+          districts: [lead.district, ...siblings.map((sibling) => sibling.district)],
           node: (
             <OutageCard
-              outage={outage}
-              status={deriveStatus(outage, now)}
+              outage={lead}
+              status={deriveStatus(lead, now)}
               locale={locale}
               dict={dict}
               now={now}
+              siblings={siblings}
             />
           ),
         }))}
@@ -330,9 +343,17 @@ export default async function HomePage({ params }: Props) {
             </Link>
           </div>
           <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
-            {recent.map((outage) => (
-              <li key={outage.id}>
-                <OutageCard outage={outage} status="past" locale={locale} dict={dict} now={now} compact />
+            {recent.map(({ lead, siblings }) => (
+              <li key={lead.id}>
+                <OutageCard
+                  outage={lead}
+                  status="past"
+                  locale={locale}
+                  dict={dict}
+                  now={now}
+                  compact
+                  siblings={siblings}
+                />
               </li>
             ))}
           </ul>

@@ -6,9 +6,11 @@ import FilterChips from './FilterChips';
 
 type Item = {
   id: string;
-  // A plain string rather than DistrictId: importing lib/geography here would
+  // Plain strings rather than DistrictId: importing lib/geography here would
   // pull the island's geometry into the client bundle for a comparison key.
-  district: string;
+  // Several, because a card can stand for one announcement filed under
+  // several districts (lib/events.ts), and belongs to each of their filters.
+  districts: string[];
   node: ReactNode;
 };
 
@@ -85,7 +87,7 @@ export default function HomeOutages({
     })),
   ];
 
-  const visible = selected ? items.filter((item) => item.district === selected) : items;
+  const visible = selected ? items.filter((item) => item.districts.includes(selected)) : items;
   const districtName = districts.find((d) => d.id === selected)?.name;
   const title = districtName ? fill(strings.titleDistrict, { district: districtName }) : strings.titleAll;
   const count = new Intl.NumberFormat(locale).format(visible.length);
