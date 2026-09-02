@@ -30,6 +30,12 @@ export type MapGeometry = {
   height: number;
   islandPath: string;
   northPath: string;
+  /**
+   * The north's own box inside the frame, with a little air. On a narrow
+   * screen the map shows this and not the whole island (§3.7): at 375px the
+   * south was sixty percent of the frame and the lamps were a pixel wide.
+   */
+  north: { x: number; y: number; width: number; height: number };
   districts: MapDistrict[];
   /** Sorted west to east — the ignition order comes from real longitude. */
   settlements: MapSettlement[];

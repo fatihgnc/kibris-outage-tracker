@@ -221,13 +221,34 @@ select {
   display: none;
 }
 
-/* On a narrow screen the lamps shrink with the frame, so the island never
- * turns into one undifferentiated smear. The glow circle sits at its group's
- * origin, so scaling it is scaling it about its own centre. */
+/* The frame's shape: the whole island, or on a narrow screen the north alone
+ * (§3.7). Both ratios are set on the frame by the component, from the same
+ * geometry the map is drawn with, and the media query picks — no script, so
+ * the first paint is already the right shape and nothing shifts. */
+.map-frame {
+  aspect-ratio: var(--ar-full);
+}
+
+/* On a narrow screen the drawing is moved and enlarged so the north's box
+ * fills the frame, and the south falls off the bottom. The numbers are the
+ * component's, in the map's own units (px is user units on an SVG element).
+ * The glow shrinks a little against it so the island never turns into one
+ * undifferentiated smear; the core grows, because at this size a lamp's core
+ * was under a pixel and the map's whole point — a light per place — was out
+ * of reach. Every core grows by the same amount, lit or dark (§3.2). */
 @media (max-width: 639px) {
+  .map-frame {
+    aspect-ratio: var(--ar-north);
+  }
+  .map-view {
+    transform: translate(var(--north-tx), var(--north-ty)) scale(var(--north-scale));
+  }
   .map-glow,
   .map-out-glow {
-    transform: scale(0.74);
+    transform: scale(0.8);
+  }
+  .map-core {
+    r: 2.4;
   }
 }
 

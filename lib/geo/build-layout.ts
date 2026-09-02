@@ -36,6 +36,9 @@ const feature = (id: string) => {
 export const SETTLEMENTS = settlementsData as Settlement[];
 
 const PAD = 20;
+// Air around the north's own box, so a coastal lamp is not on the frame's
+// edge when the map is cropped to it.
+const NORTH_PAD = 14;
 
 export function computeMapGeometry(): MapGeometry {
   const island = feature('island');
@@ -83,12 +86,23 @@ export function computeMapGeometry(): MapGeometry {
       };
     });
 
+  const northBounds = path.bounds(feature('north'));
+  const northX = Math.max(0, northBounds[0][0] - NORTH_PAD);
+  const northY = Math.max(0, northBounds[0][1] - NORTH_PAD);
+  const north = {
+    x: round(northX),
+    y: round(northY),
+    width: round(Math.min(width, northBounds[1][0] + NORTH_PAD) - northX),
+    height: round(Math.min(height, northBounds[1][1] + NORTH_PAD) - northY),
+  };
+
   return {
     viewBox: `0 0 ${width} ${height}`,
     width,
     height,
     islandPath: path(island) ?? '',
     northPath: path(feature('north')) ?? '',
+    north,
     districts,
     settlements,
   };

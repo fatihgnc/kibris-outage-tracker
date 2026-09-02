@@ -252,6 +252,7 @@ export default async function HomePage({ params }: Props) {
           width={geometry.width}
           height={geometry.height}
           islandPath={geometry.islandPath}
+          north={geometry.north}
           districts={geometry.districts}
           settlements={geometry.settlements}
           outages={lampOutages}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fill as fillTemplate } from '@/lib/i18n/dictionaries';
@@ -41,6 +41,8 @@ export type Props = {
   width: number;
   height: number;
   islandPath: string;
+  /** The north's box in the frame; what a narrow screen shows (§3.7). */
+  north: { x: number; y: number; width: number; height: number };
   districts: MapDistrict[];
   settlements: MapSettlement[];
   outages: Record<string, LampOutage>;
@@ -75,6 +77,20 @@ const SETTLED_AT = EXTINGUISH_AT + EXTINGUISH_MS + 100;
 // hunting for a four-unit dot; the lamps sit further apart than this anyway, so
 // nearest-wins settles the rest.
 const HOVER_RADIUS = 14;
+// A finger is not a pointer: on a phone a lamp's core is two pixels and the
+// finger covers forty. Nearest-wins inside this settles which lamp was meant.
+const TOUCH_RADIUS = 36;
+
+// The same breakpoint globals.css crops the map at. Read at event time and
+// for the popover's placement only — never for the first paint, which the
+// stylesheet has already settled.
+const NARROW = '(max-width: 639px)';
+const subscribeNarrow = (onChange: () => void) => {
+  const query = window.matchMedia(NARROW);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+};
+const readNarrow = () => window.matchMedia(NARROW).matches;
 
 // How many districts have to be dark at once before the island reads as one
 // event rather than a handful of separate ones. Three is where the language on
@@ -123,6 +139,7 @@ export default function IslandMap({
   width,
   height,
   islandPath,
+  north,
   districts,
   settlements,
   outages,
@@ -143,6 +160,23 @@ export default function IslandMap({
     () => new Map(districts.map((d) => [d.id, d.name])),
     [districts],
   );
+
+  // How the drawing is moved and enlarged when the frame is the north's shape
+  // rather than the island's (§3.7). The frame keeps the full viewBox and
+  // takes the north's aspect ratio; with `meet` the viewBox's height then
+  // fills the frame and the width has air either side — so the drawing is
+  // scaled until the north's height is the viewBox's, and shifted so the
+  // north's left edge sits at the left of that air. Handed to the stylesheet
+  // as custom properties; the media query there applies them.
+  const crop = useMemo(() => {
+    const s = height / north.height;
+    const extra = ((north.width / north.height) * height - width) / 2;
+    return { s, tx: -extra - north.x * s, ty: -north.y * s };
+  }, [width, height, north]);
+  // False on the server and at hydration, true on a phone once mounted. Only
+  // the popover's placement reads it, and the popover is never in the first
+  // paint, so the switch moves nothing.
+  const narrow = useSyncExternalStore(subscribeNarrow, readNarrow, () => false);
 
   // Once the opening sequence has played, the lamps are driven by a plain
   // transition instead: a data refresh should ease, not replay the overture.
@@ -207,14 +241,23 @@ export default function IslandMap({
 
   // Settlement names are never written on the map; they surface in the popover
   // when the pointer is over one, and on the line under it either way.
-  const nearestSettlement = (event: { clientX: number; clientY: number }): MapSettlement | null => {
+  const nearestSettlement = (
+    event: { clientX: number; clientY: number },
+    radius = HOVER_RADIUS,
+  ): MapSettlement | null => {
     const svg = svgRef.current;
     const matrix = svg?.getScreenCTM();
     if (!svg || !matrix) return null;
     const point = svg.createSVGPoint();
     point.x = event.clientX;
     point.y = event.clientY;
-    const { x, y } = point.matrixTransform(matrix.inverse());
+    let { x, y } = point.matrixTransform(matrix.inverse());
+    // The screen matrix stops at the viewBox; the crop's own transform sits
+    // inside it, on the drawing, and is undone here by hand.
+    if (readNarrow()) {
+      x = (x - crop.tx) / crop.s;
+      y = (y - crop.ty) / crop.s;
+    }
     let nearest: MapSettlement | null = null;
     let best = Infinity;
     for (const s of settlements) {
@@ -224,7 +267,7 @@ export default function IslandMap({
         nearest = s;
       }
     }
-    return nearest && best <= HOVER_RADIUS ? nearest : null;
+    return nearest && best <= radius ? nearest : null;
   };
   const showNearestSettlement = (event: { clientX: number; clientY: number }) => {
     setActive(nearestSettlement(event));
@@ -238,7 +281,7 @@ export default function IslandMap({
   // back, because it is that click the anchor would navigate on.
   const touchDistrict = (event: React.PointerEvent, district: string) => {
     if (event.pointerType !== 'touch') return;
-    const nearest = nearestSettlement(event);
+    const nearest = nearestSettlement(event, TOUCH_RADIUS);
     if (!nearest || nearest.name === active?.name) return;
     holdClick.current = true;
     setHovered(district);
@@ -258,10 +301,17 @@ export default function IslandMap({
         district: districtName.get(active.district) ?? active.district,
       })
     : null;
+  // Where the active lamp sits in the frame, as fractions of it: of the whole
+  // island, or of the north's box when that is what the frame shows.
+  const inFrame = active
+    ? narrow
+      ? { x: (active.x - north.x) / north.width, y: (active.y - north.y) / north.height }
+      : { x: active.x / width, y: active.y / height }
+    : null;
   // Above the lamp, unless the lamp is near the top of the frame — Girne and
   // the panhandle sit within a popover's height of it. The hairline that joins
   // the two has to run the same way.
-  const popoverBelow = active ? active.y / height < 0.28 : false;
+  const popoverBelow = inFrame ? inFrame.y < 0.28 : false;
 
   const sky = skyOf(hour);
 
@@ -280,8 +330,16 @@ export default function IslandMap({
        * Only the frame breaks out. The line beneath it stays in the column
        * with the rest of the page's text. */}
       <div
-        className="relative mx-[calc(50%-50vw)] w-[100vw]"
-        style={{ aspectRatio: `${width} / ${height}` }}
+        className="map-frame relative mx-[calc(50%-50vw)] w-[100vw]"
+        style={
+          {
+            '--ar-full': `${width} / ${height}`,
+            '--ar-north': `${north.width} / ${north.height}`,
+            '--north-scale': crop.s,
+            '--north-tx': `${crop.tx}px`,
+            '--north-ty': `${crop.ty}px`,
+          } as React.CSSProperties
+        }
       >
         <svg
           ref={svgRef}
@@ -345,6 +403,11 @@ export default function IslandMap({
 
           {/* 1 — the sea, drawn well past the frame so no edge can band */}
           <rect x="-100%" y="-100%" width="300%" height="300%" fill="var(--color-night)" />
+
+          {/* Everything drawn is inside this group, which the stylesheet moves
+           * and enlarges on a narrow screen so the north fills the frame. The
+           * sea above stays put: it is the page's own background. */}
+          <g className="map-view" style={{ transformOrigin: '0 0' }}>
 
           {/* The hour, on the water: warm from whichever side the sun is on
            * near either end of the day, and nothing at all the rest of the
@@ -563,7 +626,7 @@ export default function IslandMap({
                     * above — that one is riding the long curve while this one is
                     * already gone. */}
                   <circle
-                    className="map-anim"
+                    className="map-anim map-core"
                     r={LAMP_CORE}
                     fill={LAMP_CORE_FILL}
                     style={{
@@ -633,7 +696,7 @@ export default function IslandMap({
                   }}
                 >
                   <circle className="map-out-glow" r={OUT_GLOW} fill="url(#map-out)" />
-                  <circle r={UNLIT_DOT} fill="var(--color-fault)" />
+                  <circle className="map-core" r={UNLIT_DOT} fill="var(--color-fault)" />
                 </g>
               );
             })}
@@ -778,6 +841,7 @@ export default function IslandMap({
               <path className="map-hit" d={d.path} fill="transparent" />
             </a>
           ))}
+          </g>
         </svg>
 
         {/* The popover. It is the only place a settlement name appears on the
@@ -792,8 +856,8 @@ export default function IslandMap({
           <div
             className="pointer-events-none absolute z-10 w-max max-w-[15rem]"
             style={{
-              left: `${Math.min(Math.max(active.x / width, 0.12), 0.88) * 100}%`,
-              top: `${(active.y / height) * 100}%`,
+              left: `${Math.min(Math.max(inFrame?.x ?? 0, 0.12), 0.88) * 100}%`,
+              top: `${(inFrame?.y ?? 0) * 100}%`,
               transform: popoverBelow
                 ? 'translate(-50%, 1rem)'
                 : 'translate(-50%, calc(-100% - 0.75rem))',
