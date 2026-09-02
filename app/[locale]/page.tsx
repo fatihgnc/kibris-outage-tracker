@@ -213,19 +213,6 @@ export default async function HomePage({ params }: Props) {
                   </span>
                 </>
               )}
-              {/* A fault is running somewhere: the number is one tap away
-                * here, not three pages into the guides. */}
-              {active.some((o) => o.kind === 'fault') && (
-                <>
-                  {' · '}
-                  <a
-                    href={`tel:${dict.emergency.number}`}
-                    className="whitespace-nowrap font-mono text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
-                  >
-                    {dict.emergency.label} {dict.emergency.number}
-                  </a>
-                </>
-              )}
             </>
           )}
         </p>
