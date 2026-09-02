@@ -79,7 +79,7 @@ export const en: Dictionary = {
     openDistrict: '{district} page →',
     powerOn: 'power on',
     powerOut: 'power out',
-    pointAria: '{name} — {status}, open {district}',
+    pointAria: '{name} — {status}',
     districtAria: 'open the {district} district',
     backToday: 'was out earlier today',
     legendLead: 'Every point on the map is one settlement.',

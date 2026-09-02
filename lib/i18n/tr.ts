@@ -114,7 +114,8 @@ export const tr = {
     openDistrict: '{district} sayfası →',
     powerOn: 'elektrik var',
     powerOut: 'elektrik kesik',
-    pointAria: '{name} — {status}, {district} sayfasına git',
+    // The way onward is the link beside it now; the readout only reads.
+    pointAria: '{name} — {status}',
     districtAria: '{district} bölgesinin kesinti sayfasını aç',
     backToday: 'bugün bir ara kesilmişti',
     legendLead: 'Haritadaki her nokta bir yerleşim yerini gösteriyor.',
