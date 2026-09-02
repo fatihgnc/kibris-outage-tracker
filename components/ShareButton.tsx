@@ -9,11 +9,13 @@ type Props = {
   className?: string;
 };
 
-// The native share sheet where the browser has one — on a phone, which is
-// where most readers are and where a link gets pasted into a message — and
-// the clipboard everywhere else, with a two-second receipt in place of the
-// label. Rendered on the server like any other control, so it cannot appear
-// after hydration and move the row it sits in.
+// The native share sheet on a phone — where most readers are, and where a
+// link gets pasted into a message — and the clipboard everywhere else, with
+// a two-second receipt in place of the label. The split is by pointer, not by
+// whether `navigator.share` exists: a desktop browser has it too, and there
+// it opens the operating system's share dialog over a page whose reader
+// wanted the link. Rendered on the server like any other control, so it
+// cannot appear after hydration and move the row it sits in.
 export default function ShareButton({ title, url, labels, className = '' }: Props) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -23,7 +25,8 @@ export default function ShareButton({ title, url, labels, className = '' }: Prop
 
   const share = async () => {
     try {
-      if (typeof navigator.share === 'function') {
+      const handheld = window.matchMedia('(pointer: coarse)').matches;
+      if (handheld && typeof navigator.share === 'function') {
         await navigator.share({ title, url });
         return;
       }
