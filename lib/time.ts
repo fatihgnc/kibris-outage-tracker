@@ -151,9 +151,15 @@ export function formatClock(iso: string | number, locale: Locale): string {
 }
 
 // '09:00 – 11:00', or '09:00 – belirsiz' when the end is unknown.
+//
+// An end on a later day carries that day: a fault that started at 12:29 and
+// was repaired three days on at 08:45 read as '12:29 – 08:45', a range that
+// runs backwards on the day the card names. It is '12:29 – 1 Eyl 08:45'.
 export function formatTimeRange(outage: Pick<Outage, 'startsAt' | 'endsAt'>, locale: Locale, dict: Dictionary): string {
   const start = formatClock(outage.startsAt, locale);
-  const end = outage.endsAt ? formatClock(outage.endsAt, locale) : dict.card.endUnknown;
+  if (!outage.endsAt) return `${start} – ${dict.card.endUnknown}`;
+  const sameDay = calendarDayDiff(Date.parse(outage.endsAt), Date.parse(outage.startsAt)) === 0;
+  const end = sameDay ? formatClock(outage.endsAt, locale) : formatDateTimeShort(outage.endsAt, locale);
   return `${start} – ${end}`;
 }
 

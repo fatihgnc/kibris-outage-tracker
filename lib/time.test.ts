@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { NO_END_ASSUMED_OVER_MS, deriveStatus, formatDuration, zonedTimeToUtc } from './time';
+import { NO_END_ASSUMED_OVER_MS, deriveStatus, formatDuration, formatTimeRange, zonedTimeToUtc } from './time';
+import { tr } from './i18n/tr';
 
 const at = (iso: string) => Date.parse(iso);
 const outage = (startsAt: string, endsAt: string | null) => ({ startsAt, endsAt });
@@ -94,4 +95,18 @@ test('a local time inside the spring-forward gap resolves forward, never back', 
 // as asked.
 test('an ambiguous local time in autumn still reads back as itself', () => {
   assert.equal(nicosiaClock(zonedTimeToUtc(2026, 10, 25, 3, 30)), '03:30');
+});
+
+// The card names one day. A range whose end is on a later day has to say so,
+// or '12:29 – 08:45' reads as a window that ends before it starts.
+test('a range that ends on a later day names that day', () => {
+  // 12:29 and 08:45 on the island (UTC+3 in summer).
+  const sameDay = formatTimeRange(
+    outage('2026-08-29T09:29:00.000Z', '2026-08-29T13:45:00.000Z'), 'tr', tr);
+  assert.equal(sameDay, '12:29 – 16:45');
+  const laterDay = formatTimeRange(
+    outage('2026-08-29T09:29:00.000Z', '2026-09-01T05:45:00.000Z'), 'tr', tr);
+  assert.equal(laterDay, '12:29 – 1 Eyl 08:45');
+  const open = formatTimeRange(outage('2026-08-29T09:29:00.000Z', null), 'tr', tr);
+  assert.equal(open, `12:29 – ${tr.card.endUnknown}`);
 });
