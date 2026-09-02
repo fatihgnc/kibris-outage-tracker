@@ -12,10 +12,9 @@ import { readEndOf } from './time';
  * Girne, side by side, and cannot tell whether the lights are back.
  *
  * So the cards group them. Records of one kind, all district-wide, starting
- * within a few minutes of each other, are one card led by the record with the
- * latest reading — an open one, when there is one, so the card stays in the
- * live list exactly as long as the map stays dark — and the others are named
- * on it with their own state. Nothing is merged: every record keeps its page,
+ * within a few minutes of each other, are one card led by an open record when
+ * there is one — so the card stays in the live list exactly as long as the
+ * map stays dark — and the others are named on it with their own state. Nothing is merged: every record keeps its page,
  * its sources and its place in the archive. Only the cards are fewer.
  *
  * District-wide only, on purpose. Two records that name villages are two
@@ -48,9 +47,13 @@ export function groupSiblings<T extends Outage>(records: readonly T[]): EventCar
           )
         : [record];
     for (const member of members) taken.add(member.id);
-    // The latest reading leads: an open record outlasts a closed one, so the
-    // card is live while any member is.
-    const lead = [...members].sort((a, b) => readEndOf(b) - readEndOf(a))[0];
+    // An open record leads — the card is live while any member is — and among
+    // open ones the earliest filed, whose clock the others were rounded from.
+    // With every member closed, the one that ended last leads.
+    const open = members.filter((member) => !member.endsAt);
+    const lead = open.length
+      ? [...open].sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))[0]
+      : [...members].sort((a, b) => readEndOf(b) - readEndOf(a))[0];
     cards.push({
       lead,
       siblings: members
