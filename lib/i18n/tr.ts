@@ -108,7 +108,10 @@ export const tr = {
   },
   map: {
     ariaLabel: 'Kıbrıs haritası, kuzeydeki yerleşim yerlerinin elektrik durumu',
-    hint: 'Bölge sayfası için haritada ilçeye dokun.',
+    // Two gestures on a phone: a point reads a place, open ground opens the
+    // district. With a mouse, hovering does the first and a click the second.
+    hint: 'Bir noktaya dokun: yerin durumu. Boş alana dokun: bölge sayfası.',
+    openDistrict: '{district} sayfası →',
     powerOn: 'elektrik var',
     powerOut: 'elektrik kesik',
     pointAria: '{name} — {status}, {district} sayfasına git',

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fill as fillTemplate } from '@/lib/i18n/dictionaries';
 import type { Locale } from '@/lib/i18n/config';
@@ -56,6 +57,7 @@ export type Props = {
     pointAria: string; // {name} {status} {district}
     districtAria: string; // {district}
     backToday: string;
+    openDistrict: string; // {district}
   };
 };
 
@@ -133,6 +135,9 @@ export default function IslandMap({
   const svgRef = useRef<SVGSVGElement>(null);
   const [active, setActive] = useState<MapSettlement | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
+  // Set by a touch that landed on a lamp, so the click the browser fires next
+  // reads the place instead of leaving the page. See the district anchors.
+  const holdClick = useRef(false);
 
   const districtName = useMemo(
     () => new Map(districts.map((d) => [d.id, d.name])),
@@ -202,10 +207,10 @@ export default function IslandMap({
 
   // Settlement names are never written on the map; they surface in the popover
   // when the pointer is over one, and on the line under it either way.
-  const showNearestSettlement = (event: { clientX: number; clientY: number }) => {
+  const nearestSettlement = (event: { clientX: number; clientY: number }): MapSettlement | null => {
     const svg = svgRef.current;
     const matrix = svg?.getScreenCTM();
-    if (!svg || !matrix) return;
+    if (!svg || !matrix) return null;
     const point = svg.createSVGPoint();
     point.x = event.clientX;
     point.y = event.clientY;
@@ -219,7 +224,25 @@ export default function IslandMap({
         nearest = s;
       }
     }
-    setActive(nearest && best <= HOVER_RADIUS ? nearest : null);
+    return nearest && best <= HOVER_RADIUS ? nearest : null;
+  };
+  const showNearestSettlement = (event: { clientX: number; clientY: number }) => {
+    setActive(nearestSettlement(event));
+  };
+
+  // A finger has no hover. Before this, a tap anywhere on a district opened
+  // its page, and a phone — where most readers are — could never read a
+  // lamp. Now a tap on a lamp reads it, exactly as hovering does; a second
+  // tap on the same lamp, or a tap on open ground, opens the district. The
+  // touch is handled at pointerup and the click that follows it is held
+  // back, because it is that click the anchor would navigate on.
+  const touchDistrict = (event: React.PointerEvent, district: string) => {
+    if (event.pointerType !== 'touch') return;
+    const nearest = nearestSettlement(event);
+    if (!nearest || nearest.name === active?.name) return;
+    holdClick.current = true;
+    setHovered(district);
+    setActive(nearest);
   };
 
   // Largest first, so the smallest district's hit area is never buried under a
@@ -266,6 +289,13 @@ export default function IslandMap({
           role="group"
           aria-label={strings.ariaLabel}
           className="block h-full w-full bg-night"
+          // A touch on the water lets go of whatever a touch on a lamp took.
+          onPointerDown={(e) => {
+            if (e.pointerType === 'touch' && !(e.target as Element).closest('a')) {
+              setActive(null);
+              setHovered(null);
+            }
+          }}
         >
           <defs>
             {/* The one gradient on the site (§3): the map's light is the
@@ -720,8 +750,13 @@ export default function IslandMap({
               aria-label={fillTemplate(strings.districtAria, { district: d.name })}
               onClick={(e) => {
                 e.preventDefault();
+                if (holdClick.current) {
+                  holdClick.current = false;
+                  return;
+                }
                 open(d.id);
               }}
+              onPointerUp={(e) => touchDistrict(e, d.id)}
               // Chrome does not synthesise a click from Enter on an SVG
               // anchor, so the keyboard path is wired explicitly. Verified by
               // tabbing to a district and pressing Enter.
@@ -788,8 +823,24 @@ export default function IslandMap({
         )}
       </div>
 
+      {/* The readout, and — while a place is being read — the way onward.
+        * The popover cannot carry a link (§3.6), so the link sits here, in
+        * the column, where a finger that just read a lamp can reach it. */}
       <p aria-live="polite" className="m-0 min-h-[18px] pt-1 font-mono text-meta text-muted">
         {readout ?? strings.hint}
+        {active && (
+          <>
+            {' · '}
+            <Link
+              href={routeHref(locale, 'district', active.district)}
+              className="whitespace-nowrap text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
+            >
+              {fillTemplate(strings.openDistrict, {
+                district: districtName.get(active.district) ?? active.district,
+              })}
+            </Link>
+          </>
+        )}
       </p>
     </div>
   );

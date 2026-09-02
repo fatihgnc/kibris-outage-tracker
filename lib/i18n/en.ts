@@ -75,7 +75,8 @@ export const en: Dictionary = {
   },
   map: {
     ariaLabel: 'Map of Cyprus showing the power status of northern settlements',
-    hint: 'To look at a district in detail, tap it on the map.',
+    hint: 'Tap a point for its status, open ground for the district.',
+    openDistrict: '{district} page →',
     powerOn: 'power on',
     powerOut: 'power out',
     pointAria: '{name} — {status}, open {district}',

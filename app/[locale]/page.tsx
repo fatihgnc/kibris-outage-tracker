@@ -266,6 +266,7 @@ export default async function HomePage({ params }: Props) {
             pointAria: dict.map.pointAria,
             districtAria: dict.map.districtAria,
             backToday: dict.map.backToday,
+            openDistrict: dict.map.openDistrict,
           }}
         />
       </section>
