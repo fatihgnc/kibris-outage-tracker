@@ -127,7 +127,7 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
         </p>
       </div>
 
-      <div className="mt-auto flex flex-col items-start gap-0.5 font-mono text-meta text-muted">
+      <div className="mt-auto flex flex-wrap items-baseline gap-x-3 gap-y-0.5 font-mono text-meta text-muted">
         <a
           href={source.url}
           target="_blank"
@@ -136,6 +136,17 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
         >
           {source.name}
         </a>
+        {/* The number to call, on the one card where a reader is looking for
+          * it: a fault in progress. Planned work has nobody to report it to,
+          * and a fault that is over has been reported. */}
+        {status === 'active' && outage.kind === 'fault' && (
+          <a
+            href={`tel:${dict.emergency.number}`}
+            className="whitespace-nowrap text-text underline decoration-muted underline-offset-[3px] hover:text-lamp hover:decoration-lamp"
+          >
+            {dict.emergency.label} {dict.emergency.number}
+          </a>
+        )}
       </div>
     </article>
   );

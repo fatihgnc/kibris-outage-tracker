@@ -109,6 +109,10 @@ export const en: Dictionary = {
     districtWide: 'the whole district',
     cancelled: 'cancelled',
   },
+  emergency: {
+    label: 'report a fault',
+    number: '188',
+  },
   countdown: {
     untilEnd: 'estimated back in {duration}',
     untilStart: 'estimated to start in {duration}',

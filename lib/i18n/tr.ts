@@ -145,6 +145,13 @@ export const tr = {
     districtWide: 'ilçe geneli',
     cancelled: 'iptal edildi',
   },
+  // KIB-TEK's fault line, island-wide, around the clock. The number is data
+  // and the same in both locales; the guide (content/guides/report-a-fault)
+  // carries the alternatives and the steps.
+  emergency: {
+    label: 'arıza ihbar',
+    number: '188',
+  },
   countdown: {
     untilEnd: 'tahmini {duration} sonra gelecek',
     untilStart: 'tahmini {duration} sonra kesilecek',
