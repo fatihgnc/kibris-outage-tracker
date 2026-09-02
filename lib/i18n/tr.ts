@@ -108,7 +108,7 @@ export const tr = {
   },
   map: {
     ariaLabel: 'Kıbrıs haritası, kuzeydeki yerleşim yerlerinin elektrik durumu',
-    hint: 'Herhangi bir ilçenin detaylı kesinti verisini incelemek istiyorsanız, harita üstünden o bölgeye tıklayabilirsiniz.',
+    hint: 'Bölge sayfası için haritada ilçeye dokun.',
     powerOn: 'elektrik var',
     powerOut: 'elektrik kesik',
     pointAria: '{name} — {status}, {district} sayfasına git',

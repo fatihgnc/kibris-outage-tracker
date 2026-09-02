@@ -148,7 +148,9 @@ export default async function HomePage({ params }: Props) {
         <h1 className="opsz-120 m-0 max-w-[22ch] text-pretty font-display text-display font-semibold tracking-[-0.02em] text-text">
           {heroTitle}
         </h1>
-        <p className="mb-0 mt-1 max-w-[52ch] text-pretty font-mono text-small text-muted">
+        {/* Prose, so sans (§2.2): the mono face carries data, and a sentence set
+          * in it ran to three lines on a phone. The countdown inside stays mono. */}
+        <p className="mb-0 mt-1 max-w-[52ch] text-pretty text-small text-muted">
           {/* 'Nothing announced' is only true when nothing is running either.
             * Printed on the strength of an empty upcoming list alone it would
             * sit directly under a headline saying the power is out. */}
@@ -168,12 +170,14 @@ export default async function HomePage({ params }: Props) {
                     district: DISTRICTS[next.district].name,
                     time: formatClock(next.startsAt, locale),
                   })}
-                  <Countdown
-                    targetIso={next.startsAt}
-                    pattern={dict.countdown.plain}
-                    units={{ day: dict.time.day, hour: dict.time.hour, minute: dict.time.minute }}
-                    initialNow={now}
-                  />
+                  <span className="font-mono">
+                    <Countdown
+                      targetIso={next.startsAt}
+                      pattern={dict.countdown.plain}
+                      units={{ day: dict.time.day, hour: dict.time.hour, minute: dict.time.minute }}
+                      initialNow={now}
+                    />
+                  </span>
                 </>
               )}
             </>
