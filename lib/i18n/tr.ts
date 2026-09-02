@@ -133,9 +133,11 @@ export const tr = {
   card: {
     statusActive: 'şu an kesinti var',
     statusUpcoming: 'yaklaşıyor',
-    statusPast: 'doğrulanmadı',
-    statusPastInfo: '72 saat içinde onarıldığına dair haber bulunamadığı için kesintinin bittiği varsayıldı.',
-    assumedEnd: 'tahmini bitiş {time}',
+    // A fault nobody reported repaired. The 72-hour bound in lib/time.ts is a
+    // reading of the record, not a measurement, and the card must not dress it
+    // up as an estimate.
+    statusPast: 'bitişi bildirilmedi',
+    assumedEnd: 'onarım haberi yok · {time} itibarıyla bitmiş sayıldı',
     endedAt: 'bitti · {time}',
     endUnknown: 'belirsiz',
     districtWide: 'ilçe geneli',

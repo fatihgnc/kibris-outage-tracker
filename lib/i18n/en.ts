@@ -102,9 +102,8 @@ export const en: Dictionary = {
   card: {
     statusActive: 'outage in progress',
     statusUpcoming: 'coming up',
-    statusPast: 'unconfirmed',
-    statusPastInfo: 'No repair report was found within 72 hours, so this outage is assumed to be over.',
-    assumedEnd: 'assumed end {time}',
+    statusPast: 'end not reported',
+    assumedEnd: 'no repair report · assumed over as of {time}',
     endedAt: 'ended {time}',
     endUnknown: 'unknown',
     districtWide: 'the whole district',

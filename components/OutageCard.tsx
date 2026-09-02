@@ -40,8 +40,10 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
   // own page. `sources[0]` is the most authoritative — official sources sort
   // first (ingest/dedupe.ts).
   // Only the 72h-backstop reading of 'past' — a fault with no announced end
-  // that the site has stopped calling active — gets the info icon. A real
-  // announced end (`endedAt`, above) is not an assumption and needs no caveat.
+  // that the site has stopped calling active — gets the caveat line. A real
+  // announced end (`endedAt`, above) is not an assumption and needs none. The
+  // caveat is printed, not tucked behind a tooltip: a `title` never opens on a
+  // phone, which is where most readers are.
   const unconfirmedPast = status === 'past' && !cancelled && !outage.endsAt;
   const source = outage.sources[0];
   const units = { day: dict.time.day, hour: dict.time.hour, minute: dict.time.minute };
@@ -68,19 +70,7 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
     <article className="flex h-full flex-col gap-2 rounded-[4px] border border-dark bg-night px-4 pb-2.5 pt-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <KindBadge kind={outage.kind} dict={dict} />
-        <span className="flex items-center gap-1 font-mono text-meta text-muted">
-          {cancelled ? dict.card.cancelled : statusText}
-          {unconfirmedPast && (
-            <span
-              tabIndex={0}
-              title={dict.card.statusPastInfo}
-              aria-label={dict.card.statusPastInfo}
-              className="inline-flex h-3.5 w-3.5 shrink-0 cursor-help items-center justify-center rounded-full border border-muted text-[9px] leading-none"
-            >
-              i
-            </span>
-          )}
-        </span>
+        <span className="font-mono text-meta text-muted">{cancelled ? dict.card.cancelled : statusText}</span>
       </div>
 
       <div className="flex flex-col gap-0.5">
