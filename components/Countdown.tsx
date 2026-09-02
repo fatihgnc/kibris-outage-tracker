@@ -12,9 +12,12 @@ type Props = {
   units: { day: string; hour: string; minute: string };
   // Injected server time so the first client render matches the server render.
   initialNow: number;
+  // 'until' counts down to the target; 'since' counts up from it, for a fault
+  // whose end nobody has announced and whose start is the only clock there is.
+  direction?: 'until' | 'since';
 };
 
-export default function Countdown({ targetIso, pattern, units, initialNow }: Props) {
+export default function Countdown({ targetIso, pattern, units, initialNow, direction = 'until' }: Props) {
   const [now, setNow] = useState(initialNow);
   useEffect(() => {
     const tick = () => setNow(Date.now());
@@ -29,7 +32,10 @@ export default function Countdown({ targetIso, pattern, units, initialNow }: Pro
       clearInterval(id);
     };
   }, []);
-  const text = fill(pattern, { duration: formatDuration(Date.parse(targetIso) - now, units) });
+  const target = Date.parse(targetIso);
+  const text = fill(pattern, {
+    duration: formatDuration(direction === 'since' ? now - target : target - now, units),
+  });
   // Reserve the initial width so a tick never shifts the layout around it —
   // but never more than the line it sits on. A Turkish countdown to work
   // announced ten days out runs to 36 characters, and an uncapped reservation

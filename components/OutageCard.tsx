@@ -47,14 +47,17 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
   const unconfirmedPast = status === 'past' && !cancelled && !outage.endsAt;
   const source = outage.sources[0];
   const units = { day: dict.time.day, hour: dict.time.hour, minute: dict.time.minute };
+  // Active with no announced end — a fault in progress — counts up from the
+  // start instead: 'started 3 hr ago' is what a reader in the dark wants to
+  // know, and the only clock the record can honestly offer.
   const countdown = compact
     ? null
     : status === 'active'
       ? outage.endsAt
-        ? { target: outage.endsAt, pattern: dict.countdown.untilEnd }
-        : null
+        ? { target: outage.endsAt, pattern: dict.countdown.untilEnd, direction: 'until' as const }
+        : { target: outage.startsAt, pattern: dict.countdown.sinceStart, direction: 'since' as const }
       : status === 'upcoming'
-        ? { target: outage.startsAt, pattern: dict.countdown.untilStart }
+        ? { target: outage.startsAt, pattern: dict.countdown.untilStart, direction: 'until' as const }
         : null;
   // The card's own page. The time range carries the link because it is what
   // identifies the outage — the district name below it names a place that has
@@ -96,7 +99,13 @@ export default function OutageCard({ outage, status, locale, dict, now, compact 
           {countdown && (
             <span className="text-text">
               {' · '}
-              <Countdown targetIso={countdown.target} pattern={countdown.pattern} units={units} initialNow={now} />
+              <Countdown
+                targetIso={countdown.target}
+                pattern={countdown.pattern}
+                units={units}
+                initialNow={now}
+                direction={countdown.direction}
+              />
             </span>
           )}
           {unconfirmedPast && (

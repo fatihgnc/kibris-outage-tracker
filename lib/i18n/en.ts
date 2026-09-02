@@ -117,6 +117,7 @@ export const en: Dictionary = {
     untilEnd: 'estimated back in {duration}',
     untilStart: 'estimated to start in {duration}',
     plain: 'estimated {duration} from now',
+    sinceStart: 'started {duration} ago',
     endUnknown: 'restoration time still unknown',
   },
   time: {

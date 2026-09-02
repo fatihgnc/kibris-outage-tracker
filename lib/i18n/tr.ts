@@ -157,6 +157,10 @@ export const tr = {
     untilEnd: 'tahmini {duration} sonra gelecek',
     untilStart: 'tahmini {duration} sonra kesilecek',
     plain: 'tahmini {duration} sonra',
+    // A fault with no announced end: how long it has been, which is the
+    // one number the reader can be given. Not an estimate — it is measured
+    // from the announced start.
+    sinceStart: '{duration} önce başladı',
     endUnknown: 'bitiş saati henüz belirsiz',
   },
   time: {

@@ -101,11 +101,14 @@ export default async function OutagePage({ params }: Props) {
   }));
 
   const units = { day: dict.time.day, hour: dict.time.hour, minute: dict.time.minute };
+  // Same rule as the card: a fault with no announced end counts up from its start.
   const countdown =
-    status === 'active' && outage.endsAt
-      ? { target: outage.endsAt, pattern: dict.countdown.untilEnd }
+    status === 'active'
+      ? outage.endsAt
+        ? { target: outage.endsAt, pattern: dict.countdown.untilEnd, direction: 'until' as const }
+        : { target: outage.startsAt, pattern: dict.countdown.sinceStart, direction: 'since' as const }
       : status === 'upcoming'
-        ? { target: outage.startsAt, pattern: dict.countdown.untilStart }
+        ? { target: outage.startsAt, pattern: dict.countdown.untilStart, direction: 'until' as const }
         : null;
   // Only for a record with both ends known. A fault that was never closed has
   // no duration we can state, and the display bound is not one.
@@ -187,7 +190,13 @@ export default async function OutagePage({ params }: Props) {
           {!outage.cancelled && countdown && (
             <span className="text-text">
               {' · '}
-              <Countdown targetIso={countdown.target} pattern={countdown.pattern} units={units} initialNow={now} />
+              <Countdown
+                targetIso={countdown.target}
+                pattern={countdown.pattern}
+                units={units}
+                initialNow={now}
+                direction={countdown.direction}
+              />
             </span>
           )}
           {!outage.cancelled && status === 'active' && !outage.endsAt && (
