@@ -77,6 +77,7 @@ export default async function DistrictPage({ params }: Props) {
   const places = eligiblePlaces(areaCounts).filter((place) => place.settlement.district === id);
   const numberFormat = new Intl.NumberFormat(locale);
   const totalHours = totals.reduce((sum, t) => sum + t.plannedHours + t.faultHours, 0);
+  const openFaults = totals.reduce((sum, t) => sum + t.openFaults, 0);
 
   return (
     <div className="w-full">
@@ -162,6 +163,8 @@ export default async function DistrictPage({ params }: Props) {
           <h2 className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{dict.district.last12}</h2>
           <span className="font-mono text-meta text-muted">
             {fill(dict.chart.summary, { hours: numberFormat.format(totalHours) })}
+            {/* Said beside the total, because the total leaves them out. */}
+            {openFaults > 0 && ` · ${fill(dict.chart.detailOpen, { open: numberFormat.format(openFaults) })}`}
           </span>
         </div>
         <HistoryChart
@@ -171,6 +174,8 @@ export default async function DistrictPage({ params }: Props) {
             ariaLabel: dict.chart.ariaLabel,
             legendPlanned: dict.chart.legendPlanned,
             legendFault: dict.chart.legendFault,
+            legendOpen: dict.chart.legendOpen,
+            detailOpen: dict.chart.detailOpen,
             detail: dict.chart.detail,
             detailHint: dict.chart.detailHint,
             monthAria: dict.chart.monthAria,

@@ -79,6 +79,11 @@ export type MonthlyTotal = {
   month: string; // 'YYYY-MM'
   plannedHours: number;
   faultHours: number;
+  // Faults with no announced end. They add no hours — nobody said how long
+  // they lasted — but they happened, and a chart that left them out entirely
+  // would show the worst month as the quietest: the bigger the fault, the
+  // less likely anyone announced its end.
+  openFaults: number;
 };
 
 // Derived from startsAt / endsAt against the current time — never stored.

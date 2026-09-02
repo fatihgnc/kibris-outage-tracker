@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { NO_END_ASSUMED_OVER_MS, deriveStatus, formatDuration, formatTimeRange, zonedTimeToUtc } from './time';
+import {
+  NO_END_ASSUMED_OVER_MS,
+  bucketMonthlyTotals,
+  deriveStatus,
+  formatDuration,
+  formatTimeRange,
+  zonedTimeToUtc,
+} from './time';
 import { tr } from './i18n/tr';
 
 const at = (iso: string) => Date.parse(iso);
@@ -109,4 +116,28 @@ test('a range that ends on a later day names that day', () => {
   assert.equal(laterDay, '12:29 – 1 Eyl 08:45');
   const open = formatTimeRange(outage('2026-08-29T09:29:00.000Z', null), 'tr', tr);
   assert.equal(open, `12:29 – ${tr.card.endUnknown}`);
+});
+
+// A fault nobody reported repaired has no hours to add — the 72-hour bound is
+// a reading, not a measurement — but it happened, and a month of such faults
+// must not draw as a quiet one.
+test('an open fault is counted, and adds no hours', () => {
+  const now = at('2026-09-02T03:00:00.000Z');
+  const totals = bucketMonthlyTotals(
+    [
+      { kind: 'fault', startsAt: '2026-08-29T09:29:00.000Z', endsAt: null },
+      { kind: 'fault', startsAt: '2026-08-26T13:28:00.000Z', endsAt: null },
+      { kind: 'fault', startsAt: '2026-08-29T09:29:00.000Z', endsAt: '2026-09-01T05:45:00.000Z' },
+      { kind: 'planned', startsAt: '2026-08-26T06:30:00.000Z', endsAt: null },
+    ],
+    now,
+  );
+  const august = totals.find((t) => t.month === '2026-08');
+  assert.ok(august);
+  assert.equal(august.openFaults, 2);
+  const closedHours = (Date.parse('2026-09-01T05:45:00.000Z') - Date.parse('2026-08-29T09:29:00.000Z')) / 3600000;
+  assert.equal(august.faultHours, Math.round(closedHours));
+  assert.equal(august.plannedHours, 0);
+  assert.equal(totals.length, 12);
+  assert.ok(totals.every((t) => t.month === '2026-08' || t.openFaults === 0));
 });

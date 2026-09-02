@@ -73,7 +73,7 @@ export default async function PlacePage({ params }: Props) {
   // district chart leaves them out for the same reason — the two charts have to
   // count an outage the same way.
   const totals = bucketMonthlyTotals(live, now);
-  const totalHours = totals.reduce((sum, t) => sum + t.plannedHours + t.faultHours, 0);
+  const totalHours = totals.reduce((sum, t) => sum + t.plannedHours + t.faultHours + t.openFaults, 0);
   const numberFormat = new Intl.NumberFormat(locale);
   const earliest = records.reduce(
     (oldest, record) => (Date.parse(record.startsAt) < Date.parse(oldest) ? record.startsAt : oldest),
@@ -160,6 +160,8 @@ export default async function PlacePage({ params }: Props) {
               ariaLabel: dict.chart.ariaLabel,
               legendPlanned: dict.chart.legendPlanned,
               legendFault: dict.chart.legendFault,
+              legendOpen: dict.chart.legendOpen,
+              detailOpen: dict.chart.detailOpen,
               detail: dict.chart.detail,
               detailHint: dict.chart.detailHint,
               monthAria: dict.chart.monthAria,

@@ -297,6 +297,7 @@ export function getMockMonthlyTotals(district: DistrictId, now: number): Monthly
       month: `${year}-${String(month).padStart(2, '0')}`,
       plannedHours: 4 + Math.floor(random() * 18),
       faultHours: Math.floor(random() * 7),
+      openFaults: Math.floor(random() * 2.4),
     });
   }
   return totals;

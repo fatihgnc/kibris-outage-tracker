@@ -150,6 +150,8 @@ export const en: Dictionary = {
     summary: '{hours} hours · compiled monthly totals',
     legendPlanned: 'planned hours',
     legendFault: 'fault hours',
+    legendOpen: 'fault of unknown length',
+    detailOpen: '{open} faults of unknown length',
     detail: '{month}: {planned} hr planned, {fault} hr fault',
     detailHint: 'tap or focus a month for its figures',
     monthAria: '{month}: {planned} hours planned, {fault} hours of fault outages',

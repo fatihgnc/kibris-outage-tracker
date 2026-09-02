@@ -13,6 +13,8 @@ type Props = {
     ariaLabel: string;
     legendPlanned: string;
     legendFault: string;
+    legendOpen: string;
+    detailOpen: string; // {open}
     detail: string; // {month} {planned} {fault}
     detailHint: string;
     monthAria: string; // {month} {planned} {fault}
@@ -80,6 +82,11 @@ export default function HistoryChart({ totals, locale, strings }: Props) {
             onBlur={() => setActiveIndex(null)}
             className="flex h-full min-w-0 flex-1 cursor-default flex-col justify-end gap-0.5 border-0 bg-transparent p-0"
           >
+            {/* A fault with no announced end has no height to draw, so it is a
+              * mark above the stack: the month is not as quiet as its bar. */}
+            {month.openFaults > 0 && (
+              <span aria-hidden className="mx-auto mb-0.5 h-1.5 w-1.5 rounded-full bg-fault" />
+            )}
             <span
               aria-hidden
               className="block w-full bg-fault"
@@ -119,14 +126,23 @@ export default function HistoryChart({ totals, locale, strings }: Props) {
           <span aria-hidden className="h-2.5 w-2.5 bg-fault" />
           {strings.legendFault}
         </span>
+        <span className="flex items-center gap-2">
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-fault" />
+          {strings.legendOpen}
+        </span>
       </div>
       <p aria-live="polite" className="m-0 mt-2 min-h-[18px] font-mono text-meta text-muted">
         {active
-          ? fillTemplate(strings.detail, {
-              month: formatMonthYear(active.month, locale),
-              planned: numberFormat.format(active.plannedHours),
-              fault: numberFormat.format(active.faultHours),
-            })
+          ? [
+              fillTemplate(strings.detail, {
+                month: formatMonthYear(active.month, locale),
+                planned: numberFormat.format(active.plannedHours),
+                fault: numberFormat.format(active.faultHours),
+              }),
+              ...(active.openFaults > 0
+                ? [fillTemplate(strings.detailOpen, { open: numberFormat.format(active.openFaults) })]
+                : []),
+            ].join(' · ')
           : strings.detailHint}
       </p>
     </div>

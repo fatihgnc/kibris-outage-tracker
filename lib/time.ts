@@ -260,10 +260,11 @@ export function monthKey(iso: string): string {
  * Shared by the district chart, which buckets a district's records, and the
  * settlement chart, which buckets one place's — two views that must not
  * disagree about how an outage is counted. The rule that matters is the last
- * one: a fault with no announced end contributes nothing rather than an
+ * one: a fault with no announced end contributes no hours rather than an
  * invented duration. The display bound in `NO_END_ASSUMED_OVER_MS` exists so a
  * card does not run forever; it is not a measurement, and a chart that spent it
- * would be publishing a number nobody announced.
+ * would be publishing a number nobody announced. It is counted, though — as
+ * an open fault, so the month still says it happened.
  *
  * Months with no outages are present with zeroes, so the axis is always twelve
  * columns wide and a quiet month reads as quiet rather than as missing.
@@ -279,13 +280,16 @@ export function bucketMonthlyTotals(
     const year = wall.year + Math.floor(monthIndex / 12);
     const month = (((monthIndex % 12) + 12) % 12) + 1;
     const key = `${year}-${String(month).padStart(2, '0')}`;
-    buckets.set(key, { month: key, plannedHours: 0, faultHours: 0 });
+    buckets.set(key, { month: key, plannedHours: 0, faultHours: 0, openFaults: 0 });
   }
 
   for (const record of records) {
     const bucket = buckets.get(monthKey(record.startsAt));
     if (!bucket) continue;
-    if (!record.endsAt) continue;
+    if (!record.endsAt) {
+      if (record.kind === 'fault') bucket.openFaults += 1;
+      continue;
+    }
     const hours = (Date.parse(record.endsAt) - Date.parse(record.startsAt)) / 3600000;
     if (hours <= 0) continue;
     if (record.kind === 'fault') bucket.faultHours += hours;
@@ -296,6 +300,7 @@ export function bucketMonthlyTotals(
     month: bucket.month,
     plannedHours: Math.round(bucket.plannedHours),
     faultHours: Math.round(bucket.faultHours),
+    openFaults: bucket.openFaults,
   }));
 }
 

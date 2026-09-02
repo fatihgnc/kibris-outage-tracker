@@ -192,6 +192,10 @@ export const tr = {
     summary: '{hours} saat · derlenen aylık toplamlar',
     legendPlanned: 'planlı saat',
     legendFault: 'arıza saat',
+    // Faults nobody reported repaired: on the chart as a mark, not a bar,
+    // because they have no hours to draw.
+    legendOpen: 'süresi bilinmeyen arıza',
+    detailOpen: '{open} arızanın süresi bilinmiyor',
     detail: '{month}: {planned} sa planlı, {fault} sa arıza',
     detailHint: 'rakamlar için bir aya dokun ya da odaklan',
     monthAria: '{month}: {planned} saat planlı, {fault} saat arıza kesintisi',
