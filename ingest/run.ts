@@ -21,6 +21,7 @@ import {
 } from './store';
 import { logRun } from './log';
 import { pingIndexNow } from './indexnow';
+import { pingRevalidate } from './revalidate';
 import { adapters as allAdapters } from './adapters';
 import type { RawAnnouncement, SourceAdapter } from './adapters/types';
 
@@ -231,6 +232,16 @@ export async function ingest(options: IngestOptions = {}) {
       ping.skipped
         ? `indexnow: skipped — ${ping.skipped}`
         : `indexnow: submitted ${ping.submitted} urls (${ping.status})`,
+    );
+    // The site's cached pages are dropped after every run that reached the
+    // database, whether or not a record changed: the update stamp on every
+    // page did (app/api/revalidate/route.ts says why the ISR window alone is
+    // not enough). Same contract as the ping above — never fails the run.
+    const refresh = await pingRevalidate();
+    console.log(
+      refresh.skipped
+        ? `revalidate: skipped — ${refresh.skipped}`
+        : `revalidate: ${refresh.ok ? 'ok' : 'refused'} (${refresh.status})`,
     );
   }
 
