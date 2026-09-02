@@ -219,6 +219,12 @@ export const en: Dictionary = {
       a: 'Open your district from the map or the district list. The district page has the current situation, upcoming work, and a summary of the last 12 months. You can bookmark it.',
     },
   ],
+  districts: {
+    title: 'Districts',
+    quiet: 'no outage',
+    active: '{kind} in progress',
+    next: 'next: {time}',
+  },
   footer: {
     disclaimer:
       'The information here is compiled automatically from official announcements. Work can finish early, run long, or be cancelled — read every time as an estimate. For definitive information, check the KIB-TEK announcements.',

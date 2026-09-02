@@ -269,6 +269,13 @@ export const tr = {
       a: 'Haritadan ya da bölge listesinden bölgenizi açın. Bölge sayfasında o anki durum, yaklaşan çalışmalar ve son 12 ayın özeti bulunur. Sayfayı yer imlerine ekleyebilirsiniz.',
     },
   ],
+  districts: {
+    title: 'Bölgeler',
+    // One line per district: what is happening there now, or what is next.
+    quiet: 'kesinti yok',
+    active: '{kind} sürüyor',
+    next: 'sıradaki: {time}',
+  },
   footer: {
     disclaimer:
       'Buradaki bilgiler resmi duyurulardan otomatik derlenir. Çalışmalar erken bitebilir, uzayabilir veya iptal olabilir. Her saati tahmin olarak değerlendirin; kesin bilgi için KIB-TEK duyurularına bakın.',

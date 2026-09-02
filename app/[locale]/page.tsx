@@ -16,6 +16,7 @@ import type { Outage } from '@/lib/types';
 import IslandMap from '@/components/IslandMap';
 import MapLegend from '@/components/MapLegend';
 import HomeOutages from '@/components/HomeOutages';
+import DistrictList from '@/components/DistrictList';
 import OutageCard from '@/components/OutageCard';
 import Countdown from '@/components/Countdown';
 import AdSlot from '@/components/AdSlot';
@@ -270,6 +271,15 @@ export default async function HomePage({ params }: Props) {
             : dict.statusBar.neverChecked
         }`}
       />
+
+      {/* The six districts as a list, each with its state. The map opens a
+        * district, but on a phone a lamp is two pixels and the chips above
+        * only filter; this is the plain way to a district page — and the one
+        * the FAQ has always promised. */}
+      <section className="pt-9">
+        <h2 className="opsz-40 m-0 font-display text-h2 font-semibold text-text">{dict.districts.title}</h2>
+        <DistrictList outages={outages} now={now} locale={locale} dict={dict} />
+      </section>
 
       {recent.length > 0 && (
         <section className="pt-9">
