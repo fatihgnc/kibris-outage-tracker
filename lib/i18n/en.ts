@@ -243,7 +243,9 @@ export const en: Dictionary = {
   footer: {
     disclaimer:
       'The information here is compiled automatically from official announcements. Work can finish early, run long, or be cancelled — read every time as an estimate. For definitive information, check the KIB-TEK announcements.',
-    copyright: '© {year} Fatih Genç',
+    copyright: '© {year}',
+    author: 'Fatih Genç',
+    authorHref: 'https://fatihgenc.dev',
     legalAriaLabel: 'Legal',
   },
   switcher: {

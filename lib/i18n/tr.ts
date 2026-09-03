@@ -308,7 +308,9 @@ export const tr = {
   footer: {
     disclaimer:
       'Buradaki bilgiler resmi duyurulardan otomatik derlenir. Çalışmalar erken bitebilir, uzayabilir veya iptal olabilir. Her saati tahmin olarak değerlendirin; kesin bilgi için KIB-TEK duyurularına bakın.',
-    copyright: '© {year} Fatih Genç',
+    copyright: '© {year}',
+    author: 'Fatih Genç',
+    authorHref: 'https://fatihgenc.dev',
     legalAriaLabel: 'Yasal bilgiler',
   },
   switcher: {

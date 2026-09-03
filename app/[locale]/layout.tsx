@@ -169,8 +169,18 @@ export default async function LocaleLayout({
                   {dict.legal.terms}
                 </Link>
               </nav>
+              {/* The name is the one part of the imprint that leads somewhere:
+                * it points at its owner's own site, off this domain. */}
               <p className="m-0 sm:flex-1 sm:text-right">
-                {fill(dict.footer.copyright, { year: formatYear(now, locale) })}
+                {fill(dict.footer.copyright, { year: formatYear(now, locale) })}{' '}
+                <a
+                  href={dict.footer.authorHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted no-underline hover:text-text"
+                >
+                  {dict.footer.author}
+                </a>
               </p>
             </div>
           </div>
