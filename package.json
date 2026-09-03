@@ -19,7 +19,11 @@
     "build:icons": "node --import tsx scripts/build-icons.ts",
     "prebuild": "node scripts/check-secrets.mjs && npm run build:map",
     "harvest:places": "node --import tsx scripts/harvest-places.ts",
-    "harvest:coords": "node --import tsx scripts/harvest-coords.ts"
+    "harvest:coords": "node --import tsx scripts/harvest-coords.ts",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "test:stories": "vitest run",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
@@ -32,16 +36,29 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "latest",
+    "@storybook/addon-a11y": "^10.6.0",
+    "@storybook/addon-docs": "^10.6.0",
+    "@storybook/addon-vitest": "^10.6.0",
+    "@storybook/nextjs-vite": "^10.6.0",
     "@tailwindcss/postcss": "^4",
     "@types/d3-geo": "^3.1.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/browser-playwright": "latest",
+    "@vitest/coverage-v8": "latest",
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
+    "eslint-plugin-storybook": "^10.6.0",
+    "patch-package": "^8.0.1",
+    "playwright": "latest",
     "sharp": "^0.35.3",
+    "storybook": "^10.6.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "latest",
+    "vitest": "latest"
   }
 }

@@ -1,0 +1,22 @@
+diff --git a/node_modules/@storybook/addon-vitest/dist/vitest-plugin/index.js b/node_modules/@storybook/addon-vitest/dist/vitest-plugin/index.js
+index 74e2460..25039dd 100644
+--- a/node_modules/@storybook/addon-vitest/dist/vitest-plugin/index.js
++++ b/node_modules/@storybook/addon-vitest/dist/vitest-plugin/index.js
+@@ -2619,7 +2619,7 @@ var WORKING_DIR = process.cwd(), defaultOptions = {
+       let includeStories = stories.map((story) => {
+         let storyPath;
+         return typeof story == "string" ? storyPath = story : storyPath = `${story.directory}/${story.files ?? DEFAULT_FILES_PATTERN}`, join(finalOptions.configDir, storyPath);
+-      }).map((story) => relative(finalOptions.vitestRoot, story));
++      }).map((story) => relative(finalOptions.vitestRoot, story).split(sep).join("/"));
+       finalOptions.includeStories = includeStories;
+       let projectId = oneWayHash(finalOptions.configDir), internalSetupFiles = [
+         "@storybook/addon-vitest/internal/setup-file",
+@@ -2768,7 +2768,7 @@ var WORKING_DIR = process.cwd(), defaultOptions = {
+           }
+     },
+     async transform(code, id) {
+-      let relativeId = relative(finalOptions.vitestRoot, id);
++      let relativeId = relative(finalOptions.vitestRoot, id).split(sep).join("/");
+       if ((0, import_micromatch.match)([relativeId], finalOptions.includeStories).length > 0)
+         return vitestTransform({
+           code,
