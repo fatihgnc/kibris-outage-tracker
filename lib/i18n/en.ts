@@ -74,15 +74,8 @@ export const en: Dictionary = {
     noneAtAll: 'No planned or unplanned outage has been announced right now.',
   },
   map: {
-    ariaLabel: 'Map of Cyprus showing the power status of northern settlements',
-    hint: 'Tap a point for its status, open ground for the district.',
-    openDistrict: '{district} page →',
     powerOn: 'power on',
     powerOut: 'power out',
-    pointAria: '{name} — {status}',
-    districtAria: 'open the {district} district',
-    backToday: 'was out earlier today',
-    legendLead: 'Every point on the map is one settlement.',
   },
   search: {
     label: 'Find a place',
@@ -139,7 +132,7 @@ export const en: Dictionary = {
   },
   district: {
     h1: (district: string) => `Power outages in ${district}`,
-    back: 'island map',
+    back: 'whole island',
     now: 'Now',
     upcoming: 'Upcoming',
     last12: 'Last 12 months',
@@ -148,8 +141,6 @@ export const en: Dictionary = {
     summaryQuiet: 'Active and planned work in the {district} district, with a summary of the last 12 months.',
     noActive: (district: string) => `No outage in ${district} right now.`,
     noUpcoming: 'no planned work has been announced',
-    miniCaption: 'the {district} district on the island',
-    miniAria: 'Location of the {district} district on the island',
     follow: 'Follow:',
     calendar: 'add to calendar (.ics)',
     rss: 'RSS',

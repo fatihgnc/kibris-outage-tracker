@@ -13,7 +13,7 @@ const strings = {
 const meta = {
   title: 'Components/PlaceSearch',
   component: PlaceSearch,
-  args: { places: searchPlaces('tr'), locale: 'tr', districtNames, strings },
+  args: { places: searchPlaces(), locale: 'tr', districtNames, strings },
 } satisfies Meta<typeof PlaceSearch>;
 
 export default meta;

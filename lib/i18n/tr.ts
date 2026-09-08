@@ -107,18 +107,8 @@ export const tr = {
     noneAtAll: 'Şu anda duyurulmuş planlı ya da plansız bir elektrik kesintisi bulunmuyor.',
   },
   map: {
-    ariaLabel: 'Kıbrıs haritası, kuzeydeki yerleşim yerlerinin elektrik durumu',
-    // Two gestures on a phone: a point reads a place, open ground opens the
-    // district. With a mouse, hovering does the first and a click the second.
-    hint: 'Bir noktaya dokun: yerin durumu. Boş alana dokun: bölge sayfası.',
-    openDistrict: '{district} sayfası →',
     powerOn: 'elektrik var',
     powerOut: 'elektrik kesik',
-    // The way onward is the link beside it now; the readout only reads.
-    pointAria: '{name} — {status}',
-    districtAria: '{district} bölgesinin kesinti sayfasını aç',
-    backToday: 'bugün bir ara kesilmişti',
-    legendLead: 'Haritadaki her nokta bir yerleşim yerini gösteriyor.',
   },
   search: {
     // 'Is the power out where I live' — asked by name, because a reader
@@ -191,7 +181,7 @@ export const tr = {
     // The <title> already reads this way; the heading matches it rather than
     // standing alone as a bare place name.
     h1: (district: string) => `${district} elektrik kesintileri`,
-    back: 'ada haritası',
+    back: 'tüm ada',
     now: 'Şu an',
     upcoming: 'Yaklaşan',
     last12: 'Son 12 ay',
@@ -200,8 +190,6 @@ export const tr = {
     summaryQuiet: '{district} bölgesindeki aktif ve planlı çalışmalar ile son 12 ayın özeti.',
     noActive: (district: string) => `${locative(district)} şu anda kesinti yok.`,
     noUpcoming: 'planlanmış bir çalışma duyurulmadı',
-    miniCaption: '{district} bölgesi, ada üzerinde',
-    miniAria: '{district} bölgesinin ada üzerindeki konumu',
     // Two ways to follow the district without visiting: announced work on
     // the phone's own calendar, and a feed for a newsroom or a village office.
     follow: 'Takip et:',

@@ -5,9 +5,8 @@ import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getAreaKeyCounts, getFreshness, getMonthlyTotals, getNow, getOutages } from '@/lib/data';
 import { deriveStatus, formatClock } from '@/lib/time';
-import { DISTRICT_IDS, DISTRICTS, getMapGeometry, isDistrictId } from '@/lib/geography';
+import { DISTRICT_IDS, DISTRICTS, isDistrictId } from '@/lib/geography';
 import type { Outage } from '@/lib/types';
-import IslandMapMini from '@/components/IslandMapMini';
 import OutageCard from '@/components/OutageCard';
 import HistoryChart from '@/components/HistoryChart';
 import AdSlot from '@/components/AdSlot';
@@ -81,7 +80,6 @@ export default async function DistrictPage({ params }: Props) {
     ? dict.district.summaryActive(district.name)
     : fill(dict.district.summaryQuiet, { district: district.name });
 
-  const geometry = getMapGeometry();
   // The settlements in this district that have a page of their own. Without
   // these links nothing on the site points at a settlement page, and a page
   // reached only from the sitemap is a page search engines treat as orphaned.
@@ -99,27 +97,14 @@ export default async function DistrictPage({ params }: Props) {
         ])}
       />
 
-      <section className="flex flex-wrap items-start gap-x-7 gap-y-4 pt-4">
-        <div className="min-w-[260px] flex-[1_1_300px]">
-          <Link href={`/${locale}`} className="font-mono text-meta text-muted no-underline hover:text-text">
-            ← {dict.district.back}
-          </Link>
-          <h1 className="opsz-120 m-0 mt-2 font-display text-display font-semibold tracking-[-0.02em] text-text">
-            {heading}
-          </h1>
-          <p className="mb-0 mt-2 max-w-[44ch] text-pretty text-small text-muted">{summary}</p>
-        </div>
-        <div className="min-w-[220px] flex-[0_1_280px]">
-          <IslandMapMini
-            viewBox={geometry.viewBox}
-            islandPath={geometry.islandPath}
-            districts={geometry.districts}
-            settlements={geometry.settlements}
-            district={id}
-            ariaLabel={fill(dict.district.miniAria, { district: district.name })}
-            caption={fill(dict.district.miniCaption, { district: district.name })}
-          />
-        </div>
+      <section className="pt-4">
+        <Link href={`/${locale}`} className="font-mono text-meta text-muted no-underline hover:text-text">
+          ← {dict.district.back}
+        </Link>
+        <h1 className="opsz-120 m-0 mt-2 max-w-[22ch] font-display text-display font-semibold tracking-[-0.02em] text-text">
+          {heading}
+        </h1>
+        <p className="mb-0 mt-2 max-w-[44ch] text-pretty text-small text-muted">{summary}</p>
       </section>
 
       <div className="grid grid-cols-1 gap-5 pt-6 sm:grid-cols-2">

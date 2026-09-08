@@ -3,19 +3,10 @@ import { notFound } from 'next/navigation';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { fill, getDictionary } from '@/lib/i18n/dictionaries';
 import { getAreaKeyCounts, getFreshness, getNow, getOutages } from '@/lib/data';
-import {
-  deriveStatus,
-  formatClock,
-  formatDateLong,
-  formatTimeRange,
-  islandHour,
-  readEndOf,
-} from '@/lib/time';
+import { deriveStatus, formatClock, formatDateLong } from '@/lib/time';
 import { DISTRICT_IDS, DISTRICTS, getMapGeometry, resolveDarkness, settlementSlugs } from '@/lib/geography';
 import { eligiblePlaces } from '@/lib/places';
 import type { Outage } from '@/lib/types';
-import IslandMap from '@/components/IslandMap';
-import MapLegend from '@/components/MapLegend';
 import HomeOutages from '@/components/HomeOutages';
 import DistrictList from '@/components/DistrictList';
 import PlaceSearch from '@/components/PlaceSearch';
@@ -105,17 +96,10 @@ export default async function HomePage({ params }: Props) {
     .join(' · ');
 
   const geometry = getMapGeometry();
-  // The map is handed finished sentences rather than records: the locale, the
-  // clock and the dictionary all live here, and the popover only has to print.
-  const lampOutages = Object.fromEntries(
-    [...resolveDarkness(active, geometry.settlements)].map(([name, o]) => [
-      name,
-      { kind: dict.kind[o.kind], when: formatTimeRange(o, locale, dict), source: o.source },
-    ]),
-  );
+  const darkSettlements = new Set(resolveDarkness(active, geometry.settlements).keys());
 
-  // Every place on the map, for the search box: its name, whether it is out
-  // right now, and where a match should lead — its own page where it has one
+  // Every settlement, for the search box: its name, whether it is out right
+  // now, and where a match should lead — its own page where it has one
   // (lib/places.ts decides), its district's otherwise.
   const withPage = new Set(eligiblePlaces(areaCounts).map((place) => place.slug));
   const searchPlaces = settlementSlugs()
@@ -124,23 +108,9 @@ export default async function HomePage({ params }: Props) {
       district: settlement.district,
       slug,
       hasPage: withPage.has(slug),
-      out: Boolean(lampOutages[settlement.name]),
+      out: darkSettlements.has(settlement.name),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
-
-  // Places the day took out and gave back (§3.3). Not the same question as the
-  // map's live state, and nothing else on the page answers it: the cards are a
-  // list, and only the island can say where the day's outages were.
-  // `getOutages` already reaches thirty days back, so the day behind us is in
-  // hand and this costs no extra query.
-  const dayAgo = now - 24 * 60 * 60 * 1000;
-  const embers = [
-    ...new Set(
-      outages
-        .filter((o) => readEndOf(o) >= dayAgo && Date.parse(o.startsAt) <= now)
-        .flatMap((o) => [...resolveDarkness([o], geometry.settlements).keys()]),
-    ),
-  ].filter((name) => !lampOutages[name]);
 
   // The structured list always describes the whole island: the canonical URL
   // points past the query string, so the filtered variants are the same page.
@@ -229,44 +199,6 @@ export default async function HomePage({ params }: Props) {
             empty: dict.search.empty,
             powerOn: dict.map.powerOn,
             powerOut: dict.map.powerOut,
-          }}
-        />
-      </section>
-
-      {/* What a point is, and what its colour means — above the map rather
-        * than below it, because it is the reader's first look at two hundred
-        * unlabelled dots that needs the sentence, not their second. */}
-      <section className="pt-4">
-        <MapLegend
-          lead={dict.map.legendLead}
-          powerOn={dict.map.powerOn}
-          powerOut={dict.map.powerOut}
-          backToday={dict.map.backToday}
-        />
-      </section>
-
-      <section className="pt-1">
-        <IslandMap
-          viewBox={geometry.viewBox}
-          width={geometry.width}
-          height={geometry.height}
-          islandPath={geometry.islandPath}
-          north={geometry.north}
-          districts={geometry.districts}
-          settlements={geometry.settlements}
-          outages={lampOutages}
-          embers={embers}
-          hour={islandHour(now)}
-          locale={locale}
-          strings={{
-            ariaLabel: dict.map.ariaLabel,
-            hint: dict.map.hint,
-            powerOn: dict.map.powerOn,
-            powerOut: dict.map.powerOut,
-            pointAria: dict.map.pointAria,
-            districtAria: dict.map.districtAria,
-            backToday: dict.map.backToday,
-            openDistrict: dict.map.openDistrict,
           }}
         />
       </section>
