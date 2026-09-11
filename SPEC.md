@@ -1021,7 +1021,10 @@ returns partial results is a success; a run that throws is an outage of its own.
 
 This project is public and takes public data. Behave accordingly.
 
-- Poll every 10 minutes. Nothing here changes faster than that.
+- Poll hourly. Nothing here changes faster than that, and a ten-minute cadence
+  was what pushed Supabase egress past the free tier's 5GB/month (2026-09-11):
+  every run drops every static page's cache (app/api/revalidate), so the
+  interval between runs is also the interval between full-site re-renders.
 - Set a descriptive `User-Agent` that names the project and carries a contact
   address.
 - Respect `robots.txt`.
